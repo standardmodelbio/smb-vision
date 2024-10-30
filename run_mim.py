@@ -24,13 +24,11 @@ import transformers
 from transformers import (
     MODEL_FOR_MASKED_IMAGE_MODELING_MAPPING,
     AutoConfig,
-    AutoImageProcessor,
     HfArgumentParser,
     Trainer,
     TrainingArguments,
     VideoMAEConfig,
     VideoMAEForPreTraining,
-    VideoMAEImageProcessor,
 )
 from transformers.trainer_utils import get_last_checkpoint
 from transformers.utils import check_min_version, send_example_telemetry
@@ -409,16 +407,16 @@ def main():
     )
 
     # create image processor
-    if model_args.image_processor_name:
-        image_processor = AutoImageProcessor.from_pretrained(
-            model_args.image_processor_name, **config_kwargs
-        )
-    elif model_args.model_name_or_path:
-        image_processor = AutoImageProcessor.from_pretrained(
-            model_args.model_name_or_path, **config_kwargs
-        )
-    else:
-        image_processor = VideoMAEImageProcessor()
+    # if model_args.image_processor_name:
+    #     image_processor = AutoImageProcessor.from_pretrained(
+    #         model_args.image_processor_name, **config_kwargs
+    #     )
+    # elif model_args.model_name_or_path:
+    #     image_processor = AutoImageProcessor.from_pretrained(
+    #         model_args.model_name_or_path, **config_kwargs
+    #     )
+    # else:
+    #     image_processor = VideoMAEImageProcessor()
 
     # create model
     if model_args.model_name_or_path:
@@ -504,6 +502,9 @@ def main():
         eval_dataset=ds["validation"] if training_args.do_eval else None,
         # processing_class=image_processor,
         data_collator=collate_fn,
+        compute_metrics=lambda eval_pred: {
+            "loss": eval_pred.predictions[0].mean().item()
+        },
     )
 
     # Training
