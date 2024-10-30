@@ -322,7 +322,7 @@ if __name__ == "__main__":
     )
     ds = dataset.setup("train")
     # ds["train"].shuffle()
-    print(ds["train"][1][0]["pixel_values"].shape)
+    print(ds["train"][1][0]["image"].shape)
 
     # train_loader = dataset.train_dataloader(ds["train"])
 
