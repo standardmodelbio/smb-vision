@@ -20,6 +20,6 @@ python run_mim.py \
     --save_steps 1000 \
     --gradient_checkpointing true \
     --bf16 true \
-    --logging_steps 1
+    --logging_steps 1 \
     --report_to wandb \
     --run_name smb-vision-base-1029
