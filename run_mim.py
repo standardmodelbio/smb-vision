@@ -503,7 +503,7 @@ def main():
         # processing_class=image_processor,
         data_collator=collate_fn,
         compute_metrics=lambda eval_pred: {
-            "loss": eval_pred.predictions[0].mean().item()
+            "loss": eval_pred.predictions[0].item()
         },
     )
 
