@@ -19,7 +19,7 @@ python run_mim.py \
     --output_dir ./saves/dry_run/smb-vision-base-1029 \
     --eval_strategy "steps" \
     --eval_steps 5 \
-    --save_steps 1000 \
+    --save_steps 500 \
     --gradient_checkpointing true \
     --bf16 true \
     --logging_steps 1 \
