@@ -14,6 +14,7 @@ def create_dataset_json(data_dir, output_file="dataset.json", val_split=0.2):
     total = len(files)
     val_size = int(total * val_split)
     train_size = total - val_size
+    print(total, train_size, val_size)
 
     # Create dataset dict
     dataset = {"train": files[:train_size], "validation": files[train_size:]}
