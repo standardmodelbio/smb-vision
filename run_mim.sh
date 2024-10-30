@@ -5,10 +5,10 @@ export WANDB_LOG_MODEL=checkpoint
 python run_mim.py \
     --json_path ../data/lung-ct-4k-mim.json \
     --cache_dir ../cache/ \
-    --learning_rate 5e-5 \
+    --learning_rate 3e-4 \
     --lr_scheduler_type cosine \
     --num_train_epochs 3 \
-    --per_device_train_batch_size 2 \
+    --per_device_train_batch_size 4 \
     --per_device_eval_batch_size 1 \
     --gradient_accumulation_steps 1 \
     --do_train true \

@@ -97,7 +97,7 @@ class DataTrainingArguments:
         metadata={"help": "The size of the square patches to use for masking."},
     )
     mask_ratio: float = field(
-        default=0.75,
+        default=0.65,
         metadata={"help": "Percentage of patches to mask."},
     )
     max_train_samples: Optional[int] = field(
