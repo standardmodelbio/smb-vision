@@ -199,7 +199,7 @@ class ModelArguments:
         },
     )
     image_size: Optional[int] = field(
-        default=224,
+        default=384,
         metadata={
             "help": (
                 "The size (resolution) of each image. If not specified, will use `image_size` of the configuration."
@@ -207,7 +207,7 @@ class ModelArguments:
         },
     )
     depth: Optional[int] = field(
-        default=128,
+        default=320,
         metadata={"help": ("The depth of the 3D volume.")},
     )
     patch_size: Optional[int] = field(
