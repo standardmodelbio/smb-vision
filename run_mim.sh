@@ -17,7 +17,7 @@ python run_mim.py \
     --do_eval true \
     --overwrite_output_dir true \
     --output_dir ./saves/dry_run/smb-vision-base-1029 \
-    --eval_strategy "steps" \
+    --eval_strategy "no" \
     --eval_steps 5 \
     --save_steps 500 \
     --gradient_checkpointing true \
