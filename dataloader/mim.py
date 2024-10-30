@@ -311,12 +311,12 @@ class MIMDataset:
 
 if __name__ == "__main__":
     dataset = MIMDataset(
-        json_path="./train.json",
+        json_path="../data/lung-ct-4k-mim.json",
         img_size=224,
         depth=96,
         mask_patch_size=32,
         patch_size=16,
-        cache_dir="./cache/",
+        cache_dir="../cache/",
         downsample_ratio=[1.0, 1.0, 1.0],
         mask_ratio=0.75,
     )
