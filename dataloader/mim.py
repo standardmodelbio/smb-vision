@@ -172,16 +172,16 @@ class MIMDataset:
                     clip=True,
                 ),
                 CropForegroundd(keys=["image"], source_key="image"),
-                RandSpatialCropSamplesd(
-                    keys=["image"],
-                    roi_size=(self.img_size, self.img_size, self.depth),
-                    random_size=False,
-                    num_samples=2,
-                ),
-                SpatialPadd(
-                    keys=["image"],
-                    spatial_size=(self.img_size, self.img_size, self.depth),
-                ),
+                # RandSpatialCropSamplesd(
+                #     keys=["image"],
+                #     roi_size=(self.img_size, self.img_size, self.depth),
+                #     random_size=False,
+                #     num_samples=2,
+                # ),
+                # SpatialPadd(
+                #     keys=["image"],
+                #     spatial_size=(self.img_size, self.img_size, self.depth),
+                # ),
                 # RandScaleIntensityd(keys="image", factors=0.1, prob=0.5),
                 # RandShiftIntensityd(keys="image", offsets=0.1, prob=0.5),
                 ToTensord(keys=["image"]),
@@ -327,14 +327,13 @@ if __name__ == "__main__":
     )
     ds = dataset.setup("train")
     # ds["train"].shuffle()
-    print(ds["train"][1][0]["image"].shape)
+    # print(ds["train"][1][0]["image"].shape)
 
-    # train_loader = dataset.train_dataloader(ds["train"])
+    train_loader = dataset.train_dataloader(ds["train"])
 
-    # for batch in train_loader:
-    #     print(batch["pixel_values"].shape)
-    #     print(batch["bool_masked_pos"].shape)
-    #     print(batch["bool_masked_pos"])
+    for batch in train_loader:
+        print(batch["image"].shape)
+        print(batch["mask"].shape)
     #     break
     # from datasets import load_dataset
 
