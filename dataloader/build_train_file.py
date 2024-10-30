@@ -28,5 +28,5 @@ def create_dataset_json(data_dir, output_file="dataset.json", val_split=0.2):
 
 if __name__ == "__main__":
     create_dataset_json(
-        "../data/nifti", output_file="../data/lung-ct-4k-mim.json", val_split=0.01
+        "../nifti", output_file="../data/lung-ct-4k-mim.json", val_split=0.01
     )
