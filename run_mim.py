@@ -388,7 +388,7 @@ def main():
             "num_frames": model_args.depth,
             "tubelet_size": model_args.patch_size,
             "hidden_size": 768,
-            "num_hidden_layers": 2,
+            "num_hidden_layers": 12,
             "num_attention_heads": 12,
             "intermediate_size": 3072,
             "hidden_act": "gelu",
