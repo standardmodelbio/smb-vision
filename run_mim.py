@@ -36,7 +36,7 @@ from transformers.trainer_utils import get_last_checkpoint
 from transformers.utils import check_min_version, send_example_telemetry
 from transformers.utils.versions import require_version
 
-from data.mim import MIMDataset
+from dataloader.mim import MIMDataset
 
 """ Pre-training a 🤗 Transformers model for simple masked image modeling (SimMIM).
 Any model supported by the AutoModelForMaskedImageModeling API can be used.
