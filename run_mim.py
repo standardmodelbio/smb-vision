@@ -207,7 +207,7 @@ class ModelArguments:
         },
     )
     depth: Optional[int] = field(
-        default=96,
+        default=128,
         metadata={"help": ("The depth of the 3D volume.")},
     )
     patch_size: Optional[int] = field(
