@@ -312,35 +312,3 @@ class MIMDataset:
             collate_fn=pad_list_data_collate,
             # prefetch_factor=4,
         )
-
-
-if __name__ == "__main__":
-    dataset = MIMDataset(
-        json_path="../data/lung-ct-4k-mim.json",
-        img_size=224,
-        depth=96,
-        mask_patch_size=32,
-        patch_size=16,
-        cache_dir="../cache/",
-        downsample_ratio=[1.0, 1.0, 1.0],
-        mask_ratio=0.75,
-    )
-    ds = dataset.setup("train")
-    # ds["train"].shuffle()
-    # print(ds["train"][1][0]["image"].shape)
-
-    train_loader = dataset.train_dataloader(ds["train"])
-
-    for batch in train_loader:
-        print(batch["image"].shape)
-        print(batch["mask"].shape)
-    #     break
-    # from datasets import load_dataset
-
-    # ds = load_dataset("json", data_files="./train.json")
-    # print(ds["train"])
-    # split = ds["train"].train_test_split(1)
-    # ds["train"] = split["train"]
-    # ds["validation"] = split["test"]
-    # print(ds["train"])
-    # print(ds["validation"])
