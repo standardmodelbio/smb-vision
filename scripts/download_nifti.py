@@ -24,7 +24,7 @@ def download_series_nifti():
         print(f"Error fetching series list: {e}")
         return
 
-    for i, series_id in tqdm(enumerate(series_ids)):
+    for series_id in tqdm(series_ids):
         try:
             series_metadata_url = f"{base_url}/series/{series_id}"
             metadata_response = requests.get(series_metadata_url, auth=auth)
