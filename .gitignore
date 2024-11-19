@@ -167,3 +167,4 @@ cache/
 nifti_files/
 *.nii.gz
 *.json
+*.DS_Store
