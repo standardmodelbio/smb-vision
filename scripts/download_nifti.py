@@ -7,6 +7,7 @@ from tqdm import tqdm
 def sanitize_filename(filename):
     return "".join(c for c in filename if c.isalnum() or c in "._- ")
 
+
 def download_series_nifti():
     base_url = "http://localhost:8042"
     auth = ("orthanc", "orthanc")
@@ -24,9 +25,6 @@ def download_series_nifti():
         return
 
     for i, series_id in tqdm(enumerate(series_ids)):
-        if i >= 5:
-            break
-
         try:
             series_metadata_url = f"{base_url}/series/{series_id}"
             metadata_response = requests.get(series_metadata_url, auth=auth)
@@ -56,6 +54,7 @@ def download_series_nifti():
         except requests.exceptions.RequestException as e:
             print(f"Error processing series {series_id}: {e}")
             continue
+
 
 if __name__ == "__main__":
     download_series_nifti()

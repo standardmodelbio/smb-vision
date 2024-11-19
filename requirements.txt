@@ -1,0 +1,10 @@
+transformers>=4.46.0
+datasets>=1.8.0
+accelerate
+peft
+monai
+pandas>=2.0.0
+scipy
+einops
+packaging
+ninja
