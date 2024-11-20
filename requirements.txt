@@ -8,3 +8,4 @@ scipy
 einops
 packaging
 ninja
+loguru

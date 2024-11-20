@@ -36,6 +36,7 @@ from transformers.utils.versions import require_version
 
 from dataloader.mim import MIMDataset
 
+
 """ Pre-training a 🤗 Transformers model for simple masked image modeling (SimMIM).
 Any model supported by the AutoModelForMaskedImageModeling API can be used.
 """
@@ -68,25 +69,15 @@ class DataTrainingArguments:
     )
     dataset_config_name: Optional[str] = field(
         default=None,
-        metadata={
-            "help": "The configuration name of the dataset to use (via the datasets library)."
-        },
+        metadata={"help": "The configuration name of the dataset to use (via the datasets library)."},
     )
-    json_path: Optional[str] = field(
-        default=None, metadata={"help": "The local json data path."}
-    )
+    json_path: Optional[str] = field(default=None, metadata={"help": "The local json data path."})
     image_column_name: Optional[str] = field(
         default="image",
-        metadata={
-            "help": "The column name of the images in the files. If not set, will try to use 'image' or 'img'."
-        },
+        metadata={"help": "The column name of the images in the files. If not set, will try to use 'image' or 'img'."},
     )
-    train_dir: Optional[str] = field(
-        default=None, metadata={"help": "A folder containing the training data."}
-    )
-    validation_dir: Optional[str] = field(
-        default=None, metadata={"help": "A folder containing the validation data."}
-    )
+    train_dir: Optional[str] = field(default=None, metadata={"help": "A folder containing the training data."})
+    validation_dir: Optional[str] = field(default=None, metadata={"help": "A folder containing the validation data."})
     train_val_split: Optional[float] = field(
         default=0.15, metadata={"help": "Percent to split off of train for validation."}
     )
@@ -144,16 +135,11 @@ class ModelArguments:
     )
     model_type: Optional[str] = field(
         default=None,
-        metadata={
-            "help": "If training from scratch, pass a model type from the list: "
-            + ", ".join(MODEL_TYPES)
-        },
+        metadata={"help": "If training from scratch, pass a model type from the list: " + ", ".join(MODEL_TYPES)},
     )
     config_name_or_path: Optional[str] = field(
         default=None,
-        metadata={
-            "help": "Pretrained config name or path if not the same as model_name"
-        },
+        metadata={"help": "Pretrained config name or path if not the same as model_name"},
     )
     config_overrides: Optional[str] = field(
         default=None,
@@ -166,19 +152,13 @@ class ModelArguments:
     )
     cache_dir: Optional[str] = field(
         default=None,
-        metadata={
-            "help": "Where do you want to store (cache) the pretrained models/datasets downloaded from the hub"
-        },
+        metadata={"help": "Where do you want to store (cache) the pretrained models/datasets downloaded from the hub"},
     )
     model_revision: str = field(
         default="main",
-        metadata={
-            "help": "The specific model version to use (can be a branch name, tag name or commit id)."
-        },
+        metadata={"help": "The specific model version to use (can be a branch name, tag name or commit id)."},
     )
-    image_processor_name: str = field(
-        default=None, metadata={"help": "Name or path of preprocessor config."}
-    )
+    image_processor_name: str = field(default=None, metadata={"help": "Name or path of preprocessor config."})
     token: str = field(
         default=None,
         metadata={
@@ -235,15 +215,11 @@ def main():
     # or by passing the --help flag to this script.
     # We now keep distinct sets of args, for a cleaner separation of concerns.
 
-    parser = HfArgumentParser(
-        (ModelArguments, DataTrainingArguments, TrainingArguments)
-    )
+    parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
         # If we pass only one argument to the script and it's the path to a json file,
         # let's parse it to get our arguments.
-        model_args, data_args, training_args = parser.parse_json_file(
-            json_file=os.path.abspath(sys.argv[1])
-        )
+        model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
     else:
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
@@ -277,20 +253,14 @@ def main():
 
     # Detecting last checkpoint.
     last_checkpoint = None
-    if (
-        os.path.isdir(training_args.output_dir)
-        and training_args.do_train
-        and not training_args.overwrite_output_dir
-    ):
+    if os.path.isdir(training_args.output_dir) and training_args.do_train and not training_args.overwrite_output_dir:
         last_checkpoint = get_last_checkpoint(training_args.output_dir)
         if last_checkpoint is None and len(os.listdir(training_args.output_dir)) > 0:
             raise ValueError(
                 f"Output directory ({training_args.output_dir}) already exists and is not empty. "
                 "Use --overwrite_output_dir to overcome."
             )
-        elif (
-            last_checkpoint is not None and training_args.resume_from_checkpoint is None
-        ):
+        elif last_checkpoint is not None and training_args.resume_from_checkpoint is None:
             logger.info(
                 f"Checkpoint detected, resuming training at {last_checkpoint}. To avoid this behavior, change "
                 "the `--output_dir` or add `--overwrite_output_dir` to train from scratch."
@@ -344,13 +314,9 @@ def main():
         "trust_remote_code": model_args.trust_remote_code,
     }
     if model_args.config_name_or_path:
-        config = AutoConfig.from_pretrained(
-            model_args.config_name_or_path, **config_kwargs
-        )
+        config = AutoConfig.from_pretrained(model_args.config_name_or_path, **config_kwargs)
     elif model_args.model_name_or_path:
-        config = AutoConfig.from_pretrained(
-            model_args.model_name_or_path, **config_kwargs
-        )
+        config = AutoConfig.from_pretrained(model_args.model_name_or_path, **config_kwargs)
     else:
         config = VideoMAEConfig()
         logger.warning("Training new model from scratch")
@@ -360,19 +326,9 @@ def main():
     #     config.decoder_type = "simmim"
 
     # adapt config
-    model_args.image_size = (
-        model_args.image_size
-        if model_args.image_size is not None
-        else config.image_size
-    )
-    model_args.patch_size = (
-        model_args.patch_size
-        if model_args.patch_size is not None
-        else config.patch_size
-    )
-    model_args.depth = (
-        model_args.depth if model_args.depth is not None else config.num_frames
-    )
+    model_args.image_size = model_args.image_size if model_args.image_size is not None else config.image_size
+    model_args.patch_size = model_args.patch_size if model_args.patch_size is not None else config.patch_size
+    model_args.depth = model_args.depth if model_args.depth is not None else config.num_frames
     # model_args.encoder_stride = (
     #     model_args.encoder_stride if model_args.encoder_stride is not None else config.encoder_stride
     # )
@@ -385,10 +341,10 @@ def main():
             "num_channels": 1,
             "num_frames": model_args.depth,
             "tubelet_size": model_args.patch_size,
-            "hidden_size": 768,
-            "num_hidden_layers": 12,
-            "num_attention_heads": 12,
-            "intermediate_size": 3072,
+            "hidden_size": 1024,
+            "num_hidden_layers": 24,
+            "num_attention_heads": 16,
+            "intermediate_size": 4096,
             "hidden_act": "gelu",
             "hidden_dropout_prob": 0.0,
             "attention_probs_dropout_prob": 0.0,
@@ -396,10 +352,10 @@ def main():
             "layer_norm_eps": 1e-12,
             "qkv_bias": True,
             "use_mean_pooling": True,
-            "decoder_num_attention_heads": 6,
-            "decoder_hidden_size": 384,
-            "decoder_num_hidden_layers": 4,
-            "decoder_intermediate_size": 1536,
+            "decoder_num_attention_heads": 16,
+            "decoder_hidden_size": 512,
+            "decoder_num_hidden_layers": 8,
+            "decoder_intermediate_size": 2048,
             "norm_pix_loss": True,
             "attn_implementation": "flash_attention_2",
             "torch_dtype": "bfloat16",
@@ -502,9 +458,7 @@ def main():
         eval_dataset=ds["validation"] if training_args.do_eval else None,
         # processing_class=image_processor,
         data_collator=collate_fn,
-        compute_metrics=lambda eval_pred: {
-            "loss": eval_pred.predictions[0].item()
-        },
+        compute_metrics=lambda eval_pred: {"loss": eval_pred.predictions[0].item()},
     )
 
     # Training

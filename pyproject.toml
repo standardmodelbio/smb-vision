@@ -23,6 +23,7 @@ known-third-party = [
     "transformers",
     "monai",
     "wandb",
+    "loguru",
 ]
 
 [tool.ruff.format]
