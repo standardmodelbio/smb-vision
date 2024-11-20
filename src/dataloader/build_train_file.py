@@ -51,4 +51,4 @@ def create_dataset_json(data_dir, output_file="dataset.json", val_split: Union[i
 
 
 if __name__ == "__main__":
-    create_dataset_json("../nifti_files", output_file="../data/smb-vision-large-train-mim.json", val_split=0.01)
+    create_dataset_json("../nifti_files", output_file="./smb-vision-large-train-mim.json", val_split=100)
