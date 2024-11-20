@@ -3,6 +3,7 @@ datasets>=1.8.0
 accelerate
 peft
 monai
+nibabel
 pandas>=2.0.0
 scipy
 einops

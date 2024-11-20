@@ -27,7 +27,7 @@ def create_dataset_json(data_dir, output_file="dataset.json", val_split: Union[i
     else:
         val_size = int(total * val_split)
     train_size = total - val_size
-    logger.info(total, train_size, val_size)
+    logger.info(f"train_size is {train_size}, val_size is {val_size}")
 
     # Create dataset dict
     dataset = {"train": files[:train_size], "validation": files[train_size:]}
