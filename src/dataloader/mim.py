@@ -67,11 +67,7 @@ class MaskGenerator:
         mask[mask_idx] = 1
 
         mask = mask.reshape((self.rand_depth, self.rand_size, self.rand_size))
-        mask = (
-            mask.repeat(self.scale, axis=0)
-            .repeat(self.scale, axis=1)
-            .repeat(self.scale, axis=2)
-        )
+        mask = mask.repeat(self.scale, axis=0).repeat(self.scale, axis=1).repeat(self.scale, axis=2)
 
         return torch.tensor(mask.flatten()).bool()
 
@@ -85,9 +81,7 @@ class GenerateMask(Transform):
         model_patch_size=16,
         mask_ratio=0.75,
     ):
-        self.mask_generator = MaskGenerator(
-            input_size, depth, mask_patch_size, model_patch_size, mask_ratio
-        )
+        self.mask_generator = MaskGenerator(input_size, depth, mask_patch_size, model_patch_size, mask_ratio)
 
     def __call__(self, inputs):
         inputs["mask"] = self.mask_generator()
@@ -98,9 +92,7 @@ class PermuteImage(Transform):
     """Permute the dimensions of the image"""
 
     def __call__(self, data):
-        data["image"] = data["image"].permute(
-            3, 0, 1, 2
-        )  # Adjust permutation order as needed
+        data["image"] = data["image"].permute(3, 0, 1, 2)  # Adjust permutation order as needed
         return data
 
 
@@ -172,28 +164,28 @@ class MIMDataset:
                     clip=True,
                 ),
                 CropForegroundd(keys=["image"], source_key="image"),
-                RandSpatialCropSamplesd(
-                    keys=["image"],
-                    roi_size=(self.img_size, self.img_size, self.depth),
-                    random_size=False,
-                    num_samples=1,
-                ),
-                SpatialPadd(
-                    keys=["image"],
-                    spatial_size=(self.img_size, self.img_size, self.depth),
-                ),
-                # RandScaleIntensityd(keys="image", factors=0.1, prob=0.5),
-                # RandShiftIntensityd(keys="image", offsets=0.1, prob=0.5),
-                ToTensord(keys=["image"]),
-                PermuteImage(),
-                # Add custom transform to generate mask
-                GenerateMask(
-                    input_size=self.img_size,
-                    depth=self.depth,
-                    mask_patch_size=self.mask_patch_size,
-                    model_patch_size=self.patch_size,
-                    mask_ratio=self.mask_ratio,
-                ),
+                # RandSpatialCropSamplesd(
+                #     keys=["image"],
+                #     roi_size=(self.img_size, self.img_size, self.depth),
+                #     random_size=False,
+                #     num_samples=1,
+                # ),
+                # SpatialPadd(
+                #     keys=["image"],
+                #     spatial_size=(self.img_size, self.img_size, self.depth),
+                # ),
+                # # RandScaleIntensityd(keys="image", factors=0.1, prob=0.5),
+                # # RandShiftIntensityd(keys="image", offsets=0.1, prob=0.5),
+                # ToTensord(keys=["image"]),
+                # PermuteImage(),
+                # # Add custom transform to generate mask
+                # GenerateMask(
+                #     input_size=self.img_size,
+                #     depth=self.depth,
+                #     mask_patch_size=self.mask_patch_size,
+                #     model_patch_size=self.patch_size,
+                #     mask_ratio=self.mask_ratio,
+                # ),
             ]
         )
 
@@ -312,3 +304,41 @@ class MIMDataset:
             collate_fn=pad_list_data_collate,
             # prefetch_factor=4,
         )
+
+
+if __name__ == "__main__":
+    # Initialize dataset with example parameters
+    dataset = MIMDataset(
+        json_path="./data/smb-vision-large-train-mim.json",
+        img_size=384,
+        depth=320,
+        mask_patch_size=32,
+        patch_size=16,
+        downsample_ratio=(1.0, 1.0, 1.0),
+        cache_dir="./cache",
+        batch_size=1,
+        val_batch_size=1,
+        num_workers=4,
+        cache_num=0,
+        cache_rate=0.0,
+        dist=False,
+        mask_ratio=0.75,
+    )
+
+    # Setup dataset and get data loaders
+    datasets = dataset.setup("train")
+    train_loader = dataset.train_dataloader(datasets["train"])
+    val_loader = dataset.val_dataloader(datasets["validation"])
+
+    # Get a batch and print shapes
+    for batch in train_loader:
+        print("Training batch shapes:")
+        print(f"Image shape: {batch['image'].shape}")
+        print(f"Mask shape: {batch['mask'].shape}")
+        break
+
+    for batch in val_loader:
+        print("\nValidation batch shapes:")
+        print(f"Image shape: {batch['image'].shape}")
+        print(f"Mask shape: {batch['mask'].shape}")
+        break
