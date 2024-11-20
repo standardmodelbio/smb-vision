@@ -10,3 +10,4 @@ einops
 packaging
 ninja
 loguru
+wandb
