@@ -3,7 +3,7 @@ export WANDB_PROJECT=smb-vision
 export WANDB_LOG_MODEL=checkpoint
 
 torchrun --nproc_per_node 8 src/run_mim.py \
-    --json_path ../data/smb-vision-large-train-mim.json \
+    --json_path ./smb-vision-large-train-mim.json \
     --cache_dir ../cache/ \
     --learning_rate 3e-4 \
     --lr_scheduler_type cosine \
@@ -22,6 +22,6 @@ torchrun --nproc_per_node 8 src/run_mim.py \
     --save_steps 500 \
     --gradient_checkpointing true \
     --bf16 true \
-    --logging_steps 5 \
+    --logging_steps 1 \
     --report_to wandb \
     --run_name smb-vision-large-1120
