@@ -70,7 +70,7 @@ def main():
     # Print test results
     print(f"Volume shape: {volume_shape}")
     print(f"Tumor volume: {len(tumor_coords)}")
-    print(f"Number of total patches: {len(patch_mask)}")
+    print(f"Number of total patches: {patch_mask.shape}")
     print(f"Number of patches containing tumor/peritumoral region: {np.sum(patch_mask)}")
 
     # Validate results
