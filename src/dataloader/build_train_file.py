@@ -28,19 +28,19 @@ def get_transforms(img_size=384, depth=320, mask_patch_size=32, patch_size=16, m
             LoadImaged(keys=["image"]),
             EnsureChannelFirstd(keys=["image"]),
             Orientationd(keys=["image"], axcodes="RAS"),
-            # Spacingd(
-            #     keys=["image"],
-            #     pixdim=(1.0, 1.0, 1.0),
-            #     mode=("bilinear"),
-            # ),
-            # ScaleIntensityRanged(
-            #     keys=["image"],
-            #     a_min=-350,
-            #     a_max=1024,
-            #     b_min=0.0,
-            #     b_max=1.0,
-            #     clip=True,
-            # ),
+            Spacingd(
+                keys=["image"],
+                pixdim=(1.0, 1.0, 1.0),
+                mode=("bilinear"),
+            ),
+            ScaleIntensityRanged(
+                keys=["image"],
+                a_min=-350,
+                a_max=1024,
+                b_min=0.0,
+                b_max=1.0,
+                clip=True,
+            ),
             # CropForegroundd(keys=["image"], source_key="image", allow_smaller=False),
             # RandSpatialCropSamplesd(
             #     keys=["image"],
