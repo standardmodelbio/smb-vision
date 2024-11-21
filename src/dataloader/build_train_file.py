@@ -6,12 +6,19 @@ import nibabel as nib
 
 # Import the MaskGenerator and transforms from mim.py
 from mim import GenerateMask, PermuteImage
-from monai.transforms.compose import Compose
-from monai.transforms.croppad.dictionary import CropForegroundd, RandSpatialCropSamplesd, SpatialPadd
-from monai.transforms.intensity.dictionary import ScaleIntensityRanged
-from monai.transforms.io.dictionary import LoadImaged
-from monai.transforms.spatial.dictionary import Orientationd, Spacingd
-from monai.transforms.utility.dictionary import EnsureChannelFirstd, ToTensord
+from monai.transforms import (
+    Compose,
+    CropForegroundd,
+    EnsureChannelFirstd,
+    LoadImaged,
+    Orientationd,
+    RandSpatialCropSamplesd,
+    ScaleIntensityRanged,
+    Spacingd,
+    SpatialPadd,
+    ToTensord,
+    Transform,
+)
 
 
 def get_transforms(img_size=384, depth=320, mask_patch_size=32, patch_size=16, mask_ratio=0.75):
