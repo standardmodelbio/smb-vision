@@ -16,8 +16,8 @@ def create_dataset_json(data_dir, output_file="dataset.json", val_split: Union[i
                 try:
                     # Try to load the nifti file
                     img = nib.load(file_path)
-                    logger.info(img.shape)
-                    files.append({"image": file_path})
+                    if len(img.shape) == 3:
+                        files.append({"image": file_path})
                 except:
                     logger.info(f"Corrupted nifti file: {file_path}")
 
