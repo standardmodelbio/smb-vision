@@ -2,7 +2,7 @@
 export WANDB_PROJECT=smb-vision
 export WANDB_LOG_MODEL=checkpoint
 
-torchrun --nproc_per_node 8 src/run_mim.py \
+python src/run_mim.py \
     --json_path ./smb-vision-large-train-mim.json \
     --cache_dir ../cache/ \
     --learning_rate 3e-4 \
