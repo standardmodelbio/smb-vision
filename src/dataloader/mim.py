@@ -318,11 +318,11 @@ if __name__ == "__main__":
         cache_dir="./cache",
         batch_size=1,
         val_batch_size=1,
-        num_workers=4,
+        num_workers=64,
         cache_num=0,
         cache_rate=0.0,
         dist=False,
-        mask_ratio=0.75,
+        mask_ratio=0.6,
     )
 
     # Setup dataset and get data loaders
@@ -330,15 +330,46 @@ if __name__ == "__main__":
     train_loader = dataset.train_dataloader(datasets["train"])
     val_loader = dataset.val_dataloader(datasets["validation"])
 
-    # Get a batch and print shapes
-    for batch in train_loader:
-        print("Training batch shapes:")
-        print(f"Image shape: {batch['image'].shape}")
-        print(f"Mask shape: {batch['mask'].shape}")
-        break
+    # Initialize lists to store valid files
+    valid_train_files = []
+    valid_val_files = []
 
-    for batch in val_loader:
-        print("\nValidation batch shapes:")
-        print(f"Image shape: {batch['image'].shape}")
-        print(f"Mask shape: {batch['mask'].shape}")
-        break
+    # Process training data
+    print("Processing training data...")
+    for i, data in enumerate(train_loader):
+        try:
+            # Check if data can be loaded correctly
+            _ = data["image"].shape
+            _ = data["mask"].shape
+            # If no error, add file to valid list
+            valid_train_files.append(dataset.train_list[i])
+            if i % 100 == 0:
+                print(f"Processed {i} training files")
+        except Exception as e:
+            print(f"Error in training file {i}: {str(e)}")
+            continue
+
+    # Process validation data
+    print("\nProcessing validation data...")
+    for i, data in enumerate(val_loader):
+        try:
+            # Check if data can be loaded correctly
+            _ = data["image"].shape
+            _ = data["mask"].shape
+            # If no error, add file to valid list
+            valid_val_files.append(dataset.val_list[i])
+            if i % 100 == 0:
+                print(f"Processed {i} validation files")
+        except Exception as e:
+            print(f"Error in validation file {i}: {str(e)}")
+            continue
+
+    # Save valid files to json
+    valid_files = {"train": valid_train_files, "validation": valid_val_files}
+
+    with open("valid_files.json", "w") as f:
+        json.dump(valid_files, f, indent=4)
+
+    print(f"\nProcessing complete!")
+    print(f"Valid training files: {len(valid_train_files)}/{len(dataset.train_list)}")
+    print(f"Valid validation files: {len(valid_val_files)}/{len(dataset.val_list)}")
