@@ -20,7 +20,7 @@ def get_transforms(img_size=384, depth=320, mask_patch_size=32, patch_size=16, m
         [
             LoadImaged(keys=["image"]),
             EnsureChannelFirstd(keys=["image"]),
-            Orientationd(keys=["image"], axcodes="RAS"),
+            # Orientationd(keys=["image"], axcodes="RAS"),
             Spacingd(
                 keys=["image"],
                 pixdim=(1.0, 1.0, 1.0),
