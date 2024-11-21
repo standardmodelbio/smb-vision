@@ -1,0 +1,36 @@
+import json
+import os
+
+import boto3
+
+
+def download_nifti_from_s3(json_file):
+    # Initialize S3 client
+    s3_client = boto3.client("s3")
+
+    # Read JSON file
+    with open(json_file) as f:
+        data = json.load(f)
+
+    # Download each nifti file
+    for sample in data:
+        path = sample["image"]
+        bucket_name = "s3://smb-dev-us-east-2-data/datasets/idc2niix/"
+        key = "/".join(path.split("/")[2:])
+        local_file = "../nifti_files/" + key
+
+        # Create local directory if needed
+        os.makedirs(os.path.dirname("../nifti_files/"), exist_ok=True)
+
+        # Download file
+        try:
+            s3_client.download_file(bucket_name, key, local_file)
+            print(f"Downloaded {path}")
+        except Exception as e:
+            print(f"Error downloading {path}: {e}")
+
+
+if __name__ == "__main__":
+    # Parse command line arguments
+    json_file = input("Enter the path to the JSON file: ")
+    download_nifti_from_s3(json_file)
