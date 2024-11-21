@@ -127,12 +127,11 @@ class MIMDataset:
         self.mask_ratio = mask_ratio
 
         data_list = json.load(open(json_path, "r"))
-        data_list = data_list[:8]
 
         if "train" in data_list.keys():
-            self.train_list = data_list["train"]
+            self.train_list = data_list["train"][:8]
         if "validation" in data_list.keys():
-            self.val_list = data_list["validation"]
+            self.val_list = data_list["validation"][:8]
 
     def val_transforms(
         self,
