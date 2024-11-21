@@ -2,7 +2,7 @@
 export WANDB_PROJECT=smb-vision
 export WANDB_LOG_MODEL=checkpoint
 
-python scripts/download_from_s3.py
+# python scripts/download_from_s3.py
 
 python src/run_mim.py \
     --json_path ./smb-vision-large-train-mim.json \
