@@ -76,7 +76,7 @@ def verify_transforms(file_dict, transforms):
         print(f"Image shape: {image.shape}")
         print(f"Mask shape: {mask.shape}")
 
-        if image.shape == (1, 384, 384, 320):
+        if image.shape == (320, 1, 384, 384):
             return file_dict, True
         else:
             return file_dict, False
@@ -117,10 +117,7 @@ def create_dataset_json(data_dir, output_file="dataset.json", val_split: Union[i
 
     # Process files in parallel
     with mp.Pool(processes=mp.cpu_count()) as pool:
-        results = pool.starmap(
-            partial(process_file, transforms=transforms, verify=verify),
-            process_files
-        )
+        results = pool.starmap(partial(process_file, transforms=transforms, verify=verify), process_files)
 
     # Filter successful results
     files = [file_dict for file_dict, success in results if success]
