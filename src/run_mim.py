@@ -289,6 +289,7 @@ def main():
         cache_dir="./cache/",
         downsample_ratio=[1.0, 1.0, 1.0],
         mask_ratio=data_args.mask_ratio,
+        dist=True,
     )
     ds = mim_data.setup("train")
 
