@@ -21,6 +21,7 @@ from monai.transforms import (
     ToTensord,
     Transform,
 )
+from tqdm import tqdm
 
 
 def get_transforms(img_size=384, depth=320, mask_patch_size=32, patch_size=16, mask_ratio=0.75):
@@ -114,10 +115,17 @@ def create_dataset_json(data_dir, output_file="dataset.json", val_split: Union[i
         for filename in filenames:
             if filename.endswith(".nii.gz"):
                 process_files.append((filename, root))
+    print(f"{len(process_files)} nitis in total...")
 
     # Process files in parallel
     with mp.Pool(processes=mp.cpu_count()) as pool:
-        results = pool.starmap(partial(process_file, transforms=transforms, verify=verify), process_files)
+        results = list(
+            tqdm(
+                pool.starmap(partial(process_file, transforms=transforms, verify=verify), process_files),
+                total=len(process_files),
+                desc="Processing files",
+            )
+        )
 
     # Filter successful results
     files = [file_dict for file_dict, success in results if success]
