@@ -69,7 +69,7 @@ def verify_transforms(file_dict, transforms):
 
     # Check image shape
     # print(transformed)
-    image = transformed[0][0]["image"]
+    image = transformed[0]["image"]
     # mask = transformed[0][0]["mask"]
 
     print(image.min())
