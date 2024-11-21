@@ -2,7 +2,7 @@
 export WANDB_PROJECT=smb-vision
 export WANDB_LOG_MODEL=checkpoint
 
-python src/run_mim.py \
+torchrun --nproc_per_node 8 src/run_mim.py \
     --json_path ./smb-vision-large-train-mim.json \
     --cache_dir ../cache/ \
     --learning_rate 3e-4 \
@@ -10,7 +10,7 @@ python src/run_mim.py \
     --max_grad_norm 1.0 \
     --warmup_steps 500 \
     --max_steps 1200 \
-    --per_device_train_batch_size 32 \
+    --per_device_train_batch_size 1 \
     --per_device_eval_batch_size 1 \
     --gradient_accumulation_steps 1 \
     --do_train true \
