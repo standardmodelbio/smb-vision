@@ -9,7 +9,7 @@ torchrun --nproc_per_node 8 src/run_mim.py \
     --lr_scheduler_type cosine \
     --max_grad_norm 1.0 \
     --warmup_steps 500 \
-    --num_train_epochs 10 \
+    --max_steps 1200 \
     --per_device_train_batch_size 32 \
     --per_device_eval_batch_size 1 \
     --gradient_accumulation_steps 1 \
