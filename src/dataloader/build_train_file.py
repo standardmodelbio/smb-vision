@@ -85,21 +85,21 @@ def create_dataset_json(data_dir, output_file="dataset.json", val_split: Union[i
                 file_path = os.path.join(root, filename)
                 file_dict = {"image": file_path}
 
-                try:
-                    if verify:
-                        print(f"\nVerifying transforms for {filename}")
-                        if verify_transforms([file_dict], transforms):
-                            files.append(file_dict)
-                            print(f"Successfully verified {filename}")
-                        else:
-                            print(f"Failed to verify {filename}")
+                # try:
+                if verify:
+                    print(f"\nVerifying transforms for {filename}")
+                    if verify_transforms([file_dict], transforms):
+                        files.append(file_dict)
+                        print(f"Successfully verified {filename}")
                     else:
-                        # Just check if file can be loaded
-                        img = nib.load(file_path)
-                        if len(img.get_fdata().shape) == 3:
-                            files.append(file_dict)
-                except Exception as e:
-                    print(f"Error processing {filename}: {str(e)}")
+                        print(f"Failed to verify {filename}")
+                else:
+                    # Just check if file can be loaded
+                    img = nib.load(file_path)
+                    if len(img.get_fdata().shape) == 3:
+                        files.append(file_dict)
+                # except Exception as e:
+                #     print(f"Error processing {filename}: {str(e)}")
 
     # Calculate split indices
     total = len(files)
