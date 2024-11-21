@@ -41,7 +41,7 @@ def get_transforms(img_size=384, depth=320, mask_patch_size=32, patch_size=16, m
                 b_max=1.0,
                 clip=True,
             ),
-            CropForegroundd(keys=["image"], source_key="image", allow_smaller=False),
+            # CropForegroundd(keys=["image"], source_key="image", allow_smaller=False),
             RandSpatialCropSamplesd(
                 keys=["image"],
                 roi_size=(img_size, img_size, depth),
