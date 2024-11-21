@@ -19,12 +19,12 @@ EOF
 mkdir -p ../nifti_files
 
 # Read each path and sync individually
-# while IFS= read -r path; do
-#     aws s3 cp s3://smb-dev-us-east-2-data/$path ../nifti_files/$path
-# done < s3_paths.txt
+while IFS= read -r path; do
+    aws s3 cp s3://smb-dev-us-east-2-data/$path ../nifti_files/$path
+done < s3_paths.txt
 #
 # Sync all files at once for better performance
-aws s3 sync s3://smb-dev-us-east-2-data/datasets/idc2niix/ ../nifti_files/
+# aws s3 sync s3://smb-dev-us-east-2-data/datasets/idc2niix/ ../nifti_files/
 
 # Clean up temporary file
 rm s3_paths.txt
