@@ -46,7 +46,7 @@ def get_transforms(img_size=384, depth=320, mask_patch_size=32, patch_size=16, m
                 keys=["image"],
                 roi_size=(img_size, img_size, depth),
                 random_size=False,
-                num_samples=1,
+                num_samples=2,
             ),
             # ToTensord(keys=["image"]),
             # SpatialPadd(keys=["image"], spatial_size=(img_size, img_size, depth)),
