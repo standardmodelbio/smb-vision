@@ -15,12 +15,12 @@ def download_nifti_from_s3(json_file):
     # Download each nifti file
     for sample in data["train"] + data["validation"]:
         path = sample["image"]
-        bucket_name = "s3://smb-dev-us-east-2-data/datasets/idc2niix/"
-        key = "/".join(path.split("/")[2:])
-        local_file = "../nifti_files/" + key
+        bucket_name = "s3://smb-dev-us-east-2-data/"
+        key = "datasets/idc2niix/" + "/".join(path.split("/")[2:])
+        local_file = "../nifti_files/" + "/".join(path.split("/")[2:])
 
         # Create local directory if needed
-        os.makedirs(os.path.dirname("../nifti_files/"), exist_ok=True)
+        # os.makedirs(os.path.dirname("../nifti_files/"), exist_ok=True)
 
         # Download file
         try:
