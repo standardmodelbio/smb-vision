@@ -32,5 +32,5 @@ def download_nifti_from_s3(json_file):
 
 if __name__ == "__main__":
     # Parse command line arguments
-    json_file = input("Enter the path to the JSON file: ")
+    json_file = "./smb-vision-large-train-mim.json"
     download_nifti_from_s3(json_file)
