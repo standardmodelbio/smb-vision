@@ -129,9 +129,9 @@ class MIMDataset:
         data_list = json.load(open(json_path, "r"))
 
         if "train" in data_list.keys():
-            self.train_list = data_list["train"][:8]
+            self.train_list = data_list["train"]
         if "validation" in data_list.keys():
-            self.val_list = data_list["validation"][:8]
+            self.val_list = data_list["validation"]
 
     def val_transforms(
         self,
