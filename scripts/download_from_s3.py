@@ -20,7 +20,7 @@ def download_nifti_from_s3(json_file):
         local_file = "../nifti_files/" + "/".join(path.split("/")[2:])
 
         # Create local directory if needed
-        # os.makedirs(os.path.dirname("../nifti_files/"), exist_ok=True)
+        os.makedirs(os.path.dirname(local_file), exist_ok=True)
 
         # Download file
         try:
