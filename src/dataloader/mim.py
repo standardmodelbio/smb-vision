@@ -4,11 +4,7 @@ from typing import Optional, Sequence
 import numpy as np
 import torch
 import torch.distributed as ptdist
-from monai.data import (
-    CacheDataset,
-    PersistentDataset,
-    partition_dataset,
-)
+from monai.data import CacheDataset, IterableDataset, PersistentDataset, partition_dataset
 from monai.data.utils import pad_list_data_collate
 from monai.transforms import (
     Compose,
@@ -230,15 +226,15 @@ class MIMDataset:
                     transform=self.val_transforms(),
                 )
             else:
-                train_ds = PersistentDataset(
+                train_ds = IterableDataset(
                     train_partition,
                     transform=self.train_transforms(),
-                    cache_dir=self.cache_dir,
+                    # cache_dir=self.cache_dir,
                 )
-                valid_ds = PersistentDataset(
+                valid_ds = IterableDataset(
                     valid_partition,
                     transform=self.val_transforms(),
-                    cache_dir=self.cache_dir,
+                    # cache_dir=self.cache_dir,
                 )
 
             return {"train": train_ds, "validation": valid_ds}
