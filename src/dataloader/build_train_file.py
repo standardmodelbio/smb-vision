@@ -63,6 +63,7 @@ def verify_transforms(file_dict, transforms):
     transformed = transforms(file_dict)
 
     # Check image shape
+    print(transformed)
     image = transformed[0]["image"]
     mask = transformed[0]["mask"]
 
