@@ -96,7 +96,7 @@ def create_dataset_json(data_dir, output_file="dataset.json", val_split: Union[i
                 # try:
                 if verify:
                     print(f"\nVerifying transforms for {filename}")
-                    if verify_transforms([file_dict], transforms):
+                    if verify_transforms(file_dict, transforms):
                         files.append(file_dict)
                         print(f"Successfully verified {filename}")
                     else:
