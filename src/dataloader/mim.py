@@ -164,28 +164,28 @@ class MIMDataset:
                     clip=True,
                 ),
                 CropForegroundd(keys=["image"], source_key="image"),
-                # RandSpatialCropSamplesd(
-                #     keys=["image"],
-                #     roi_size=(self.img_size, self.img_size, self.depth),
-                #     random_size=False,
-                #     num_samples=1,
-                # ),
-                # SpatialPadd(
-                #     keys=["image"],
-                #     spatial_size=(self.img_size, self.img_size, self.depth),
-                # ),
-                # # RandScaleIntensityd(keys="image", factors=0.1, prob=0.5),
-                # # RandShiftIntensityd(keys="image", offsets=0.1, prob=0.5),
-                # ToTensord(keys=["image"]),
-                # PermuteImage(),
-                # # Add custom transform to generate mask
-                # GenerateMask(
-                #     input_size=self.img_size,
-                #     depth=self.depth,
-                #     mask_patch_size=self.mask_patch_size,
-                #     model_patch_size=self.patch_size,
-                #     mask_ratio=self.mask_ratio,
-                # ),
+                RandSpatialCropSamplesd(
+                    keys=["image"],
+                    roi_size=(self.img_size, self.img_size, self.depth),
+                    random_size=False,
+                    num_samples=1,
+                ),
+                SpatialPadd(
+                    keys=["image"],
+                    spatial_size=(self.img_size, self.img_size, self.depth),
+                ),
+                # RandScaleIntensityd(keys="image", factors=0.1, prob=0.5),
+                # RandShiftIntensityd(keys="image", offsets=0.1, prob=0.5),
+                ToTensord(keys=["image"]),
+                PermuteImage(),
+                # Add custom transform to generate mask
+                GenerateMask(
+                    input_size=self.img_size,
+                    depth=self.depth,
+                    mask_patch_size=self.mask_patch_size,
+                    model_patch_size=self.patch_size,
+                    mask_ratio=self.mask_ratio,
+                ),
             ]
         )
 
@@ -340,5 +340,5 @@ if __name__ == "__main__":
     for batch in val_loader:
         print("\nValidation batch shapes:")
         print(f"Image shape: {batch['image'].shape}")
-        # print(f"Mask shape: {batch['mask'].shape}")
-        # break
+        print(f"Mask shape: {batch['mask'].shape}")
+        break
