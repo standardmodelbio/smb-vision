@@ -20,7 +20,7 @@ def get_transforms(img_size=384, depth=320, mask_patch_size=32, patch_size=16, m
         [
             LoadImaged(keys=["image"]),
             EnsureChannelFirstd(keys=["image"]),
-            # Orientationd(keys=["image"], axcodes="RAS"),
+            Orientationd(keys=["image"], axcodes="RAS"),
             Spacingd(
                 keys=["image"],
                 pixdim=(1.0, 1.0, 1.0),
@@ -34,26 +34,26 @@ def get_transforms(img_size=384, depth=320, mask_patch_size=32, patch_size=16, m
                 b_max=1.0,
                 clip=True,
             ),
-            # CropForegroundd(keys=["image"], source_key="image"),
+            CropForegroundd(keys=["image"], source_key="image"),
             RandSpatialCropSamplesd(
                 keys=["image"],
                 roi_size=(img_size, img_size, depth),
                 random_size=False,
                 num_samples=1,
             ),
-            SpatialPadd(
-                keys=["image"],
-                spatial_size=(img_size, img_size, depth),
-            ),
-            ToTensord(keys=["image"]),
-            PermuteImage(),
-            GenerateMask(
-                input_size=img_size,
-                depth=depth,
-                mask_patch_size=mask_patch_size,
-                model_patch_size=patch_size,
-                mask_ratio=mask_ratio,
-            ),
+            # SpatialPadd(
+            #     keys=["image"],
+            #     spatial_size=(img_size, img_size, depth),
+            # ),
+            # ToTensord(keys=["image"]),
+            # PermuteImage(),
+            # GenerateMask(
+            #     input_size=img_size,
+            #     depth=depth,
+            #     mask_patch_size=mask_patch_size,
+            #     model_patch_size=patch_size,
+            #     mask_ratio=mask_ratio,
+            # ),
         ]
     )
 
