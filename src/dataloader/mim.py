@@ -327,18 +327,18 @@ if __name__ == "__main__":
 
     # Setup dataset and get data loaders
     datasets = dataset.setup("train")
-    train_loader = dataset.train_dataloader(datasets["train"])
+    # train_loader = dataset.train_dataloader(datasets["train"])
     val_loader = dataset.val_dataloader(datasets["validation"])
 
     # Get a batch and print shapes
-    for batch in train_loader:
-        print("Training batch shapes:")
-        print(f"Image shape: {batch['image'].shape}")
-        print(f"Mask shape: {batch['mask'].shape}")
-        break
+    # for batch in train_loader:
+    #     print("Training batch shapes:")
+    #     print(f"Image shape: {batch['image'].shape}")
+    #     print(f"Mask shape: {batch['mask'].shape}")
+    #     break
 
     for batch in val_loader:
         print("\nValidation batch shapes:")
         print(f"Image shape: {batch['image'].shape}")
-        print(f"Mask shape: {batch['mask'].shape}")
-        break
+        # print(f"Mask shape: {batch['mask'].shape}")
+        # break
