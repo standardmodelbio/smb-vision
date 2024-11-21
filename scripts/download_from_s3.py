@@ -2,6 +2,7 @@ import json
 import os
 
 import boto3
+from tqdm import tqdm
 
 
 def download_nifti_from_s3(json_file):
@@ -13,7 +14,7 @@ def download_nifti_from_s3(json_file):
         data = json.load(f)
 
     # Download each nifti file
-    for sample in data["train"] + data["validation"]:
+    for sample in tqdm(data["train"] + data["validation"]):
         path = sample["image"]
         bucket_name = "smb-dev-us-east-2-data"
         key = "datasets/idc2niix/" + "/".join(path.split("/")[2:])
