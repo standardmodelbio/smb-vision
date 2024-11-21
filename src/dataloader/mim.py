@@ -343,6 +343,7 @@ if __name__ == "__main__":
             _ = data["mask"].shape
             # If no error, add file to valid list
             valid_train_files.append(dataset.train_list[i])
+            print(dataset.train_list[i])
             if i % 100 == 0:
                 print(f"Processed {i} training files")
         except Exception as e:
