@@ -155,6 +155,10 @@ class MIMDataset:
                     pixdim=self.downsample_ratio,
                     mode=("bilinear"),
                 ),
+                SpatialPadd(
+                    keys=["image"],
+                    spatial_size=(self.img_size, self.img_size, self.depth),
+                ),
                 ScaleIntensityRanged(
                     keys=["image"],
                     a_min=-175,
@@ -169,10 +173,6 @@ class MIMDataset:
                     roi_size=(self.img_size, self.img_size, self.depth),
                     random_size=False,
                     num_samples=1,
-                ),
-                SpatialPadd(
-                    keys=["image"],
-                    spatial_size=(self.img_size, self.img_size, self.depth),
                 ),
                 # RandScaleIntensityd(keys="image", factors=0.1, prob=0.5),
                 # RandShiftIntensityd(keys="image", offsets=0.1, prob=0.5),
