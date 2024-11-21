@@ -66,10 +66,10 @@ def verify_transforms(file_dict, transforms):
         # Check image shape
         # print(transformed)
         image = transformed[0][0]["image"]
-        mask = transformed[0][0]["mask"]
+        # mask = transformed[0][0]["mask"]
 
         print(f"Image shape: {image.shape}")
-        print(f"Mask shape: {mask.shape}")
+        # print(f"Mask shape: {mask.shape}")
 
         return True
     except Exception as e:
