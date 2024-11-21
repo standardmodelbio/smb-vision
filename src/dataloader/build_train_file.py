@@ -48,8 +48,8 @@ def get_transforms(img_size=384, depth=320, mask_patch_size=32, patch_size=16, m
                 random_size=False,
                 num_samples=1,
             ),
-            SpatialPadd(keys=["image"], spatial_size=(img_size, img_size, depth), method="end"),
-            # ToTensord(keys=["image"]),
+            ToTensord(keys=["image"]),
+            SpatialPadd(keys=["image"], spatial_size=(img_size, img_size, depth)),
             # PermuteImage(),
             # GenerateMask(
             #     input_size=img_size,
