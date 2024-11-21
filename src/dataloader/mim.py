@@ -318,7 +318,7 @@ if __name__ == "__main__":
         cache_dir="./cache",
         batch_size=1,
         val_batch_size=1,
-        num_workers=32,
+        num_workers=8,
         cache_num=0,
         cache_rate=0.0,
         dist=False,
