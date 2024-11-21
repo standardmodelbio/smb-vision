@@ -33,14 +33,14 @@ def get_transforms(img_size=384, depth=320, mask_patch_size=32, patch_size=16, m
                 pixdim=(1.0, 1.0, 1.0),
                 mode=("bilinear"),
             ),
-            ScaleIntensityRanged(
-                keys=["image"],
-                a_min=-175,
-                a_max=250,
-                b_min=0.0,
-                b_max=1.0,
-                clip=True,
-            ),
+            # ScaleIntensityRanged(
+            #     keys=["image"],
+            #     a_min=-175,
+            #     a_max=250,
+            #     b_min=0.0,
+            #     b_max=1.0,
+            #     clip=True,
+            # ),
             CropForegroundd(keys=["image"], source_key="image", allow_smaller=False),
             RandSpatialCropSamplesd(
                 keys=["image"],
@@ -48,10 +48,10 @@ def get_transforms(img_size=384, depth=320, mask_patch_size=32, patch_size=16, m
                 random_size=False,
                 num_samples=1,
             ),
-            SpatialPadd(
-                keys=["image"],
-                spatial_size=(img_size, img_size, depth),
-            ),
+            # SpatialPadd(
+            #     keys=["image"],
+            #     spatial_size=(img_size, img_size, depth),
+            # ),
             # ToTensord(keys=["image"]),
             # PermuteImage(),
             # GenerateMask(
@@ -75,7 +75,8 @@ def verify_transforms(file_dict, transforms):
         image = transformed[0][0]["image"]
         # mask = transformed[0][0]["mask"]
 
-        print(image)
+        print(image.min())
+        print(image.max())
         print(f"Image shape: {image.shape}")
         # print(f"Mask shape: {mask.shape}")
 
