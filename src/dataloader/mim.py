@@ -127,6 +127,7 @@ class MIMDataset:
         self.mask_ratio = mask_ratio
 
         data_list = json.load(open(json_path, "r"))
+        data_list = data_list[:8]
 
         if "train" in data_list.keys():
             self.train_list = data_list["train"]
@@ -226,15 +227,15 @@ class MIMDataset:
                     transform=self.val_transforms(),
                 )
             else:
-                train_ds = IterableDataset(
+                train_ds = PersistentDataset(
                     train_partition,
                     transform=self.train_transforms(),
-                    # cache_dir=self.cache_dir,
+                    cache_dir=self.cache_dir,
                 )
-                valid_ds = IterableDataset(
+                valid_ds = PersistentDataset(
                     valid_partition,
                     transform=self.val_transforms(),
-                    # cache_dir=self.cache_dir,
+                    cache_dir=self.cache_dir,
                 )
 
             return {"train": train_ds, "validation": valid_ds}
