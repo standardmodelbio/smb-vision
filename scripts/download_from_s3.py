@@ -15,7 +15,7 @@ def download_nifti_from_s3(json_file):
     # Download each nifti file
     for sample in data["train"] + data["validation"]:
         path = sample["image"]
-        bucket_name = "s3://smb-dev-us-east-2-data"
+        bucket_name = "smb-dev-us-east-2-data"
         key = "datasets/idc2niix/" + "/".join(path.split("/")[2:])
         local_file = "../nifti_files/" + "/".join(path.split("/")[2:])
 
