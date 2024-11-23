@@ -159,7 +159,7 @@ class MIMDataset:
                     b_max=1.0,
                     clip=True,
                 ),
-                CropForegroundd(keys=["image"], source_key="image"),
+                CropForegroundd(keys=["image"], source_key="image", allow_smaller=False),
                 RandSpatialCropSamplesd(
                     keys=["image"],
                     roi_size=(self.img_size, self.img_size, self.depth),
