@@ -24,6 +24,7 @@ python src/run_mim.py \
     --save_steps 1000 \
     --gradient_checkpointing true \
     --bf16 true \
+    --deepspeed ds_configs/ds_z0_config.json \
     --logging_steps 1 \
     --report_to wandb \
     --run_name smb-vision-large-1120

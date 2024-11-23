@@ -165,6 +165,6 @@ cython_debug/
 saves/
 cache/
 nifti_files/
+data/
 *.nii.gz
-*.json
 *.DS_Store
