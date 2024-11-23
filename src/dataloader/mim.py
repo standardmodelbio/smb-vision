@@ -182,7 +182,8 @@ class MIMDataset:
                     model_patch_size=self.patch_size,
                     mask_ratio=self.mask_ratio,
                 ),
-            ]
+            ],
+            lazy=True,
         )
 
         return transforms
