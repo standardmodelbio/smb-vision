@@ -16,7 +16,6 @@ python src/run_mim.py \
     --per_device_eval_batch_size 1 \
     --gradient_accumulation_steps 1 \
     --dataloader_num_workers 24 \
-    --dataloader_prefetch_factor 1 \
     --do_train true \
     --do_eval true \
     --overwrite_output_dir true \
