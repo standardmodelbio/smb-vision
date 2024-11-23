@@ -227,15 +227,15 @@ class MIMDataset:
                     transform=self.val_transforms(),
                 )
             else:
-                train_ds = Dataset(
+                train_ds = PersistentDataset(
                     train_partition,
                     transform=self.train_transforms(),
-                    # cache_dir=self.cache_dir,
+                    cache_dir=self.cache_dir,
                 )
-                valid_ds = Dataset(
+                valid_ds = PersistentDataset(
                     valid_partition,
                     transform=self.val_transforms(),
-                    # cache_dir=self.cache_dir,
+                    cache_dir=self.cache_dir,
                 )
 
             return {"train": train_ds, "validation": valid_ds}
