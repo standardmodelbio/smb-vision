@@ -12,9 +12,9 @@ python src/run_mim.py \
     --max_grad_norm 1.0 \
     --warmup_steps 200 \
     --num_train_epochs 30 \
-    --per_device_train_batch_size 32 \
+    --per_device_train_batch_size 4 \
     --per_device_eval_batch_size 1 \
-    --gradient_accumulation_steps 4 \
+    --gradient_accumulation_steps 1 \
     --do_train true \
     --do_eval true \
     --overwrite_output_dir true \
