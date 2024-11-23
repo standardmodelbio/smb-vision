@@ -336,8 +336,8 @@ if __name__ == "__main__":
     for i, data in enumerate(train_loader):
         try:
             # Check if data can be loaded correctly
-            _ = data["image"].shape
-            _ = data["mask"].shape
+            print(data["image"].shape)
+            print(data["mask"].shape)
             # If no error, add file to valid list
             valid_train_files.append(dataset.train_list[i])
             print(dataset.train_list[i])
