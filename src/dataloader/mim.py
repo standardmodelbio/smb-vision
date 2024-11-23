@@ -164,7 +164,7 @@ class MIMDataset:
                     keys=["image"],
                     roi_size=(self.img_size, self.img_size, self.depth),
                     random_size=False,
-                    num_samples=2,
+                    num_samples=1,
                 ),
                 SpatialPadd(
                     keys=["image"],
