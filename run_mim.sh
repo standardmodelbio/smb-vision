@@ -22,7 +22,6 @@ python src/run_mim.py \
     --eval_strategy "no" \
     --eval_steps 500 \
     --save_steps 1000 \
-    --gradient_checkpointing true \
     --bf16 true \
     --deepspeed ds_configs/ds_z2_config.json \
     --logging_steps 1 \
