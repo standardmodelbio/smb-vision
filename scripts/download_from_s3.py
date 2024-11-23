@@ -26,7 +26,7 @@ def download_nifti_from_s3(json_file):
         # Download file
         try:
             s3_client.download_file(bucket_name, key, local_file)
-            print(f"Downloaded {path}")
+            # print(f"Downloaded {path}")
         except Exception as e:
             print(f"Error downloading {path}: {e}")
 
