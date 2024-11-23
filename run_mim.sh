@@ -11,8 +11,8 @@ python src/run_mim.py \
     --lr_scheduler_type cosine \
     --max_grad_norm 1.0 \
     --warmup_steps 200 \
-    --num_train_epochs 30 \
-    --per_device_train_batch_size 4 \
+    --num_train_epochs 10 \
+    --per_device_train_batch_size 12 \
     --per_device_eval_batch_size 1 \
     --gradient_accumulation_steps 1 \
     --do_train true \
