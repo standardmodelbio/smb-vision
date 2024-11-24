@@ -192,7 +192,7 @@ def create_dataset_json(
 
 if __name__ == "__main__":
     create_dataset_json(
-        "s3://smb-dev-us-east-2-data/datasets/idc2niix-ct/",
+        "s3://smb-dev-us-east-2-data/datasets/idc2niix/",
         output_file="./smb-vision-large-train-mim.json",
         val_split=100,
         verify=True,
