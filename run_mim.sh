@@ -12,9 +12,9 @@ python src/run_mim.py \
     --max_grad_norm 1.0 \
     --warmup_steps 200 \
     --num_train_epochs 10 \
-    --per_device_train_batch_size 24 \
+    --per_device_train_batch_size 36 \
     --per_device_eval_batch_size 1 \
-    --gradient_accumulation_steps 4 \
+    --gradient_accumulation_steps 1 \
     --do_train true \
     --do_eval true \
     --overwrite_output_dir true \
@@ -24,6 +24,7 @@ python src/run_mim.py \
     --save_steps 1000 \
     --bf16 true \
     --deepspeed ds_configs/ds_z2_config.json \
+    --gradient_checkpointing true \
     --logging_steps 1 \
     --report_to wandb \
     --run_name smb-vision-large-1120
