@@ -66,10 +66,8 @@ def verify_transforms(file_dict, transforms, temp_path):
 
         # Check image shape
         image = transformed[0]["image"]
-        mask = transformed[0]["mask"]
 
         print(f"Image shape: {image.shape}")
-        print(f"Mask shape: {mask.shape}")
 
         # Clean up temp file
         if os.path.exists(temp_path):
