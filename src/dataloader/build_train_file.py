@@ -100,7 +100,7 @@ def process_file(s3_client, bucket, key, transforms, verify):
             result = verify_transforms(file_dict, transforms, temp_path)
             if result[1]:  # If validation successful
                 # Copy to validated folder
-                validated_key = "datasets/idc2niix-ct/" + key
+                validated_key = "datasets/idc2niix-ct/" + "/".join(key.split("/")[2:])
                 s3_client.copy_object(Bucket=bucket, CopySource={"Bucket": bucket, "Key": key}, Key=validated_key)
                 print(f"Copied validated file to: {validated_key}")
             return result
