@@ -1,9 +1,12 @@
 import json
 import multiprocessing as mp
 import os
+import tempfile
+from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from typing import Union
 
+import boto3
 import nibabel as nib
 
 # Import the MaskGenerator and transforms from mim.py
@@ -38,8 +41,8 @@ def get_transforms(img_size=384, depth=320, mask_patch_size=32, patch_size=16, m
             ),
             ScaleIntensityRanged(
                 keys=["image"],
-                a_min=-350,
-                a_max=1024,
+                a_min=-175,
+                a_max=250,
                 b_min=0.0,
                 b_max=1.0,
                 clip=True,
@@ -51,21 +54,12 @@ def get_transforms(img_size=384, depth=320, mask_patch_size=32, patch_size=16, m
                 random_size=False,
                 num_samples=1,
             ),
-            # ToTensord(keys=["image"]),
             SpatialPadd(keys=["image"], spatial_size=(img_size, img_size, depth)),
-            PermuteImage(),
-            GenerateMask(
-                input_size=img_size,
-                depth=depth,
-                mask_patch_size=mask_patch_size,
-                model_patch_size=patch_size,
-                mask_ratio=mask_ratio,
-            ),
         ]
     )
 
 
-def verify_transforms(file_dict, transforms):
+def verify_transforms(file_dict, transforms, temp_path):
     """Apply transforms to a single file and verify the output"""
     try:
         transformed = transforms(file_dict)
@@ -77,55 +71,87 @@ def verify_transforms(file_dict, transforms):
         print(f"Image shape: {image.shape}")
         print(f"Mask shape: {mask.shape}")
 
+        # Clean up temp file
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
         if image.shape == (320, 1, 384, 384):
             return file_dict, True
         else:
             return file_dict, False
     except Exception as e:
         print(f"Transform failed: {str(e)}")
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
         return file_dict, False
 
 
-def process_file(filename, root, transforms, verify):
-    file_path = os.path.join(root, filename)
-    file_dict = {"image": file_path}
-
+def process_file(s3_client, bucket, key, transforms, verify):
     try:
+        # Create temp file
+        temp_file = tempfile.NamedTemporaryFile(suffix=".nii.gz", delete=False)
+        temp_path = temp_file.name
+        temp_file.close()
+
+        # Download file from S3
+        s3_client.download_file(bucket, key, temp_path)
+        file_dict = {"image": temp_path}
+
         if verify:
-            print(f"\nVerifying transforms for {filename}")
-            return verify_transforms(file_dict, transforms)
+            print(f"\nVerifying transforms for {key}")
+            result = verify_transforms(file_dict, transforms, temp_path)
+            if result[1]:  # If validation successful
+                # Copy to validated folder
+                validated_key = "idc2niix-ct/" + os.path.basename(key)
+                s3_client.copy_object(Bucket=bucket, CopySource={"Bucket": bucket, "Key": key}, Key=validated_key)
+                print(f"Copied validated file to: {validated_key}")
+            return result
         else:
             # Just check if file can be loaded
-            img = nib.load(file_path)
+            img = nib.load(temp_path)
             if len(img.get_fdata().shape) == 3:
+                os.remove(temp_path)
                 return file_dict, True
+            os.remove(temp_path)
             return file_dict, False
     except Exception as e:
-        print(f"Error processing {filename}: {str(e)}")
+        print(f"Error processing {key}: {str(e)}")
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
         return file_dict, False
 
 
-def create_dataset_json(data_dir, output_file="dataset.json", val_split: Union[int, float] = 0.2, verify=True):
+def create_dataset_json(s3_path, output_file="dataset.json", val_split: Union[int, float] = 0.2, verify=True):
     transforms = get_transforms() if verify else None
-    files = []
+    s3_client = boto3.client("s3")
 
-    # Get all relevant files
+    # Parse S3 path
+    bucket = s3_path.split("/")[2]
+    prefix = "/".join(s3_path.split("/")[3:])
+
+    # List all objects in bucket with prefix
+    paginator = s3_client.get_paginator("list_objects_v2")
+    files = []
     process_files = []
-    for root, _, filenames in os.walk(data_dir):
-        for filename in filenames:
-            if filename.endswith(".nii.gz"):
-                process_files.append((filename, root))
+
+    for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+        for obj in page.get("Contents", []):
+            if obj["Key"].endswith(".nii.gz"):
+                process_files.append((s3_client, bucket, obj["Key"]))
+
     print(f"{len(process_files)} nitis in total...")
 
-    # Process files in parallel
-    with mp.Pool(processes=mp.cpu_count()) as pool:
-        results = list(
-            tqdm(
-                pool.starmap(partial(process_file, transforms=transforms, verify=verify), process_files),
-                total=len(process_files),
-                desc="Processing files",
-            )
-        )
+    # Process files using ThreadPoolExecutor
+    max_workers = min(32, len(process_files))  # Limit max threads
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = []
+        for args in process_files:
+            future = executor.submit(process_file, *args, transforms=transforms, verify=verify)
+            futures.append(future)
+
+        results = []
+        for future in tqdm(futures, total=len(process_files), desc="Processing files"):
+            results.append(future.result())
 
     # Filter successful results
     files = [file_dict for file_dict, success in results if success]
@@ -151,8 +177,8 @@ def create_dataset_json(data_dir, output_file="dataset.json", val_split: Union[i
 
 if __name__ == "__main__":
     create_dataset_json(
-        "../nifti_files",
+        "s3://bucket-name/nifti_files",
         output_file="./smb-vision-large-train-mim.json",
         val_split=100,
-        verify=True,  # Set to True to verify transforms
+        verify=True,
     )
