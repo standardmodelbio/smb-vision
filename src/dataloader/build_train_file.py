@@ -67,7 +67,7 @@ def verify_transforms(file_dict, transforms, temp_path):
         # Check image shape
         image = transformed[0]["image"]
 
-        print(f"Image shape: {image.shape}")
+        # print(f"Image shape: {image.shape}")
 
         # Clean up temp file
         if os.path.exists(temp_path):
@@ -96,13 +96,13 @@ def process_file(s3_client, bucket, key, transforms, verify):
         file_dict = {"image": temp_path}
 
         if verify:
-            print(f"\nVerifying transforms for {key}")
+            # print(f"\nVerifying transforms for {key}")
             result = verify_transforms(file_dict, transforms, temp_path)
             if result[1]:  # If validation successful
                 # Copy to validated folder
                 validated_key = "datasets/idc2niix-ct/" + "/".join(key.split("/")[2:])
                 s3_client.copy_object(Bucket=bucket, CopySource={"Bucket": bucket, "Key": key}, Key=validated_key)
-                print(f"Copied validated file to: {validated_key}")
+                # print(f"Copied validated file to: {validated_key}")
             return result
         else:
             # Just check if file can be loaded
