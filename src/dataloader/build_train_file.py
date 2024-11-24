@@ -102,7 +102,7 @@ def process_file(s3_client, bucket, key, transforms, verify):
             result = verify_transforms(file_dict, transforms, temp_path)
             if result[1]:  # If validation successful
                 # Copy to validated folder
-                validated_key = "idc2niix-ct/" + os.path.basename(key)
+                validated_key = "datasets/idc2niix-ct/" + os.path.basename(key)
                 s3_client.copy_object(Bucket=bucket, CopySource={"Bucket": bucket, "Key": key}, Key=validated_key)
                 print(f"Copied validated file to: {validated_key}")
             return result
@@ -121,7 +121,12 @@ def process_file(s3_client, bucket, key, transforms, verify):
         return file_dict, False
 
 
-def create_dataset_json(s3_path, output_file="dataset.json", val_split: Union[int, float] = 0.2, verify=True):
+def create_dataset_json(
+    s3_path="s3://smb-dev-us-east-2-data/datasets/idc2niix/",
+    output_file="dataset.json",
+    val_split: Union[int, float] = 0.2,
+    verify=True,
+):
     transforms = get_transforms() if verify else None
     s3_client = boto3.client("s3")
 
@@ -139,7 +144,7 @@ def create_dataset_json(s3_path, output_file="dataset.json", val_split: Union[in
             if obj["Key"].endswith(".nii.gz"):
                 process_files.append((s3_client, bucket, obj["Key"]))
 
-    print(f"{len(process_files)} nitis in total...")
+    print(f"{len(process_files)} niftis in total...")
 
     # Process files using ThreadPoolExecutor
     max_workers = min(32, len(process_files))  # Limit max threads
@@ -177,7 +182,7 @@ def create_dataset_json(s3_path, output_file="dataset.json", val_split: Union[in
 
 if __name__ == "__main__":
     create_dataset_json(
-        "s3://bucket-name/nifti_files",
+        "s3://smb-dev-us-east-2-data/datasets/idc2niix/",
         output_file="./smb-vision-large-train-mim.json",
         val_split=100,
         verify=True,
