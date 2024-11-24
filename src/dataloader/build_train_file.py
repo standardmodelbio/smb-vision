@@ -73,7 +73,7 @@ def verify_transforms(file_dict, transforms, temp_path):
         if os.path.exists(temp_path):
             os.remove(temp_path)
 
-        if image.shape == (320, 1, 384, 384):
+        if image.shape == (1, 384, 384, 320):
             return file_dict, True
         else:
             return file_dict, False
