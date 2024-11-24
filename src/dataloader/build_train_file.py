@@ -103,6 +103,7 @@ def process_file(s3_client, bucket, key, transforms, verify):
                 validated_key = "datasets/idc2niix-ct/" + "/".join(key.split("/")[2:])
                 s3_client.copy_object(Bucket=bucket, CopySource={"Bucket": bucket, "Key": key}, Key=validated_key)
                 # print(f"Copied validated file to: {validated_key}")
+                result[0]["image"] = "../nifti_files/" + "/".join(key.split("/")[2:])
             return result
         else:
             # Just check if file can be loaded
