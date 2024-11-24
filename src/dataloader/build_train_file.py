@@ -146,7 +146,7 @@ def create_dataset_json(
     print(f"{len(process_files)} niftis in total...")
 
     # Process files using ThreadPoolExecutor
-    max_workers = min(32, len(process_files))  # Limit max threads
+    max_workers = min(88, len(process_files))  # Limit max threads
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = []
         for args in process_files:
