@@ -139,7 +139,7 @@ def create_dataset_json(
     files = []
     process_files = []
 
-    for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+    for page in paginator.paginate(Bucket=bucket, Prefix=prefix, PaginationConfig={"MaxItems": 10}):
         for obj in page.get("Contents", []):
             if obj["Key"].endswith(".nii.gz"):
                 process_files.append((s3_client, bucket, obj["Key"]))
