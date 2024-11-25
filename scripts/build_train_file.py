@@ -1,0 +1,38 @@
+import glob
+import json
+import os
+import random
+
+
+def collect_nifti_files(directory_path, output_file="nifti_files.json", val_size=100):
+    # Get all nifti files in directory and subdirectories
+    nifti_files = glob.glob(os.path.join(directory_path, "**", "*.nii.gz"), recursive=True)
+
+    # Randomly shuffle files
+    random.shuffle(nifti_files)
+
+    # Split into train and val based on validation size
+    val_size = min(val_size, len(nifti_files))
+    train_files = nifti_files[val_size:]
+    val_files = nifti_files[:val_size]
+
+    # Create dictionary
+    data_split = {"train": train_files, "val": val_files}
+
+    # Save to json
+    with open(output_file, "w") as f:
+        json.dump(data_split, f, indent=2)
+
+    return data_split
+
+
+def main():
+    # Test the function
+    directory = "../nifti_files/"  # Replace with actual path
+    data = collect_nifti_files(directory, "./smb-vision-large-train-mim.json", val_size=100)
+    print(f"Found {len(data['train'])} training files")
+    print(f"Found {len(data['val'])} validation files")
+
+
+if __name__ == "__main__":
+    main()
