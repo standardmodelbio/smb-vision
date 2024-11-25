@@ -21,7 +21,7 @@ def collect_nifti_files(directory_path, output_file="nifti_files.json", val_size
     val_records = [{"image": path} for path in val_files]
 
     # Create dictionary
-    data_split = {"train": train_records, "val": val_records}
+    data_split = {"train": train_records, "validation": val_records}
 
     # Save to json
     with open(output_file, "w") as f:
