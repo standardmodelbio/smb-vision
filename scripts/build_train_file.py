@@ -35,7 +35,7 @@ def main():
     directory = "../nifti_files/"  # Replace with actual path
     data = collect_nifti_files(directory, "./smb-vision-large-train-mim.json", val_size=100)
     print(f"Found {len(data['train'])} training files")
-    print(f"Found {len(data['val'])} validation files")
+    print(f"Found {len(data['validation'])} validation files")
 
 
 if __name__ == "__main__":
