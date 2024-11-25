@@ -156,43 +156,43 @@ def create_dataset_json(
 
     print(f"{len(process_files)} niftis in total...")
 
-    # # Process files using ThreadPoolExecutor
-    # max_workers = min(88, len(process_files))  # Limit max threads
-    # with ThreadPoolExecutor(max_workers=max_workers) as executor:
-    #     futures = []
-    #     for args in process_files:
-    #         future = executor.submit(process_file, *args, transforms=transforms, verify=verify)
-    #         futures.append(future)
+    # Process files using ThreadPoolExecutor
+    max_workers = min(88, len(process_files))  # Limit max threads
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = []
+        for args in process_files:
+            future = executor.submit(process_file, *args, transforms=transforms, verify=verify)
+            futures.append(future)
 
-    #     results = []
-    #     for future in tqdm(futures, total=len(process_files), desc="Processing files"):
-    #         results.append(future.result())
+        results = []
+        for future in tqdm(futures, total=len(process_files), desc="Processing files"):
+            results.append(future.result())
 
-    # # Filter successful results
-    # files = [file_dict for file_dict, success in results if success]
+    # Filter successful results
+    files = [file_dict for file_dict, success in results if success]
 
-    # # Calculate split indices
-    # total = len(files)
-    # if isinstance(val_split, int):
-    #     val_size = val_split
-    # else:
-    #     val_size = int(total * val_split)
-    # train_size = total - val_size
-    # print(f"train_size is {train_size}, val_size is {val_size}")
+    # Calculate split indices
+    total = len(files)
+    if isinstance(val_split, int):
+        val_size = val_split
+    else:
+        val_size = int(total * val_split)
+    train_size = total - val_size
+    print(f"train_size is {train_size}, val_size is {val_size}")
 
-    # # Create dataset dict
-    # dataset = {"train": files[:train_size], "validation": files[train_size:]}
+    # Create dataset dict
+    dataset = {"train": files[:train_size], "validation": files[train_size:]}
 
-    # # Write to json file
-    # with open(output_file, "w") as f:
-    #     json.dump(dataset, f, indent=4)
+    # Write to json file
+    with open(output_file, "w") as f:
+        json.dump(dataset, f, indent=4)
 
-    # return dataset
+    return dataset
 
 
 if __name__ == "__main__":
     create_dataset_json(
-        "s3://smb-dev-us-east-2-data/datasets/idc2niix-ct/",
+        "s3://smb-dev-us-east-2-data/datasets/idc2niix/",
         output_file="./smb-vision-large-train-mim.json",
         val_split=100,
         verify=True,
