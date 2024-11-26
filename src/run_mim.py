@@ -359,7 +359,7 @@ def main():
             "decoder_intermediate_size": 2048,
             "norm_pix_loss": True,
             "attn_implementation": "flash_attention_2",
-            # "torch_dtype": "bfloat16",
+            "torch_dtype": "bfloat16",
         }
     )
 
