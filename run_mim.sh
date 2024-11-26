@@ -30,7 +30,7 @@ python src/run_mim.py \
     --eval_steps 500 \
     --save_steps 1000 \
     --bf16 true \
-    --deepspeed ds_configs/ds_z3_config.json \
+    --deepspeed ds_configs/ds_z2_config.json \
     --gradient_checkpointing true \
     --logging_steps 1 \
     --report_to wandb \
