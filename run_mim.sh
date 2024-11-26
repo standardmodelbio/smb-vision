@@ -5,7 +5,7 @@ export WANDB_LOG_MODEL=checkpoint
 # python scripts/download_from_s3.py
 
 # download data
-aws s3 sync s3://smb-dev-us-east-2-data/datasets/idc2niix-ct/ ../nifti_files/
+# aws s3 sync s3://smb-dev-us-east-2-data/datasets/idc2niix-ct/ ../nifti_files/
 
 # build train file
 python scripts/build_train_file.py
