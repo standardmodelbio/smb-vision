@@ -4,6 +4,9 @@ import os
 import random
 
 
+random.seed(42)
+
+
 def collect_nifti_files(directory_path, output_file="nifti_files.json", val_size=100):
     # Get all nifti files in directory and subdirectories
     nifti_files = glob.glob(os.path.join(directory_path, "**", "*.nii.gz"), recursive=True)

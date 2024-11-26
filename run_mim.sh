@@ -19,7 +19,7 @@ torchrun --nproc_per_node 4 src/run_mim.py \
     --max_grad_norm 1.0 \
     --warmup_ratio 0.01 \
     --num_train_epochs 10 \
-    --per_device_train_batch_size 16 \
+    --per_device_train_batch_size 32 \
     --dataloader_num_workers 12 \
     --per_device_eval_batch_size 1 \
     --gradient_accumulation_steps 1 \
@@ -31,7 +31,7 @@ torchrun --nproc_per_node 4 src/run_mim.py \
     --eval_steps 500 \
     --save_steps 100 \
     --bf16 true \
-    --gradient_checkpointing true \
+    --deepspeed ds_configs/ds_z2_config.json \
     --logging_steps 1 \
     --report_to wandb \
     --run_name smb-vision-large-1125

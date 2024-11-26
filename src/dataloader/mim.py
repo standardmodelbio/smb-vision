@@ -172,7 +172,7 @@ class MIMDataset:
                 ),
                 # RandScaleIntensityd(keys="image", factors=0.1, prob=0.5),
                 # RandShiftIntensityd(keys="image", offsets=0.1, prob=0.5),
-                ToTensord(keys=["image"], dtype=torch.bfloat16),
+                ToTensord(keys=["image"]),
                 PermuteImage(),
                 # Add custom transform to generate mask
                 GenerateMask(
@@ -227,15 +227,15 @@ class MIMDataset:
                     transform=self.val_transforms(),
                 )
             else:
-                train_ds = PersistentDataset(
+                train_ds = Dataset(
                     train_partition,
                     transform=self.train_transforms(),
-                    cache_dir=self.cache_dir,
+                    # cache_dir=self.cache_dir,
                 )
-                valid_ds = PersistentDataset(
+                valid_ds = Dataset(
                     valid_partition,
                     transform=self.val_transforms(),
-                    cache_dir=self.cache_dir,
+                    # cache_dir=self.cache_dir,
                 )
 
             return {"train": train_ds, "validation": valid_ds}
