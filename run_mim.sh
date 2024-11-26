@@ -20,6 +20,7 @@ torchrun --nproc_per_node 4 src/run_mim.py \
     --warmup_ratio 0.01 \
     --num_train_epochs 10 \
     --per_device_train_batch_size 16 \
+    --dataloader_num_workers 12 \
     --per_device_eval_batch_size 1 \
     --gradient_accumulation_steps 1 \
     --do_train true \
