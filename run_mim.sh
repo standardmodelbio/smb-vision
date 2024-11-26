@@ -25,12 +25,12 @@ torchrun --nproc_per_node 4 src/run_mim.py \
     --do_train true \
     --do_eval true \
     --overwrite_output_dir true \
-    --output_dir ./saves/smb-vision-large-1123 \
+    --output_dir ./saves/smb-vision-large-1125 \
     --eval_strategy "no" \
     --eval_steps 500 \
-    --save_steps 1000 \
+    --save_steps 100 \
     --bf16 true \
     --gradient_checkpointing true \
     --logging_steps 1 \
     --report_to wandb \
-    --run_name smb-vision-large-1123
+    --run_name smb-vision-large-1125
