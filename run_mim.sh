@@ -11,7 +11,7 @@ export WANDB_LOG_MODEL=checkpoint
 # python scripts/build_train_file.py
 
 # train
-python src/run_mim.py \
+torchrun --nproc_per_node 4 src/run_mim.py \
     --json_path ./smb-vision-large-train-mim.json \
     --cache_dir ../cache/ \
     --learning_rate 3e-4 \
@@ -30,7 +30,6 @@ python src/run_mim.py \
     --eval_steps 500 \
     --save_steps 1000 \
     --bf16 true \
-    --deepspeed ds_configs/ds_z2_config.json \
     --gradient_checkpointing true \
     --logging_steps 1 \
     --report_to wandb \
