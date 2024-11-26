@@ -11,7 +11,7 @@ export WANDB_LOG_MODEL=checkpoint
 python scripts/build_train_file.py
 
 # train
-python src/run_mim.py \
+torchrun --nproc_per_node 4 src/run_mim.py \
     --json_path ./smb-vision-large-train-mim.json \
     --cache_dir ../cache/ \
     --learning_rate 3e-4 \
@@ -19,8 +19,7 @@ python src/run_mim.py \
     --max_grad_norm 1.0 \
     --warmup_ratio 0.01 \
     --num_train_epochs 10 \
-    --per_device_train_batch_size 1 \
-    --dataloader_num_workers 12 \
+    --per_device_train_batch_size 16 \
     --per_device_eval_batch_size 1 \
     --gradient_accumulation_steps 1 \
     --do_train true \
@@ -31,7 +30,7 @@ python src/run_mim.py \
     --eval_steps 500 \
     --save_steps 100 \
     --bf16 true \
-    --deepspeed ds_configs/ds_z2_config.json \
+    --gradient_checkpointing true \
     --logging_steps 1 \
     --report_to wandb \
     --run_name smb-vision-large-1125
