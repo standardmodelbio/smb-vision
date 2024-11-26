@@ -8,7 +8,7 @@ export WANDB_LOG_MODEL=checkpoint
 # aws s3 sync s3://smb-dev-us-east-2-data/datasets/idc2niix-ct/ ../nifti_files/
 
 # build train file
-# python scripts/build_train_file.py
+python scripts/build_train_file.py
 
 # train
 torchrun --nproc_per_node 4 src/run_mim.py \
