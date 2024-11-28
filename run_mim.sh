@@ -31,7 +31,6 @@ python src/run_mim.py \
     --save_steps 500 \
     --bf16 true \
     --gradient_checkpointing true \
-    --deepspeed ds_configs/ds_z2_config.json \
     --resume_from_checkpoint saves/smb-vision-large-1125/checkpoint-7900 \
     --logging_steps 1 \
     --report_to wandb \
