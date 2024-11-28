@@ -8,7 +8,7 @@ export WANDB_LOG_MODEL=checkpoint
 # aws s3 sync s3://smb-dev-us-east-2-data/datasets/idc2niix-ct/ ../nifti_files/
 
 # build train file
-python scripts/build_train_file.py
+# python scripts/build_train_file.py
 
 # train
 python src/run_mim.py \
@@ -28,10 +28,11 @@ python src/run_mim.py \
     --output_dir ./saves/smb-vision-large-1125 \
     --eval_strategy "no" \
     --eval_steps 500 \
-    --save_steps 100 \
+    --save_steps 500 \
     --bf16 true \
     --gradient_checkpointing true \
     --deepspeed ds_configs/ds_z2_config.json \
+    --resume_from_checkpoint saves/smb-vision-large-1125/checkpoint-7900 \
     --logging_steps 1 \
     --report_to wandb \
     --run_name smb-vision-large-1125
