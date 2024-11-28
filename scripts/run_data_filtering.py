@@ -1,16 +1,11 @@
 import json
-import multiprocessing as mp
 import os
 import tempfile
 from concurrent.futures import ThreadPoolExecutor
-from functools import partial
 from typing import Union
 
 import boto3
 import nibabel as nib
-
-# Import the MaskGenerator and transforms from mim.py
-from mim import GenerateMask, PermuteImage
 from monai.transforms import (
     Compose,
     CropForegroundd,
@@ -21,8 +16,6 @@ from monai.transforms import (
     ScaleIntensityRanged,
     Spacingd,
     SpatialPadd,
-    ToTensord,
-    Transform,
 )
 from tqdm import tqdm
 
