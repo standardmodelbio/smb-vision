@@ -31,7 +31,7 @@ python src/run_mim.py \
     --save_steps 500 \
     --bf16 true \
     --gradient_checkpointing true \
-    --resume_from_checkpoint saves/smb-vision-large-1125/checkpoint-13200 \
+    --resume_from_checkpoint saves/smb-vision-large-1125/checkpoint-15800 \
     --logging_steps 1 \
     --report_to wandb \
     --run_name smb-vision-large-1125
