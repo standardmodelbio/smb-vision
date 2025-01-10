@@ -33,10 +33,10 @@ def build_json_from_nifti_files(train_dir, val_dir, output_json_path):
 
 if __name__ == "__main__":
     # Build json file of dataset paths
-    train_dir = "../mdanderson/public_data/train/CT/"
-    val_dir = "../mdanderson/public_data/valid/CT/"
-    json_path = "../data/dataset.json"
-    build_json_from_nifti_files(train_dir, val_dir, json_path)
+    # train_dir = "../mdanderson/public_data/train/CT/"
+    # val_dir = "../mdanderson/public_data/valid/CT/"
+    # json_path = "../data/dataset.json"
+    # build_json_from_nifti_files(train_dir, val_dir, json_path)
 
     # Example usage/testing of CTDataset
     dataset = CTDataset(
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     for batch in dataset.train_dataloader(data["train"]):
         image = batch["image"]
         print(image.shape)
-        print(dict(batch))
+        print(dict(image))
         break
 
     # Set device for computation
