@@ -48,7 +48,7 @@ def setup_dataset():
     logger.info("Setting up dataset...")
     try:
         dataset = CTDataset(
-            json_path="../data/dataset.json",
+            json_path="../data/dataset-v1.json",
             img_size=384,
             depth=320,
             downsample_ratio=[1.0, 1.0, 1.0],
