@@ -68,7 +68,7 @@ if __name__ == "__main__":
     # Process each batch
     for i, item in enumerate(data["train"]):
         image = item["image"]
-        filepath = Path(dataset.train_list[i])
+        filepath = Path(dataset.train_list[i]["image"])
         save_name = filepath.stem
 
         # Move image to device and generate embeddings
