@@ -70,7 +70,7 @@ if __name__ == "__main__":
         image = item["image"]
         print(image.shape)
         filepath = Path(dataset.train_list[i]["image"])
-        save_name = filepath.stem
+        save_name = filepath.stem.replace(".nii", "")
 
         # Move image to device and generate embeddings
         image = image.to(device)
@@ -81,4 +81,18 @@ if __name__ == "__main__":
         tensors = {"embedding": embedding.last_hidden_state}
         save_file(tensors, Path("embeddings") / f"{save_name}.safetensors")
 
-        break
+    # Process each batch
+    for i, item in enumerate(data["validation"]):
+        image = item["image"]
+        print(image.shape)
+        filepath = Path(dataset.val_list[i]["image"])
+        save_name = filepath.stem.replace(".nii", "")
+
+        # Move image to device and generate embeddings
+        image = image.to(device)
+        with torch.no_grad():
+            embedding = model.videomae(image.unsqueeze(0))
+
+        # Save embeddings with corresponding filepath
+        tensors = {"embedding": embedding.last_hidden_state}
+        save_file(tensors, Path("embeddings") / f"{save_name}.safetensors")
