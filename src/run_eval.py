@@ -52,26 +52,28 @@ if __name__ == "__main__":
     )
     data = dataset.setup("train")
 
-    for batch in dataset.train_dataloader(data["train"]):
-        image = batch["image"]
-        print(image.shape)
-        print(dict(image))
-        break
+    print(data[0])
 
-    # Set device for computation
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device}")
+    # for batch in dataset.train_dataloader(data["train"]):
+    #     image = batch["image"]
+    #     print(image.shape)
+    #     print(dict(image))
+    #     break
 
-    # Move image to device and load pre-trained model
-    image = image.to(device)
-    model = VideoMAEForPreTraining.from_pretrained("standardmodelbio/smb-vision-base", trust_remote_code=True).to(
-        device
-    )
+    # # Set device for computation
+    # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    # print(f"Using device: {device}")
 
-    # Generate embeddings
-    with torch.no_grad():
-        embedding = model.videomae(image)
+    # # Move image to device and load pre-trained model
+    # image = image.to(device)
+    # model = VideoMAEForPreTraining.from_pretrained("standardmodelbio/smb-vision-base", trust_remote_code=True).to(
+    #     device
+    # )
 
-    # Print embedding outputs
-    print("Embedding outputs:")
-    print(embedding.last_hidden_state.shape)
+    # # Generate embeddings
+    # with torch.no_grad():
+    #     embedding = model.videomae(image)
+
+    # # Print embedding outputs
+    # print("Embedding outputs:")
+    # print(embedding.last_hidden_state.shape)
