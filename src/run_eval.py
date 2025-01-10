@@ -49,7 +49,7 @@ if __name__ == "__main__":
         num_workers=4,
         dist=False,
     )
-    data = dataset.setup("fit")
+    data = dataset.setup("train")
 
     for batch in dataset.train_dataloader(data["train"]):
         image = batch["image"]
