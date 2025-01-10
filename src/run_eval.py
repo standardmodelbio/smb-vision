@@ -52,7 +52,8 @@ if __name__ == "__main__":
     )
     data = dataset.setup("train")
 
-    print(data["train"][0])
+    print(dataset.train_list[0])
+    print(data["train"][0]["image"])
 
     # for batch in dataset.train_dataloader(data["train"]):
     #     image = batch["image"]
