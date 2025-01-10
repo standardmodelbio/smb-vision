@@ -81,7 +81,7 @@ class CTDataset:
             [
                 LoadImaged(keys=["image"]),
                 EnsureChannelFirstd(keys=["image"]),
-                # Orientationd(keys=["image"], axcodes="RAS"),
+                Orientationd(keys=["image"], axcodes="RAS"),
                 Spacingd(
                     keys=["image"],
                     pixdim=self.downsample_ratio,
@@ -96,13 +96,13 @@ class CTDataset:
                     clip=True,
                 ),
                 # CropForegroundd(keys=["image"], source_key="image"),
-                # CenterSpatialCropd(keys=["image"], roi_size=(self.img_size, self.img_size, self.depth)),
-                # SpatialPadd(
-                #     keys=["image"],
-                #     spatial_size=(self.img_size, self.img_size, self.depth),
-                # ),
+                CenterSpatialCropd(keys=["image"], roi_size=(self.img_size, self.img_size, self.depth)),
+                SpatialPadd(
+                    keys=["image"],
+                    spatial_size=(self.img_size, self.img_size, self.depth),
+                ),
                 ToTensord(keys=["image"]),
-                # PermuteImage(),
+                PermuteImage(),
             ]
         )
 
