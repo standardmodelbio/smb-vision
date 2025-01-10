@@ -14,11 +14,8 @@ from dataloader.load import CTDataset
 # Set up logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('processing.log'),
-        logging.StreamHandler()
-    ]
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("processing.log"), logging.StreamHandler()],
 )
 logger = logging.getLogger(__name__)
 
@@ -94,7 +91,7 @@ def generate_embedding(model, image, device):
 
 def save_embedding(embedding, save_path):
     try:
-        tensors = {"embedding": embedding.last_hidden_state}
+        tensors = {"embedding": embedding.last_hidden_state.mean(dim=1)}
         save_file(tensors, save_path)
         logger.info(f"Saved embedding to {save_path}")
     except Exception as e:
