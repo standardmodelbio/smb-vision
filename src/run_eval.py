@@ -68,13 +68,14 @@ if __name__ == "__main__":
     # Process each batch
     for i, item in enumerate(data["train"]):
         image = item["image"]
+        print(image.shape)
         filepath = Path(dataset.train_list[i]["image"])
         save_name = filepath.stem
 
         # Move image to device and generate embeddings
         image = image.to(device)
         with torch.no_grad():
-            embedding = model.videomae(image)
+            embedding = model.videomae(image.unsqueeze(0))
 
         # Save embeddings with corresponding filepath
         tensors = {"embedding": embedding.last_hidden_state}
