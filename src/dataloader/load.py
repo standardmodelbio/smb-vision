@@ -11,6 +11,7 @@ from monai.data import (
 )
 from monai.data.utils import pad_list_data_collate
 from monai.transforms import (
+    CenterSpatialCropd,
     Compose,
     CropForegroundd,
     EnsureChannelFirstd,
@@ -95,6 +96,7 @@ class CTDataset:
                     clip=True,
                 ),
                 CropForegroundd(keys=["image"], source_key="image"),
+                CenterSpatialCropd(keys=["image"], roi_size=(self.img_size, self.img_size, self.depth)),
                 SpatialPadd(
                     keys=["image"],
                     spatial_size=(self.img_size, self.img_size, self.depth),
