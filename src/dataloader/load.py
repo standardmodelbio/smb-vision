@@ -95,7 +95,7 @@ class CTDataset:
                     b_max=1.0,
                     clip=True,
                 ),
-                # CropForegroundd(keys=["image"], source_key="image"),
+                CropForegroundd(keys=["image"], source_key="image"),
                 CenterSpatialCropd(keys=["image"], roi_size=(self.img_size, self.img_size, self.depth)),
                 SpatialPadd(
                     keys=["image"],
