@@ -29,9 +29,7 @@ class PermuteImage(Transform):
     """Permute the dimensions of the image"""
 
     def __call__(self, data):
-        data["image"] = data["image"].permute(
-            3, 0, 1, 2
-        )  # Adjust permutation order as needed
+        data["image"] = data["image"].permute(3, 0, 1, 2)  # Adjust permutation order as needed
         return data
 
 
@@ -41,8 +39,6 @@ class CTDataset:
         json_path: str,
         img_size: int,
         depth: int,
-        mask_patch_size: int,
-        patch_size: int,
         downsample_ratio: Sequence[float],
         cache_dir: str,
         batch_size: int = 1,
@@ -56,8 +52,6 @@ class CTDataset:
         self.json_path = json_path
         self.img_size = img_size
         self.depth = depth
-        self.mask_patch_size = mask_patch_size
-        self.patch_size = patch_size
         self.cache_dir = cache_dir
         self.downsample_ratio = downsample_ratio
         self.batch_size = batch_size
@@ -101,12 +95,6 @@ class CTDataset:
                     clip=True,
                 ),
                 CropForegroundd(keys=["image"], source_key="image"),
-                RandSpatialCropSamplesd(
-                    keys=["image"],
-                    roi_size=(self.img_size, self.img_size, self.depth),
-                    random_size=False,
-                    num_samples=1,
-                ),
                 SpatialPadd(
                     keys=["image"],
                     spatial_size=(self.img_size, self.img_size, self.depth),
