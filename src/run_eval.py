@@ -3,6 +3,7 @@ import json
 import os
 
 import torch
+from safetensors.torch import save_file
 from transformers import VideoMAEForPreTraining
 
 from dataloader.load import CTDataset
@@ -52,29 +53,30 @@ if __name__ == "__main__":
     )
     data = dataset.setup("train")
 
-    print(dataset.train_list[0])
-    print(data["train"][0]["image"])
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
 
-    # for batch in dataset.train_dataloader(data["train"]):
-    #     image = batch["image"]
-    #     print(image.shape)
-    #     print(dict(image))
-    #     break
+    # Load pre-trained model
+    model = VideoMAEForPreTraining.from_pretrained("standardmodelbio/smb-vision-base", trust_remote_code=True).to(
+        device
+    )
 
-    # # Set device for computation
-    # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    # print(f"Using device: {device}")
+    # Create output directory for embeddings
+    os.makedirs("embeddings", exist_ok=True)
 
-    # # Move image to device and load pre-trained model
-    # image = image.to(device)
-    # model = VideoMAEForPreTraining.from_pretrained("standardmodelbio/smb-vision-base", trust_remote_code=True).to(
-    #     device
-    # )
+    # Process each batch
+    for batch in dataset.train_dataloader(data["train"]):
+        image = batch["image"]
+        filepath = batch["image_meta_dict"]["filename_or_obj"][0]
+        save_name = os.path.splitext(os.path.basename(filepath))[0]
 
-    # # Generate embeddings
-    # with torch.no_grad():
-    #     embedding = model.videomae(image)
+        # Move image to device and generate embeddings
+        image = image.to(device)
+        with torch.no_grad():
+            embedding = model.videomae(image)
 
-    # # Print embedding outputs
-    # print("Embedding outputs:")
-    # print(embedding.last_hidden_state.shape)
+        # Save embeddings with corresponding filepath
+        tensors = {"embedding": embedding.last_hidden_state}
+        save_file(tensors, f"embeddings/{save_name}.safetensors")
+
+        break
