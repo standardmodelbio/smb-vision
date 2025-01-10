@@ -55,6 +55,7 @@ if __name__ == "__main__":
     for batch in dataset.train_dataloader(data["train"]):
         image = batch["image"]
         print(image.shape)
+        print(dict(batch))
         break
 
     # Set device for computation
