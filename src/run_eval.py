@@ -34,10 +34,10 @@ def build_json_from_nifti_files(train_dir, val_dir, output_json_path):
 
 if __name__ == "__main__":
     # Build json file of dataset paths
-    train_dir = "../mdanderson/public_data/train/CT/"
-    val_dir = "../mdanderson/public_data/valid/CT/"
-    json_path = "../data/dataset.json"
-    build_json_from_nifti_files(train_dir, val_dir, json_path)
+    # train_dir = "../mdanderson/public_data/train/CT/"
+    # val_dir = "../mdanderson/public_data/valid/CT/"
+    # json_path = "../data/dataset.json"
+    # build_json_from_nifti_files(train_dir, val_dir, json_path)
 
     # Example usage/testing of CTDataset
     dataset = CTDataset(
@@ -67,8 +67,8 @@ if __name__ == "__main__":
     # Process each batch
     for i, item in enumerate(data["train"]):
         image = item["image"]
-        filepath = dataset.train_list[i]
-        save_name = os.path.splitext(os.path.basename(filepath))[0]
+        filepath = Path(dataset.train_list[i])
+        save_name = filepath.stem
 
         # Move image to device and generate embeddings
         image = image.to(device)
@@ -77,6 +77,6 @@ if __name__ == "__main__":
 
         # Save embeddings with corresponding filepath
         tensors = {"embedding": embedding.last_hidden_state}
-        save_file(tensors, f"embeddings/{save_name}.safetensors")
+        save_file(tensors, Path("embeddings") / f"{save_name}.safetensors")
 
         break
