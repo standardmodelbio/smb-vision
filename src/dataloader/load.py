@@ -96,13 +96,11 @@ class CTDataset:
                     clip=True,
                 ),
                 CropForegroundd(keys=["image"], source_key="image"),
-                CenterSpatialCropd(keys=["image"], roi_size=(self.img_size, self.img_size, self.depth)),
                 SpatialPadd(
                     keys=["image"],
                     spatial_size=(self.img_size, self.img_size, self.depth),
                 ),
-                # RandScaleIntensityd(keys="image", factors=0.1, prob=0.5),
-                # RandShiftIntensityd(keys="image", offsets=0.1, prob=0.5),
+                CenterSpatialCropd(keys=["image"], roi_size=(self.img_size, self.img_size, self.depth)),
                 ToTensord(keys=["image"]),
                 PermuteImage(),
             ]
