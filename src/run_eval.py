@@ -53,12 +53,13 @@ if __name__ == "__main__":
 
     for batch in dataset.train_dataloader(data["train"]):
         image = batch["image"]
+        print(image.shape)
         break
 
-    # model = VideoMAEForPreTraining.from_pretrained(
-    #     "standardmodelbio/smb-vision-base",
-    #     trust_remote_code=True,
-    # )
+    model = VideoMAEForPreTraining.from_pretrained(
+        "standardmodelbio/smb-vision-base",
+        trust_remote_code=True,
+    )
 
-    # embedding = model.videomae(image)
-    # print(embedding.shape)
+    embedding = model.videomae(image)
+    print(embedding.shape)
