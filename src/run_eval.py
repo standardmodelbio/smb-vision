@@ -73,4 +73,4 @@ if __name__ == "__main__":
 
     # Print embedding outputs
     print("Embedding outputs:")
-    print(dict(embedding))
+    print(embedding.last_hidden_state.shape)
