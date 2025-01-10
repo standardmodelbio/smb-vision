@@ -2,6 +2,7 @@ import glob
 import json
 import os
 
+import torch
 from transformers import VideoMAEForPreTraining
 
 from dataloader.load import CTDataset
@@ -56,10 +57,20 @@ if __name__ == "__main__":
         print(image.shape)
         break
 
-    model = VideoMAEForPreTraining.from_pretrained(
-        "standardmodelbio/smb-vision-base",
-        trust_remote_code=True,
+    # Set device for computation
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
+
+    # Move image to device and load pre-trained model
+    image = image.to(device)
+    model = VideoMAEForPreTraining.from_pretrained("standardmodelbio/smb-vision-base", trust_remote_code=True).to(
+        device
     )
 
-    embedding = model.videomae(image)
-    print(embedding.shape)
+    # Generate embeddings
+    with torch.no_grad():
+        embedding = model.videomae(image)
+
+    # Print embedding outputs
+    print("Embedding outputs:")
+    print(dict(embedding))
