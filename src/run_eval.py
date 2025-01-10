@@ -34,10 +34,10 @@ def build_json_from_nifti_files(train_dir, val_dir, output_json_path):
 
 if __name__ == "__main__":
     # Build json file of dataset paths
-    # train_dir = "../mdanderson/public_data/train/CT/"
-    # val_dir = "../mdanderson/public_data/valid/CT/"
-    # json_path = "../data/dataset.json"
-    # build_json_from_nifti_files(train_dir, val_dir, json_path)
+    train_dir = "../mdanderson/public_data/train/CT/"
+    val_dir = "../mdanderson/public_data/valid/CT/"
+    json_path = "../data/dataset.json"
+    build_json_from_nifti_files(train_dir, val_dir, json_path)
 
     # Example usage/testing of CTDataset
     dataset = CTDataset(
@@ -65,9 +65,9 @@ if __name__ == "__main__":
     os.makedirs("embeddings", exist_ok=True)
 
     # Process each batch
-    for batch in dataset.train_dataloader(data["train"]):
-        image = batch["image"]
-        filepath = batch["image_meta_dict"]["filename_or_obj"][0]
+    for i, item in enumerate(data["train"]):
+        image = item["image"]
+        filepath = dataset.train_list[i]
         save_name = os.path.splitext(os.path.basename(filepath))[0]
 
         # Move image to device and generate embeddings
