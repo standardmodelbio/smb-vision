@@ -12,12 +12,14 @@ def build_json_from_nifti_files(train_dir, val_dir, output_json_path):
     # Find all .nii or .nii.gz files in train directory
     train_files = []
     for ext in ["*.nii", "*.nii.gz"]:
-        train_files.extend(glob.glob(os.path.join(train_dir, "**", ext), recursive=True))
+        paths = glob.glob(os.path.join(train_dir, "**", ext), recursive=True)
+        train_files.extend([{"image": path} for path in paths])
 
     # Find all .nii or .nii.gz files in validation directory
     val_files = []
     for ext in ["*.nii", "*.nii.gz"]:
-        val_files.extend(glob.glob(os.path.join(val_dir, "**", ext), recursive=True))
+        paths = glob.glob(os.path.join(val_dir, "**", ext), recursive=True)
+        val_files.extend([{"image": path} for path in paths])
 
     data_dict = {"train": train_files, "validation": val_files}
 
@@ -30,10 +32,10 @@ def build_json_from_nifti_files(train_dir, val_dir, output_json_path):
 
 if __name__ == "__main__":
     # Build json file of dataset paths
-    # train_dir = "../mdanderson/public_data/train/CT/"
-    # val_dir = "../mdanderson/public_data/valid/CT/"
-    # json_path = "../data/dataset.json"
-    # build_json_from_nifti_files(train_dir, val_dir, json_path)
+    train_dir = "../mdanderson/public_data/train/CT/"
+    val_dir = "../mdanderson/public_data/valid/CT/"
+    json_path = "../data/dataset.json"
+    build_json_from_nifti_files(train_dir, val_dir, json_path)
 
     # Example usage/testing of CTDataset
     dataset = CTDataset(
