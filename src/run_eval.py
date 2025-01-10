@@ -30,28 +30,28 @@ def build_json_from_nifti_files(train_dir, val_dir, output_json_path):
 
 if __name__ == "__main__":
     # Build json file of dataset paths
-    train_dir = "../mdanderson/public_data/train/CT/"
-    val_dir = "../mdanderson/public_data/valid/CT/"
-    json_path = "../data/dataset.json"
-    build_json_from_nifti_files(train_dir, val_dir, json_path)
+    # train_dir = "../mdanderson/public_data/train/CT/"
+    # val_dir = "../mdanderson/public_data/valid/CT/"
+    # json_path = "../data/dataset.json"
+    # build_json_from_nifti_files(train_dir, val_dir, json_path)
 
     # Example usage/testing of CTDataset
-    # dataset = CTDataset(
-    #     json_path="path/to/json",
-    #     img_size=384,
-    #     depth=320,
-    #     downsample_ratio=[1.0, 1.0, 1.0],
-    #     cache_dir="../data/cache",
-    #     batch_size=1,
-    #     val_batch_size=1,
-    #     num_workers=4,
-    #     dist=False,
-    # )
-    # data = dataset.setup("fit")
+    dataset = CTDataset(
+        json_path="../data/dataset.json",
+        img_size=384,
+        depth=320,
+        downsample_ratio=[1.0, 1.0, 1.0],
+        cache_dir="../data/cache",
+        batch_size=1,
+        val_batch_size=1,
+        num_workers=4,
+        dist=False,
+    )
+    data = dataset.setup("fit")
 
-    # for batch in dataset.train_dataloader(data["train"]):
-    #     image = batch["image"]
-    #     break
+    for batch in dataset.train_dataloader(data["train"]):
+        image = batch["image"]
+        break
 
     # model = VideoMAEForPreTraining.from_pretrained(
     #     "standardmodelbio/smb-vision-base",
