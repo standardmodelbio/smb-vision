@@ -13,8 +13,9 @@ export WANDB_LOG_MODEL=checkpoint
 # train
 python src/run_mim.py \
     --json_path ./smb-vision-train-mim.json \
-    --cache_dir ../cache/ \
-    --learning_rate 3e-4 \
+    --cache_dir ../data/cache/ \
+    --model_name_or_path standardmodelbio/smb-vision-base \
+    --learning_rate 5e-5 \
     --lr_scheduler_type cosine \
     --max_grad_norm 1.0 \
     --warmup_ratio 0.01 \
@@ -25,13 +26,12 @@ python src/run_mim.py \
     --do_train true \
     --do_eval true \
     --overwrite_output_dir true \
-    --output_dir ./saves/smb-vision-large-1125 \
+    --output_dir ./saves/smb-vision-base-20250122 \
     --eval_strategy "no" \
     --eval_steps 500 \
     --save_steps 500 \
     --bf16 true \
     --gradient_checkpointing true \
-    --resume_from_checkpoint saves/smb-vision-large-1125/checkpoint-17900 \
     --logging_steps 1 \
     --report_to wandb \
-    --run_name smb-vision-large-1125
+    --run_name smb-vision-base-20250122

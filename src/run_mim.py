@@ -179,7 +179,7 @@ class ModelArguments:
         },
     )
     image_size: Optional[int] = field(
-        default=384,
+        default=512,
         metadata={
             "help": (
                 "The size (resolution) of each image. If not specified, will use `image_size` of the configuration."
@@ -293,9 +293,9 @@ def main():
     )
     ds = mim_data.setup("train")
 
-    assert (
-        "train" in ds.keys() and "validation" in ds.keys()
-    ), "Dataset should contain both train and validation splits"
+    assert "train" in ds.keys() and "validation" in ds.keys(), (
+        "Dataset should contain both train and validation splits"
+    )
 
     # If we don't have a validation split, split off a percentage of train as validation.
     # data_args.train_val_split = None if "validation" in ds.keys() else data_args.train_val_split
@@ -338,28 +338,9 @@ def main():
         {
             "image_size": model_args.image_size,
             "patch_size": model_args.patch_size,
-            # "encoder_stride": model_args.encoder_stride,
             "num_channels": 1,
             "num_frames": model_args.depth,
             "tubelet_size": model_args.patch_size,
-            "hidden_size": 1024,
-            "num_hidden_layers": 24,
-            "num_attention_heads": 16,
-            "intermediate_size": 4096,
-            "hidden_act": "gelu",
-            "hidden_dropout_prob": 0.0,
-            "attention_probs_dropout_prob": 0.0,
-            "initializer_range": 0.02,
-            "layer_norm_eps": 1e-12,
-            "qkv_bias": True,
-            "use_mean_pooling": True,
-            "decoder_num_attention_heads": 16,
-            "decoder_hidden_size": 512,
-            "decoder_num_hidden_layers": 8,
-            "decoder_intermediate_size": 2048,
-            "norm_pix_loss": True,
-            "attn_implementation": "flash_attention_2",
-            "torch_dtype": "bfloat16",
         }
     )
 
