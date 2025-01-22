@@ -286,7 +286,7 @@ def main():
         depth=model_args.depth,
         mask_patch_size=data_args.mask_patch_size,
         patch_size=model_args.patch_size,
-        cache_dir="./cache/",
+        cache_dir=model_args.cache_dir,
         downsample_ratio=[1.0, 1.0, 1.0],
         mask_ratio=data_args.mask_ratio,
         # dist=True,
