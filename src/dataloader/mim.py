@@ -153,8 +153,8 @@ class MIMDataset:
                 ),
                 ScaleIntensityRanged(
                     keys=["image"],
-                    a_min=-175,
-                    a_max=250,
+                    a_min=-1000,
+                    a_max=300,
                     b_min=0.0,
                     b_max=1.0,
                     clip=True,
@@ -307,8 +307,8 @@ if __name__ == "__main__":
     # Initialize dataset with example parameters
     dataset = MIMDataset(
         json_path="./smb-vision-large-train-mim.json",
-        img_size=384,
-        depth=320,
+        img_size=512,
+        depth=512,
         mask_patch_size=32,
         patch_size=16,
         downsample_ratio=(1.0, 1.0, 1.0),

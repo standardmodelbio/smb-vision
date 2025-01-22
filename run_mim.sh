@@ -12,7 +12,7 @@ export WANDB_LOG_MODEL=checkpoint
 
 # train
 python src/run_mim.py \
-    --json_path ./smb-vision-large-train-mim.json \
+    --json_path ./smb-vision-train-mim.json \
     --cache_dir ../cache/ \
     --learning_rate 3e-4 \
     --lr_scheduler_type cosine \

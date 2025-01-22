@@ -35,8 +35,8 @@ def collect_nifti_files(directory_path, output_file="nifti_files.json", val_size
 
 def main():
     # Test the function
-    directory = "../nifti_files/"  # Replace with actual path
-    data = collect_nifti_files(directory, "./smb-vision-large-train-mim.json", val_size=100)
+    directory = "../data/nifti_files/"  # Replace with actual path
+    data = collect_nifti_files(directory, "./smb-vision-train-mim.json", val_size=100)
     print(f"Found {len(data['train'])} training files")
     print(f"Found {len(data['validation'])} validation files")
 
