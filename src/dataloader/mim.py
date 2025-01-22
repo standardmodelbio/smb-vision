@@ -146,19 +146,19 @@ class MIMDataset:
                 LoadImaged(keys=["image"]),
                 EnsureChannelFirstd(keys=["image"]),
                 Orientationd(keys=["image"], axcodes="RAS"),
-                # Spacingd(
-                #     keys=["image"],
-                #     pixdim=self.downsample_ratio,
-                #     mode=("bilinear"),
-                # ),
-                # ScaleIntensityRanged(
-                #     keys=["image"],
-                #     a_min=-1000,
-                #     a_max=300,
-                #     b_min=0.0,
-                #     b_max=1.0,
-                #     clip=True,
-                # ),
+                Spacingd(
+                    keys=["image"],
+                    pixdim=self.downsample_ratio,
+                    mode=("bilinear"),
+                ),
+                ScaleIntensityRanged(
+                    keys=["image"],
+                    a_min=-1000,
+                    a_max=300,
+                    b_min=0.0,
+                    b_max=1.0,
+                    clip=True,
+                ),
                 # CropForegroundd(keys=["image"], source_key="image", allow_smaller=False),
                 # RandSpatialCropSamplesd(
                 #     keys=["image"],
