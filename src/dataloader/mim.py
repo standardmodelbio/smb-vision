@@ -146,11 +146,11 @@ class MIMDataset:
                 LoadImaged(keys=["image"]),
                 EnsureChannelFirstd(keys=["image"]),
                 Orientationd(keys=["image"], axcodes="RAS"),
-                Spacingd(
-                    keys=["image"],
-                    pixdim=self.downsample_ratio,
-                    mode=("bilinear"),
-                ),
+                # Spacingd(
+                #     keys=["image"],
+                #     pixdim=self.downsample_ratio,
+                #     mode=("bilinear"),
+                # ),
                 ScaleIntensityRanged(
                     keys=["image"],
                     a_min=-1000,
