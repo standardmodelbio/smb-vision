@@ -160,28 +160,28 @@ class MIMDataset:
                     clip=True,
                 ),
                 # CropForegroundd(keys=["image"], source_key="image", allow_smaller=False),
-                # RandSpatialCropSamplesd(
-                #     keys=["image"],
-                #     roi_size=(self.img_size, self.img_size, self.depth),
-                #     random_size=False,
-                #     num_samples=1,
-                # ),
-                # SpatialPadd(
-                #     keys=["image"],
-                #     spatial_size=(self.img_size, self.img_size, self.depth),
-                # ),
+                RandSpatialCropSamplesd(
+                    keys=["image"],
+                    roi_size=(self.img_size, self.img_size, self.depth),
+                    random_size=False,
+                    num_samples=1,
+                ),
+                SpatialPadd(
+                    keys=["image"],
+                    spatial_size=(self.img_size, self.img_size, self.depth),
+                ),
                 # RandScaleIntensityd(keys="image", factors=0.1, prob=0.5),
                 # RandShiftIntensityd(keys="image", offsets=0.1, prob=0.5),
                 ToTensord(keys=["image"]),
-                # PermuteImage(),
+                PermuteImage(),
                 # Add custom transform to generate mask
-                # GenerateMask(
-                #     input_size=self.img_size,
-                #     depth=self.depth,
-                #     mask_patch_size=self.mask_patch_size,
-                #     model_patch_size=self.patch_size,
-                #     mask_ratio=self.mask_ratio,
-                # ),
+                GenerateMask(
+                    input_size=self.img_size,
+                    depth=self.depth,
+                    mask_patch_size=self.mask_patch_size,
+                    model_patch_size=self.patch_size,
+                    mask_ratio=self.mask_ratio,
+                ),
             ],
             lazy=True,
         )
@@ -308,7 +308,7 @@ if __name__ == "__main__":
     dataset = MIMDataset(
         json_path="./smb-vision-train-mim.json",
         img_size=512,
-        depth=512,
+        depth=320,
         mask_patch_size=32,
         patch_size=16,
         downsample_ratio=(1.0, 1.0, 1.0),
@@ -327,50 +327,47 @@ if __name__ == "__main__":
     train_loader = dataset.train_dataloader(datasets["train"])
     val_loader = dataset.val_dataloader(datasets["validation"])
 
-    for batch in train_loader:
-        print(batch["image"].shape)
+    # Initialize lists to store valid files
+    valid_train_files = []
+    valid_val_files = []
 
-    # # Initialize lists to store valid files
-    # valid_train_files = []
-    # valid_val_files = []
+    # Process training data
+    print("Processing training data...")
+    for i, data in enumerate(train_loader):
+        try:
+            # Check if data can be loaded correctly
+            print(data["image"].shape)
+            print(data["mask"].shape)
+            # If no error, add file to valid list
+            valid_train_files.append(dataset.train_list[i])
+            print(dataset.train_list[i])
+            if i % 100 == 0:
+                print(f"Processed {i} training files")
+        except Exception as e:
+            print(f"Error in training file {i}: {str(e)}")
+            continue
 
-    # # Process training data
-    # print("Processing training data...")
-    # for i, data in enumerate(train_loader):
-    #     try:
-    #         # Check if data can be loaded correctly
-    #         print(data["image"].shape)
-    #         print(data["mask"].shape)
-    #         # If no error, add file to valid list
-    #         valid_train_files.append(dataset.train_list[i])
-    #         print(dataset.train_list[i])
-    #         if i % 100 == 0:
-    #             print(f"Processed {i} training files")
-    #     except Exception as e:
-    #         print(f"Error in training file {i}: {str(e)}")
-    #         continue
+    # Process validation data
+    print("\nProcessing validation data...")
+    for i, data in enumerate(val_loader):
+        try:
+            # Check if data can be loaded correctly
+            _ = data["image"].shape
+            _ = data["mask"].shape
+            # If no error, add file to valid list
+            valid_val_files.append(dataset.val_list[i])
+            if i % 100 == 0:
+                print(f"Processed {i} validation files")
+        except Exception as e:
+            print(f"Error in validation file {i}: {str(e)}")
+            continue
 
-    # # Process validation data
-    # print("\nProcessing validation data...")
-    # for i, data in enumerate(val_loader):
-    #     try:
-    #         # Check if data can be loaded correctly
-    #         _ = data["image"].shape
-    #         _ = data["mask"].shape
-    #         # If no error, add file to valid list
-    #         valid_val_files.append(dataset.val_list[i])
-    #         if i % 100 == 0:
-    #             print(f"Processed {i} validation files")
-    #     except Exception as e:
-    #         print(f"Error in validation file {i}: {str(e)}")
-    #         continue
+    # Save valid files to json
+    valid_files = {"train": valid_train_files, "validation": valid_val_files}
 
-    # # Save valid files to json
-    # valid_files = {"train": valid_train_files, "validation": valid_val_files}
+    with open("valid_files.json", "w") as f:
+        json.dump(valid_files, f, indent=4)
 
-    # with open("valid_files.json", "w") as f:
-    #     json.dump(valid_files, f, indent=4)
-
-    # print(f"\nProcessing complete!")
-    # print(f"Valid training files: {len(valid_train_files)}/{len(dataset.train_list)}")
-    # print(f"Valid validation files: {len(valid_val_files)}/{len(dataset.val_list)}")
+    print(f"\nProcessing complete!")
+    print(f"Valid training files: {len(valid_train_files)}/{len(dataset.train_list)}")
+    print(f"Valid validation files: {len(valid_val_files)}/{len(dataset.val_list)}")
