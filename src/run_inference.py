@@ -1,3 +1,4 @@
+import argparse
 import glob
 import json
 import logging
@@ -44,19 +45,18 @@ def build_json_from_nifti_files(train_dir, val_dir, output_json_path):
     return output_json_path
 
 
-def setup_dataset():
+def setup_dataset(args):
     logger.info("Setting up dataset...")
     try:
         dataset = CTDataset(
-            json_path="../data/dataset.json",
-            img_size=384,
-            depth=320,
-            downsample_ratio=[1.0, 1.0, 1.0],
-            cache_dir="../data/cache",
-            batch_size=1,
-            val_batch_size=1,
-            num_workers=4,
-            dist=False,
+            json_path=args.json_path,
+            img_size=args.img_size,
+            depth=args.depth,
+            cache_dir=args.cache_dir,
+            batch_size=args.batch_size,
+            val_batch_size=args.val_batch_size,
+            num_workers=args.num_workers,
+            dist=args.dist,
         )
         logger.info("Dataset setup successful")
         return dataset.setup("train"), dataset.train_list, dataset.val_list
@@ -65,12 +65,10 @@ def setup_dataset():
         raise
 
 
-def setup_model(device):
+def setup_model(device, model_name):
     logger.info(f"Setting up model on {device}...")
     try:
-        model = VideoMAEForPreTraining.from_pretrained("standardmodelbio/smb-vision-base", trust_remote_code=True).to(
-            device
-        )
+        model = VideoMAEForPreTraining.from_pretrained(model_name, trust_remote_code=True).to(device)
         logger.info("Model setup successful")
         return model
     except Exception as e:
@@ -99,7 +97,7 @@ def save_embedding(embedding, save_path):
         raise
 
 
-def process_split(data, file_list, split_name):
+def process_split(data, file_list, split_name, model, device, output_dir):
     logger.info(f"\nProcessing {split_name} split...")
     error_files = []
 
@@ -110,7 +108,7 @@ def process_split(data, file_list, split_name):
 
             filepath = Path(file_list[i]["image"])
             save_name = filepath.stem.replace(".nii", "")
-            save_path = Path("embeddings") / f"{save_name}.safetensors"
+            save_path = Path(output_dir) / f"{save_name}.safetensors"
 
             embedding = generate_embedding(model, image, device)
             save_embedding(embedding, save_path)
@@ -126,25 +124,44 @@ def process_split(data, file_list, split_name):
             json.dump(error_files, f, indent=2)
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Generate embeddings from medical images")
+    parser.add_argument("--json_path", type=str, default="../data/dataset.json", help="Path to dataset JSON file")
+    parser.add_argument("--img_size", type=int, default=512, help="Image size")
+    parser.add_argument("--depth", type=int, default=320, help="Image depth")
+    parser.add_argument("--cache_dir", type=str, default="../data/cache", help="Cache directory")
+    parser.add_argument("--batch_size", type=int, default=1, help="Training batch size")
+    parser.add_argument("--val_batch_size", type=int, default=1, help="Validation batch size")
+    parser.add_argument("--num_workers", type=int, default=4, help="Number of data loading workers")
+    parser.add_argument("--dist", action="store_true", help="Enable distributed training")
+    parser.add_argument(
+        "--model_name", type=str, default="standardmodelbio/smb-vision-base-20250122", help="Model name or path"
+    )
+    parser.add_argument("--output_dir", type=str, default="embeddings", help="Output directory for embeddings")
+    parser.add_argument("--gpu", type=int, default=0, help="GPU device ID")
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
     logger.info("Starting embedding generation process")
+    args = parse_args()
 
     # Setup device
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device(f"cuda:{args.gpu}" if torch.cuda.is_available() else "cpu")
     logger.info(f"Using device: {device}")
 
     try:
         # Setup dataset and model
-        data, train_list, val_list = setup_dataset()
-        model = setup_model(device)
+        data, train_list, val_list = setup_dataset(args)
+        model = setup_model(device, args.model_name)
 
         # Create output directory
-        os.makedirs("embeddings", exist_ok=True)
-        logger.info("Created embeddings directory")
+        os.makedirs(args.output_dir, exist_ok=True)
+        logger.info(f"Created embeddings directory at {args.output_dir}")
 
         # Process train and validation splits
-        process_split(data, train_list, "train")
-        process_split(data, val_list, "validation")
+        process_split(data, train_list, "train", model, device, args.output_dir)
+        process_split(data, val_list, "validation", model, device, args.output_dir)
 
         logger.info("Embedding generation process completed successfully")
 

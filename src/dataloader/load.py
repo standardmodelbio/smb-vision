@@ -1,7 +1,6 @@
 import json
 from typing import Optional, Sequence
 
-import numpy as np
 import torch
 import torch.distributed as ptdist
 from monai.data import (
@@ -17,7 +16,6 @@ from monai.transforms import (
     EnsureChannelFirstd,
     LoadImaged,
     Orientationd,
-    RandSpatialCropSamplesd,
     ScaleIntensityRanged,
     Spacingd,
     SpatialPadd,
@@ -40,8 +38,8 @@ class CTDataset:
         json_path: str,
         img_size: int,
         depth: int,
-        downsample_ratio: Sequence[float],
         cache_dir: str,
+        downsample_ratio: Optional[Sequence[float]] = None,
         batch_size: int = 1,
         val_batch_size: int = 1,
         num_workers: int = 4,
@@ -82,27 +80,27 @@ class CTDataset:
                 LoadImaged(keys=["image"]),
                 EnsureChannelFirstd(keys=["image"]),
                 Orientationd(keys=["image"], axcodes="RAS"),
-                Spacingd(
-                    keys=["image"],
-                    pixdim=self.downsample_ratio,
-                    mode=("bilinear"),
-                ),
+                # Spacingd(
+                #     keys=["image"],
+                #     pixdim=self.downsample_ratio,
+                #     mode=("bilinear"),
+                # ),
                 ScaleIntensityRanged(
                     keys=["image"],
-                    a_min=-175,
-                    a_max=250,
+                    a_min=-1000,
+                    a_max=300,
                     b_min=0.0,
                     b_max=1.0,
                     clip=True,
                 ),
-                CropForegroundd(keys=["image"], source_key="image"),
-                # CenterSpatialCropd(keys=["image"], roi_size=(self.img_size, self.img_size, self.depth)),
-                # SpatialPadd(
-                #     keys=["image"],
-                #     spatial_size=(self.img_size, self.img_size, self.depth),
-                # ),
-                # ToTensord(keys=["image"]),
-                # PermuteImage(),
+                # CropForegroundd(keys=["image"], source_key="image"),
+                CenterSpatialCropd(keys=["image"], roi_size=(self.img_size, self.img_size, self.depth)),
+                SpatialPadd(
+                    keys=["image"],
+                    spatial_size=(self.img_size, self.img_size, self.depth),
+                ),
+                ToTensord(keys=["image"]),
+                PermuteImage(),
             ]
         )
 
