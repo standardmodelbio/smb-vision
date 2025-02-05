@@ -1,7 +1,6 @@
 import json
 from typing import Optional, Sequence
 
-import torch
 import torch.distributed as ptdist
 from monai.data import (
     CacheDataset,
@@ -9,7 +8,6 @@ from monai.data import (
     PersistentDataset,
     partition_dataset,
 )
-from monai.data.utils import pad_list_data_collate
 from monai.transforms import (
     CenterSpatialCropd,
     Compose,
@@ -61,14 +59,7 @@ class CTDataset:
         self.cache_rate = cache_rate
         self.dist = dist
 
-        data_list = json.load(open(json_path, "r"))
-
-        if "train" in data_list.keys():
-            self.train_list = data_list["train"]
-        if "validation" in data_list.keys():
-            self.val_list = data_list["validation"]
-        if "test" in data_list.keys():
-            self.test_list = data_list["test"]
+        self.data_list = json.load(open(json_path, "r"))
 
     def val_transforms(
         self,
@@ -109,113 +100,32 @@ class CTDataset:
 
         return transforms
 
-    def setup(self, stage: Optional[str] = None):
-        # Assign Train split(s) for use in Dataloaders
-        if stage in [None, "train"]:
-            if self.dist:
-                train_partition = partition_dataset(
-                    data=self.train_list,
-                    num_partitions=ptdist.get_world_size(),
-                    shuffle=True,
-                    even_divisible=True,
-                    drop_last=False,
-                )[ptdist.get_rank()]
-                valid_partition = partition_dataset(
-                    data=self.val_list,
-                    num_partitions=ptdist.get_world_size(),
-                    shuffle=False,
-                    even_divisible=True,
-                    drop_last=False,
-                )[ptdist.get_rank()]
-                # self.cache_num //= ptdist.get_world_size()
-            else:
-                train_partition = self.train_list
-                valid_partition = self.val_list
+    def setup(
+        self,
+    ):
+        if self.dist:
+            train_partition = partition_dataset(
+                data=self.data_list,
+                num_partitions=ptdist.get_world_size(),
+                shuffle=True,
+                even_divisible=True,
+                drop_last=False,
+            )[ptdist.get_rank()]
+        else:
+            train_partition = self.data_list
 
-            if any([self.cache_num, self.cache_rate]) > 0:
-                train_ds = CacheDataset(
-                    train_partition,
-                    cache_num=self.cache_num,
-                    cache_rate=self.cache_rate,
-                    num_workers=self.num_workers,
-                    transform=self.train_transforms(),
-                )
-                valid_ds = CacheDataset(
-                    valid_partition,
-                    cache_num=self.cache_num // 4,
-                    cache_rate=self.cache_rate,
-                    num_workers=self.num_workers,
-                    transform=self.val_transforms(),
-                )
-            else:
-                train_ds = Dataset(
-                    train_partition,
-                    transform=self.train_transforms(),
-                )
-                valid_ds = Dataset(
-                    valid_partition,
-                    transform=self.val_transforms(),
-                )
+        if any([self.cache_num, self.cache_rate]) > 0:
+            train_ds = CacheDataset(
+                train_partition,
+                cache_num=self.cache_num,
+                cache_rate=self.cache_rate,
+                num_workers=self.num_workers,
+                transform=self.train_transforms(),
+            )
+        else:
+            train_ds = Dataset(
+                train_partition,
+                transform=self.train_transforms(),
+            )
 
-            return {"train": train_ds, "validation": valid_ds}
-
-        if stage in [None, "test"]:
-            if any([self.cache_num, self.cache_rate]) > 0:
-                test_ds = CacheDataset(
-                    self.test_list,
-                    cache_num=self.cache_num // 4,
-                    cache_rate=self.cache_rate,
-                    num_workers=self.num_workers,
-                    transform=self.val_transforms(),
-                )
-            else:
-                test_ds = Dataset(
-                    self.test_list,
-                    transform=self.val_transforms(),
-                )
-
-            return {"test": test_ds}
-
-        return {"train": None, "validation": None}
-
-    def train_dataloader(self, train_ds):
-        # def collate_fn(examples):
-        #     pixel_values = torch.stack([example["image"] for example in examples])
-        #     mask = torch.stack([example["mask"] for example in examples])
-        #     return {"pixel_values": pixel_values, "bool_masked_pos": mask}
-
-        return torch.utils.data.DataLoader(
-            train_ds,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            pin_memory=True,
-            shuffle=True,
-            collate_fn=pad_list_data_collate,
-            # collate_fn=collate_fn
-            # drop_last=False,
-            # prefetch_factor=4,
-        )
-
-    def val_dataloader(self, valid_ds):
-        return torch.utils.data.DataLoader(
-            valid_ds,
-            batch_size=self.val_batch_size,
-            num_workers=self.num_workers,
-            pin_memory=True,
-            shuffle=False,
-            # drop_last=False,
-            collate_fn=pad_list_data_collate,
-            # prefetch_factor=4,
-        )
-
-    def test_dataloader(self, test_ds):
-        return torch.utils.data.DataLoader(
-            test_ds,
-            batch_size=self.val_batch_size,
-            num_workers=self.num_workers,
-            pin_memory=True,
-            shuffle=False,
-            # drop_last=False,
-            collate_fn=pad_list_data_collate,
-            # prefetch_factor=4,
-        )
+        return train_ds

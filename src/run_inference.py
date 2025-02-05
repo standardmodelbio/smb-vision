@@ -58,7 +58,7 @@ def setup_dataset(args):
             dist=args.dist,
         )
         logger.info("Dataset setup successful")
-        return dataset.setup("train"), dataset.train_list, dataset.val_list
+        return dataset.setup(), dataset.data_list
     except Exception as e:
         logger.error(f"Failed to setup dataset: {e}")
         raise
@@ -96,14 +96,14 @@ def save_embedding(embedding, save_path):
         raise
 
 
-def process_split(data, file_list, split_name, model, device, output_dir):
-    logger.info(f"\nProcessing {split_name} split...")
+def main_process_func(data, file_list, model, device, output_dir):
+    logger.info("\nProcessing data...")
     error_files = []
 
-    for i, item in enumerate(data[split_name]):
+    for i, item in enumerate(data):
         try:
             image = item["image"]
-            logger.info(f"Processing image {i + 1}/{len(data[split_name])} with shape: {image.shape}")
+            logger.info(f"Processing image {i + 1}/{len(data)} with shape: {image.shape}")
 
             filepath = Path(file_list[i]["image"])
             save_name = filepath.stem.replace(".nii", "")
@@ -118,8 +118,8 @@ def process_split(data, file_list, split_name, model, device, output_dir):
             error_files.append({"file": str(filepath), "error": str(e)})
 
     if error_files:
-        logger.error(f"Failed to process {len(error_files)} files in {split_name} split")
-        with open(f"error_files_{split_name}.json", "w") as f:
+        logger.error(f"Failed to process {len(error_files)} files")
+        with open("error_files.json", "w") as f:
             json.dump(error_files, f, indent=2)
 
 
@@ -151,7 +151,7 @@ if __name__ == "__main__":
 
     try:
         # Setup dataset and model
-        data, train_list, val_list = setup_dataset(args)
+        data, data_list = setup_dataset(args)
         model = setup_model(device, args.model_name)
 
         # Create output directory
@@ -159,8 +159,7 @@ if __name__ == "__main__":
         logger.info(f"Created embeddings directory at {args.output_dir}")
 
         # Process train and validation splits
-        process_split(data, train_list, "train", model, device, args.output_dir)
-        process_split(data, val_list, "validation", model, device, args.output_dir)
+        main_process_func(data, data_list, model, device, args.output_dir)
 
         logger.info("Embedding generation process completed successfully")
 

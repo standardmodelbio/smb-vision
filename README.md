@@ -73,8 +73,8 @@ The dataset should be provided as a JSON file with the following structure:
         {"image": "path/to/image2.nii.gz"}
     ],
     "validation": [
-        {"image": "path/to/val1.nii.gz"},
-        {"image": "path/to/val2.nii.gz"}
+        {"image": "path/to/image3.nii.gz"},
+        {"image": "path/to/image4.nii.gz"}
     ]
 }
 ```
