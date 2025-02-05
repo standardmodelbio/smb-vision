@@ -5,6 +5,7 @@ import torch
 import torch.distributed as ptdist
 from monai.data import (
     CacheDataset,
+    Dataset,
     PersistentDataset,
     partition_dataset,
 )
@@ -38,13 +39,13 @@ class CTDataset:
         json_path: str,
         img_size: int,
         depth: int,
-        cache_dir: str,
         downsample_ratio: Optional[Sequence[float]] = None,
         batch_size: int = 1,
         val_batch_size: int = 1,
         num_workers: int = 4,
         cache_num: int = 0,
         cache_rate: float = 0.0,
+        cache_dir: Optional[str] = None,
         dist: bool = False,
     ):
         super().__init__()
@@ -66,6 +67,8 @@ class CTDataset:
             self.train_list = data_list["train"]
         if "validation" in data_list.keys():
             self.val_list = data_list["validation"]
+        if "test" in data_list.keys():
+            self.test_list = data_list["test"]
 
     def val_transforms(
         self,
@@ -145,15 +148,13 @@ class CTDataset:
                     transform=self.val_transforms(),
                 )
             else:
-                train_ds = PersistentDataset(
+                train_ds = Dataset(
                     train_partition,
                     transform=self.train_transforms(),
-                    cache_dir=self.cache_dir,
                 )
-                valid_ds = PersistentDataset(
+                valid_ds = Dataset(
                     valid_partition,
                     transform=self.val_transforms(),
-                    cache_dir=self.cache_dir,
                 )
 
             return {"train": train_ds, "validation": valid_ds}
@@ -161,17 +162,16 @@ class CTDataset:
         if stage in [None, "test"]:
             if any([self.cache_num, self.cache_rate]) > 0:
                 test_ds = CacheDataset(
-                    self.val_list,
+                    self.test_list,
                     cache_num=self.cache_num // 4,
                     cache_rate=self.cache_rate,
                     num_workers=self.num_workers,
                     transform=self.val_transforms(),
                 )
             else:
-                test_ds = PersistentDataset(
-                    self.val_list,
+                test_ds = Dataset(
+                    self.test_list,
                     transform=self.val_transforms(),
-                    cache_dir=self.cache_dir,
                 )
 
             return {"test": test_ds}

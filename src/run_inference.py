@@ -52,7 +52,6 @@ def setup_dataset(args):
             json_path=args.json_path,
             img_size=args.img_size,
             depth=args.depth,
-            cache_dir=args.cache_dir,
             batch_size=args.batch_size,
             val_batch_size=args.val_batch_size,
             num_workers=args.num_workers,

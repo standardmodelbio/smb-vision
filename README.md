@@ -11,9 +11,13 @@ This project provides tools for:
 ## Installation
 
 ```bash
-git clone https://github.com/yourusername/smb-vision.git
+conda create -n vision python=3.11
+conda activate vision
+
+git clone https://github.com/standardmodelbio/smb-vision.git
 cd smb-vision
 pip install -r requirements.txt
+pip install flash-attn --no-build-isolation
 ```
 
 ## Project Structure
