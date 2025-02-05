@@ -67,16 +67,24 @@ python src/run_inference.py \
 The dataset should be provided as a JSON file with the following structure:
 
 ```json
-{
-    "train": [
-        {"image": "path/to/image1.nii.gz"},
-        {"image": "path/to/image2.nii.gz"}
-    ],
-    "validation": [
-        {"image": "path/to/image3.nii.gz"},
-        {"image": "path/to/image4.nii.gz"}
-    ]
-}
+[
+  {"image": "path/to/image1.nii.gz"},
+  {"image": "path/to/image2.nii.gz"},
+  {"image": "path/to/image3.nii.gz"},
+  {"image": "path/to/image4.nii.gz"},
+  ...
+]
+```
+
+The generated embeddings will be saved in the specified output directory with the following structure:
+
+```
+embeddings/
+├── image1.safetensor      # Numpy array for image 1
+├── image2.safetensor      # Numpy array for image 2
+├── image3.safetensor      # Numpy array for image 3
+├── image4.safetensor      # Numpy array for image 4
+└── metadata.json        # Mapping between files and embeddings
 ```
 
 ## Features
