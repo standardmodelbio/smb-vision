@@ -5,8 +5,8 @@ import logging
 import os
 from pathlib import Path
 
+import numpy as np
 import torch
-from safetensors.torch import save_file
 from transformers import VideoMAEForPreTraining
 
 from dataloader.load import CTDataset
@@ -88,8 +88,8 @@ def generate_embedding(model, image, device):
 
 def save_embedding(embedding, save_path):
     try:
-        tensors = {"embedding": embedding.last_hidden_state.mean(dim=1)}
-        save_file(tensors, save_path)
+        np_embedding = embedding.last_hidden_state.mean(dim=1).cpu().numpy()
+        np.save(save_path, np_embedding)
         logger.info(f"Saved embedding to {save_path}")
     except Exception as e:
         logger.error(f"Failed to save embedding to {save_path}: {e}")
@@ -107,7 +107,7 @@ def main_process_func(data, file_list, model, device, output_dir):
 
             filepath = Path(file_list[i]["image"])
             save_name = filepath.stem.replace(".nii", "")
-            save_path = Path(output_dir) / f"{save_name}.safetensors"
+            save_path = Path(output_dir) / f"{save_name}.npy"
 
             embedding = generate_embedding(model, image, device)
             save_embedding(embedding, save_path)
