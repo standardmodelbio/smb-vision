@@ -80,27 +80,11 @@ The generated embeddings will be saved in the specified output directory with th
 
 ```
 embeddings/
-├── image1.safetensor      # Numpy array for image 1
-├── image2.safetensor      # Numpy array for image 2
-├── image3.safetensor      # Numpy array for image 3
-├── image4.safetensor      # Numpy array for image 4
+├── image1.npy      # Numpy array for image 1
+├── image2.npy      # Numpy array for image 2
+├── image3.npy      # Numpy array for image 3
+├── image4.npy      # Numpy array for image 4
 └── metadata.json        # Mapping between files and embeddings
-```
-
-### 3. Loading Embeddings
-
-```python
-from safetensors import safe_open
-
-# Load a single embedding
-with safe_open("embeddings/image1.safetensor", framework="pt") as f:
-    tensor = f.get_tensor("tensor")  # Returns a torch tensor
-
-# Load multiple embeddings
-embeddings = {}
-for file in ["image1.safetensor", "image2.safetensor"]:
-    with safe_open(f"embeddings/{file}", framework="pt") as f:
-        embeddings[file] = f.get_tensor("tensor")
 ```
 
 ## Features
