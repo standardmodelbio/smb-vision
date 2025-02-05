@@ -64,7 +64,7 @@ python src/run_inference.py \
 
 ## Data Format
 
-The dataset should be provided as a JSON file with the following structure:
+**For inference, the dataset should be provided as a JSON file with the following structure:**
 
 ```json
 [
