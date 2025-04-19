@@ -117,7 +117,7 @@ def main_process_func(data, model, device, args):
     logger.info(f"Processing {len(data)} total samples")
     error_files = []
 
-    logger.info(data)
+    logger.info(data[0])
     for i, item in enumerate(data):
         logger.info(f"Processing item: {item}")
         try:
