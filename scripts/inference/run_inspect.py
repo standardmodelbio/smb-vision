@@ -71,7 +71,9 @@ def setup_dataset(args):
 def setup_model(device, model_name):
     logger.info(f"Setting up model on {device}...")
     try:
-        model = VideoMAEForPreTraining.from_pretrained(model_name, trust_remote_code=True).to(device)
+        model = VideoMAEForPreTraining.from_pretrained(
+            model_name, torch_dtype=torch.bfloat16, attn_implementation="flash_attention_2", trust_remote_code=True
+        ).to(device)
         logger.info("Model setup successful")
         return model
     except Exception as e:
@@ -92,7 +94,7 @@ def generate_embedding(model, image, device):
 
 def save_embedding(embedding, impression_id, save_path, model_id):
     try:
-        np_embedding = embedding.last_hidden_state.cpu().numpy()
+        np_embedding = embedding.last_hidden_state.squeeze(0).cpu().numpy()
         # Store original shape before flattening
         original_shape = np_embedding.shape
         # Flatten the embedding array to 1D
