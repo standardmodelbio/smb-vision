@@ -23,6 +23,7 @@ dependencies = [
     "datasets",
     "monai",
     "loguru",
+    "awswrangler",
 ]
 
 [project.optional-dependencies]
