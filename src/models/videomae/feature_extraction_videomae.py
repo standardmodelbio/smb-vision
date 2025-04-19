@@ -19,6 +19,7 @@ import warnings
 from ...utils import logging
 from .image_processing_videomae import VideoMAEImageProcessor
 
+
 logger = logging.get_logger(__name__)
 
 

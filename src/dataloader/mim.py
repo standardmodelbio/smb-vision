@@ -4,17 +4,15 @@ from typing import Optional, Sequence
 import numpy as np
 import torch
 import torch.distributed as ptdist
-from monai.data import CacheDataset, Dataset, IterableDataset, PersistentDataset, partition_dataset
+from monai.data import CacheDataset, PersistentDataset, partition_dataset
 from monai.data.utils import pad_list_data_collate
 from monai.transforms import (
     Compose,
-    CropForegroundd,
     EnsureChannelFirstd,
     LoadImaged,
     Orientationd,
     RandSpatialCropSamplesd,
     ScaleIntensityRanged,
-    Spacingd,
     SpatialPadd,
     ToTensord,
     Transform,
@@ -368,6 +366,6 @@ if __name__ == "__main__":
     with open("valid_files.json", "w") as f:
         json.dump(valid_files, f, indent=4)
 
-    print(f"\nProcessing complete!")
+    print("\nProcessing complete!")
     print(f"Valid training files: {len(valid_train_files)}/{len(dataset.train_list)}")
     print(f"Valid validation files: {len(valid_val_files)}/{len(dataset.val_list)}")

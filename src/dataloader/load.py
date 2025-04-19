@@ -5,18 +5,15 @@ import torch.distributed as ptdist
 from monai.data import (
     CacheDataset,
     Dataset,
-    PersistentDataset,
     partition_dataset,
 )
 from monai.transforms import (
     CenterSpatialCropd,
     Compose,
-    CropForegroundd,
     EnsureChannelFirstd,
     LoadImaged,
     Orientationd,
     ScaleIntensityRanged,
-    Spacingd,
     SpatialPadd,
     ToTensord,
     Transform,

@@ -1,41 +1,30 @@
 import argparse
-import glob
 import json
-import logging
 import os
-from pathlib import Path
 
-import numpy as np
+import awswrangler as wr
+import pandas as pd
 import torch
+from loguru import logger
 
 from dataloader.load import CTDataset
 from transformers import VideoMAEForPreTraining
 
 
-# Set up logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler("processing.log"), logging.StreamHandler()],
-)
-logger = logging.getLogger(__name__)
-
-
-def build_json_from_nifti_files(train_dir, val_dir, output_json_path):
+def build_json(impressions_path, image_dir, output_json_path):
     """Build a json file containing paths to nifti files from separate train/validation directories"""
-    # Find all .nii or .nii.gz files in train directory
-    train_files = []
-    for ext in ["*.nii", "*.nii.gz"]:
-        paths = glob.glob(os.path.join(train_dir, "**", ext), recursive=True)
-        train_files.extend([{"image": path} for path in paths])
+    # Read impressions CSV file
+    impressions_df = pd.read_csv(impressions_path)
 
-    # Find all .nii or .nii.gz files in validation directory
-    val_files = []
-    for ext in ["*.nii", "*.nii.gz"]:
-        paths = glob.glob(os.path.join(val_dir, "**", ext), recursive=True)
-        val_files.extend([{"image": path} for path in paths])
+    # Create file list with image paths
+    files = []
+    for _, row in impressions_df.iterrows():
+        image_path = os.path.join(image_dir, f"{row['impression_id']}.nii.gz")
+        files.append({"image": image_path, "uid": row["impression_id"]})
 
-    data_dict = {"train": train_files, "validation": val_files}
+    # For this implementation, just putting all files in train
+    # Could split into train/val based on labels_path if needed
+    data_dict = {"train": files, "validation": []}
 
     # Write to json file
     with open(output_json_path, "w") as f:
@@ -46,6 +35,9 @@ def build_json_from_nifti_files(train_dir, val_dir, output_json_path):
 
 
 def setup_dataset(args):
+    logger.info("Building JSON file...")
+    build_json(args.impressions_path, args.image_dir, args.saved_json_path)
+
     logger.info("Setting up dataset...")
     try:
         dataset = CTDataset(
@@ -58,7 +50,7 @@ def setup_dataset(args):
             dist=args.dist,
         )
         logger.info("Dataset setup successful")
-        return dataset.setup(), dataset.data_list
+        return dataset.setup()
     except Exception as e:
         logger.error(f"Failed to setup dataset: {e}")
         raise
@@ -86,36 +78,49 @@ def generate_embedding(model, image, device):
         raise
 
 
-def save_embedding(embedding, save_path):
+def save_embedding(embedding, impression_id, save_path, model_id):
     try:
         np_embedding = embedding.last_hidden_state.cpu().numpy()
-        np.save(save_path, np_embedding)
-        logger.info(f"Saved embedding to {save_path}")
+        df = pd.DataFrame(
+            {
+                "impression_id": [impression_id],
+                "embedding": [np_embedding],
+                "model_id": [model_id],
+            }
+        )
+
+        wr.s3.to_parquet(
+            df=df,
+            path=save_path,
+            dataset=True,
+            partition_cols=["model_id"],
+            mode="append",
+            compression="snappy",
+            max_rows_by_file=1000000,
+        )
+        logger.info(f"Saved embedding to {s3_path}")
     except Exception as e:
-        logger.error(f"Failed to save embedding to {save_path}: {e}")
+        logger.error(f"Failed to save embedding to {s3_path}: {e}")
         raise
 
 
-def main_process_func(data, file_list, model, device, output_dir):
+def main_process_func(data, model, device, args):
     logger.info("\nProcessing data...")
     error_files = []
 
     for i, item in enumerate(data):
         try:
+            impression_id = item["impression_id"]
             image = item["image"]
             logger.info(f"Processing image {i + 1}/{len(data)} with shape: {image.shape}")
 
-            filepath = Path(file_list[i]["image"])
-            save_name = filepath.stem.replace(".nii", "")
-            save_path = Path(output_dir) / f"{save_name}.npy"
-
             embedding = generate_embedding(model, image, device)
-            save_embedding(embedding, save_path)
+            save_embedding(embedding, impression_id, args.save_path, args.model_name)
 
         except Exception as e:
-            error_msg = f"Error processing {filepath}: {str(e)}"
+            error_msg = f"Error processing {image}: {str(e)}"
             logger.error(error_msg)
-            error_files.append({"file": str(filepath), "error": str(e)})
+            error_files.append({"file": str(image), "error": str(e)})
 
     if error_files:
         logger.error(f"Failed to process {len(error_files)} files")
@@ -125,7 +130,11 @@ def main_process_func(data, file_list, model, device, output_dir):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Generate embeddings from medical images")
-    parser.add_argument("--json_path", type=str, default="../data/dataset.json", help="Path to dataset JSON file")
+    parser.add_argument(
+        "--impressions_path", type=str, default="../data/Final_impressions.csv", help="Path to dataset CSV file"
+    )
+    parser.add_argument("--image_dir", type=str, default="../data/asset-inspect/CTPA", help="Path to image directory")
+    parser.add_argument("--saved_json_path", type=str, default="/tmp/asset-inspect.json", help="Path to JSON file")
     parser.add_argument("--img_size", type=int, default=512, help="Image size")
     parser.add_argument("--depth", type=int, default=320, help="Image depth")
     parser.add_argument("--cache_dir", type=str, default="../data/cache", help="Cache directory")
@@ -136,7 +145,9 @@ def parse_args():
     parser.add_argument(
         "--model_name", type=str, default="standardmodelbio/smb-vision-base-20250122", help="Model name or path"
     )
-    parser.add_argument("--output_dir", type=str, default="embeddings", help="Output directory for embeddings")
+    parser.add_argument(
+        "--save_path", type=str, default="s3://bucket-name/folder-name", help="Save s3 path for embeddings"
+    )
     parser.add_argument("--gpu", type=int, default=0, help="GPU device ID")
     return parser.parse_args()
 
@@ -151,15 +162,11 @@ if __name__ == "__main__":
 
     try:
         # Setup dataset and model
-        data, data_list = setup_dataset(args)
+        dataset = setup_dataset(args)
         model = setup_model(device, args.model_name)
 
-        # Create output directory
-        os.makedirs(args.output_dir, exist_ok=True)
-        logger.info(f"Created embeddings directory at {args.output_dir}")
-
         # Process train and validation splits
-        main_process_func(data, data_list, model, device, args.output_dir)
+        main_process_func(dataset, model, device, args)
 
         logger.info("Embedding generation process completed successfully")
 
