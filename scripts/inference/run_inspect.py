@@ -18,9 +18,17 @@ def build_json(impressions_path, image_dir, output_json_path):
 
     # Create file list with image paths
     files = []
+    missing_files = []
     for _, row in impressions_df.iterrows():
         image_path = os.path.join(image_dir, f"{row['impression_id']}.nii.gz")
-        files.append({"image": image_path, "uid": row["impression_id"]})
+        if os.path.exists(image_path):
+            files.append({"image": image_path, "uid": row["impression_id"]})
+        else:
+            missing_files.append(image_path)
+            logger.warning(f"Image file not found: {image_path}")
+
+    if missing_files:
+        logger.warning(f"Total missing files: {len(missing_files)}")
 
     # For this implementation, just putting all files in train
     # Could split into train/val based on labels_path if needed
