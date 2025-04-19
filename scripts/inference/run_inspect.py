@@ -24,26 +24,22 @@ def build_json(impressions_path, image_dir, output_json_path):
 
     # For this implementation, just putting all files in train
     # Could split into train/val based on labels_path if needed
-    data_dict = {"train": files, "validation": []}
+    # data_dict = {"train": files, "validation": []}
 
     # Write to json file
     with open(output_json_path, "w") as f:
-        json.dump(data_dict, f, indent=2)
+        json.dump(files, f, indent=2)
 
     logger.info(f"Created dataset JSON file at {output_json_path}")
-    return data_dict, output_json_path
+    return files, output_json_path
 
 
 def setup_dataset(args):
     logger.info("Building JSON file...")
     data_dict, output_json_path = build_json(args.impressions_path, args.image_dir, args.saved_json_path)
 
-    logger.info("Train samples (first 3):")
-    for sample in data_dict["train"][:3]:
-        logger.info(sample)
-
-    logger.info("Validation samples (first 3):")
-    for sample in data_dict["validation"][:3]:
+    logger.info("Samples (first 3):")
+    for sample in data_dict[:3]:
         logger.info(sample)
 
     logger.info("Setting up dataset...")
@@ -115,11 +111,9 @@ def save_embedding(embedding, impression_id, save_path, model_id):
 def main_process_func(data, model, device, args):
     logger.info("Processing data...")
     logger.info(f"Processing {len(data)} total samples")
-    logger.info(data.data_list)
     error_files = []
 
     for i, item in enumerate(data):
-        logger.info(f"Processing item: {item}")
         try:
             impression_id = item["uid"]
             image = item["image"]
