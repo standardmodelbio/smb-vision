@@ -91,7 +91,7 @@ def save_embedding(embedding, impression_id, save_path, model_id):
         np_embedding = embedding.last_hidden_state.cpu().numpy()
         df = pd.DataFrame(
             {
-                "impression_id": [impression_id],
+                "uid": [impression_id],
                 "embedding": [np_embedding],
                 "model_id": [model_id],
             }
@@ -113,12 +113,13 @@ def save_embedding(embedding, impression_id, save_path, model_id):
 
 
 def main_process_func(data, model, device, args):
-    logger.info("\nProcessing data...")
+    logger.info("Processing data...")
+    logger.info(f"Processing {len(data)} total samples")
     error_files = []
 
     for i, item in enumerate(data):
         try:
-            impression_id = item["impression_id"]
+            impression_id = item["uid"]
             image = item["image"]
             logger.info(f"Processing image {i + 1}/{len(data)} with shape: {image.shape}")
 
