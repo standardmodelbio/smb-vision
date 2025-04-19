@@ -6,8 +6,8 @@ import awswrangler as wr
 import pandas as pd
 import torch
 from loguru import logger
+from smb_vision.dataloader.load import CTDataset
 
-from dataloader.load import CTDataset
 from transformers import VideoMAEForPreTraining
 
 
