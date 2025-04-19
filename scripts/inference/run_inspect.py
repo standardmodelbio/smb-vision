@@ -110,9 +110,9 @@ def save_embedding(embedding, impression_id, save_path, model_id):
             compression="snappy",
             max_rows_by_file=1000000,
         )
-        logger.info(f"Saved embedding to {s3_path}")
+        logger.info(f"Saved embedding to {save_path}")
     except Exception as e:
-        logger.error(f"Failed to save embedding to {s3_path}: {e}")
+        logger.error(f"Failed to save embedding to {save_path}: {e}")
         raise
 
 
@@ -131,9 +131,9 @@ def main_process_func(data, model, device, args):
             save_embedding(embedding, impression_id, args.save_path, args.model_name)
 
         except Exception as e:
-            error_msg = f"Error processing {image}: {str(e)}"
+            error_msg = f"Error processing {impression_id}: {str(e)}"
             logger.error(error_msg)
-            error_files.append({"file": str(image), "error": str(e)})
+            error_files.append({"uid": str(impression_id), "error": str(e)})
 
     if error_files:
         logger.error(f"Failed to process {len(error_files)} files")
