@@ -7,7 +7,7 @@ import pandas as pd
 import torch
 from loguru import logger
 
-from src.dataloader.load import CTDataset
+from dataloader.load import CTDataset
 from transformers import VideoMAEForPreTraining
 
 
