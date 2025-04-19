@@ -2,7 +2,7 @@
 
 HOME=/workspace/inspect
 
-python scripts/inference/inspect.py \
+python scripts/inference/run_inspect.py \
     --impressions_path $HOME/Final_Impressions.csv \
     --image_dir $HOME/CTPA/ \
     --saved_json_path /tmp/asset-inspect.json \
