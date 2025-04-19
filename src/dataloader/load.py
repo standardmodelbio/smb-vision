@@ -57,6 +57,7 @@ class CTDataset:
         self.dist = dist
 
         self.data_list = json.load(open(json_path, "r"))
+        print(self.data_list[:3])
 
     def val_transforms(
         self,
