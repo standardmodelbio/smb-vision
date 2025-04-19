@@ -31,17 +31,25 @@ def build_json(impressions_path, image_dir, output_json_path):
         json.dump(data_dict, f, indent=2)
 
     logger.info(f"Created dataset JSON file at {output_json_path}")
-    return output_json_path
+    return data_dict, output_json_path
 
 
 def setup_dataset(args):
     logger.info("Building JSON file...")
-    build_json(args.impressions_path, args.image_dir, args.saved_json_path)
+    data_dict, output_json_path = build_json(args.impressions_path, args.image_dir, args.saved_json_path)
+
+    logger.info("Train samples (first 3):")
+    for sample in data_dict["train"][:3]:
+        logger.info(sample)
+
+    logger.info("Validation samples (first 3):")
+    for sample in data_dict["validation"][:3]:
+        logger.info(sample)
 
     logger.info("Setting up dataset...")
     try:
         dataset = CTDataset(
-            json_path=args.json_path,
+            json_path=output_json_path,
             img_size=args.img_size,
             depth=args.depth,
             batch_size=args.batch_size,
