@@ -115,6 +115,7 @@ def save_embedding(embedding, impression_id, save_path, model_id):
 def main_process_func(data, model, device, args):
     logger.info("Processing data...")
     logger.info(f"Processing {len(data)} total samples")
+    logger.info(data.data_list)
     error_files = []
 
     for i, item in enumerate(data):
