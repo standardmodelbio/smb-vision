@@ -49,7 +49,7 @@ def setup_dataset(args):
     logger.info("Setting up dataset...")
     try:
         dataset = CTDataset(
-            json_path=output_json_path,
+            data_list=data_dict,
             img_size=args.img_size,
             depth=args.depth,
             batch_size=args.batch_size,
@@ -173,7 +173,6 @@ if __name__ == "__main__":
     try:
         # Setup dataset and model
         dataset = setup_dataset(args)
-        logger.info(dataset[0])
         model = setup_model(device, args.model_name)
 
         # Process train and validation splits

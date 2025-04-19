@@ -31,7 +31,7 @@ class PermuteImage(Transform):
 class CTDataset:
     def __init__(
         self,
-        json_path: str,
+        data_list,
         img_size: int,
         depth: int,
         downsample_ratio: Optional[Sequence[float]] = None,
@@ -44,7 +44,7 @@ class CTDataset:
         dist: bool = False,
     ):
         super().__init__()
-        self.json_path = json_path
+        self.data_list = data_list
         self.img_size = img_size
         self.depth = depth
         self.cache_dir = cache_dir
@@ -55,8 +55,6 @@ class CTDataset:
         self.cache_num = cache_num
         self.cache_rate = cache_rate
         self.dist = dist
-
-        self.data_list = json.load(open(json_path, "r"))
 
     def val_transforms(
         self,
