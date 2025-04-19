@@ -117,7 +117,9 @@ def main_process_func(data, model, device, args):
     logger.info(f"Processing {len(data)} total samples")
     error_files = []
 
+    logger.info(data)
     for i, item in enumerate(data):
+        logger.info(f"Processing item: {item}")
         try:
             impression_id = item["uid"]
             image = item["image"]
