@@ -19,8 +19,8 @@ from models.videomae.modeling_videomae import VideoMAEForPreTraining
 
 
 # Use your AWS SSO profile directly
-boto3.setup_default_session(profile_name="smb-dev")
-client = boto3.client("s3")
+for profile in boto3.session.Session().available_profiles:
+    print(profile)
 
 
 def build_json(impressions_path, image_dir, output_json_path):
