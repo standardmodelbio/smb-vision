@@ -86,7 +86,7 @@ def process_file(s3_client, bucket, key, transforms, verify):
             # File already exists in validated location, skip processing
             file_dict = {"image": "../nifti_files/" + "/".join(key.split("/")[2:])}
             return file_dict, True
-        except:
+        except boto3.exceptions.ClientError:
             # File doesn't exist in validated location, proceed with processing
             pass
 

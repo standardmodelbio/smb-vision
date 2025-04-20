@@ -14,7 +14,6 @@ from monai.transforms import (
     LoadImaged,
     Orientationd,
     ScaleIntensityRanged,
-    SpatialPadd,
     ToTensord,
     Transform,
 )

@@ -1,19 +1,30 @@
+# Standard library imports
 import argparse
 import json
 import os
-from re import A
 
+# Third-party library imports
 import awswrangler as wr
 import pandas as pd
 import torch
 from loguru import logger
 
+# Local imports
 from dataloader.load import CTDataset
 from models.videomae.modeling_videomae import VideoMAEForPreTraining
 
 
 def build_json(impressions_path, image_dir, output_json_path):
-    """Build a json file containing paths to nifti files from separate train/validation directories"""
+    """Build a json file containing paths to nifti files from separate train/validation directories
+
+    Args:
+        impressions_path (str): Path to CSV file containing image impressions
+        image_dir (str): Directory containing the image files
+        output_json_path (str): Path to save the output JSON file
+
+    Returns:
+        tuple: List of files and path to created JSON
+    """
     # Read impressions CSV file
     impressions_df = pd.read_csv(impressions_path)
 
@@ -44,6 +55,14 @@ def build_json(impressions_path, image_dir, output_json_path):
 
 
 def setup_dataset(args):
+    """Set up the dataset for training
+
+    Args:
+        args: Command line arguments
+
+    Returns:
+        CTDataset: The configured dataset
+    """
     logger.info("Building JSON file...")
     data_dict, output_json_path = build_json(args.impressions_path, args.image_dir, args.saved_json_path)
 
@@ -71,6 +90,15 @@ def setup_dataset(args):
 
 
 def setup_model(device, model_name):
+    """Initialize the VideoMAE model
+
+    Args:
+        device: PyTorch device
+        model_name (str): Name or path of pretrained model
+
+    Returns:
+        VideoMAEForPreTraining: The initialized model
+    """
     logger.info(f"Setting up model on {device}...")
     try:
         model = VideoMAEForPreTraining.from_pretrained(
@@ -84,27 +112,44 @@ def setup_model(device, model_name):
 
 
 def generate_embedding(model, image, device):
-    # try:
-    image = image.to(device)
-    with torch.no_grad():
-        embedding = model.videomae(image.unsqueeze(0))
-    return embedding
-    # except Exception as e:
-    #     logger.error(f"Failed to generate embedding: {e}")
-    #     raise
+    """Generate embeddings from input image
+
+    Args:
+        model: The VideoMAE model
+        image: Input image tensor
+        device: PyTorch device
+
+    Returns:
+        torch.Tensor: Generated embedding
+    """
+    try:
+        image = image.to(device)
+        with torch.no_grad():
+            embedding = model.videomae(image.unsqueeze(0))
+        return embedding
+    except Exception as e:
+        logger.error(f"Failed to generate embedding: {e}")
+        raise
 
 
 def save_embedding(embedding, impression_id, save_path, model_id):
+    """Save generated embedding to S3
+
+    Args:
+        embedding: The embedding tensor
+        impression_id: Unique identifier for the image
+        save_path (str): S3 path to save embeddings
+        model_id (str): Identifier for the model used
+    """
     try:
         np_embedding = embedding.last_hidden_state.squeeze(0).float().cpu().numpy()
         # Store original shape before flattening
         original_shape = np_embedding.shape
         # Convert to nested list before storing in DataFrame
-        embedding_list = np_embedding.tolist()
         df = pd.DataFrame(
             {
                 "uid": [impression_id],
-                "embedding": [embedding_list],
+                "embedding": [np_embedding],
                 "embedding_shape": [original_shape],
                 "model_id": [model_id],
             }
@@ -126,23 +171,31 @@ def save_embedding(embedding, impression_id, save_path, model_id):
 
 
 def main_process_func(data, model, device, args):
+    """Main processing function to generate and save embeddings
+
+    Args:
+        data: Dataset containing images
+        model: The VideoMAE model
+        device: PyTorch device
+        args: Command line arguments
+    """
     logger.info("Processing data...")
     logger.info(f"Processing {len(data)} total samples")
     error_files = []
 
     for i, item in enumerate(data):
-        # try:
-        impression_id = item["uid"]
-        image = item["image"]
-        logger.info(f"Processing image {i + 1}/{len(data)} with shape: {image.shape}")
+        try:
+            impression_id = item["uid"]
+            image = item["image"]
+            logger.info(f"Processing image {i + 1}/{len(data)} with shape: {image.shape}")
 
-        embedding = generate_embedding(model, image, device)
-        save_embedding(embedding, impression_id, args.save_path, args.model_name)
+            embedding = generate_embedding(model, image, device)
+            save_embedding(embedding, impression_id, args.save_path, args.model_name)
 
-        # except Exception as e:
-        #     error_msg = f"Error processing {impression_id}: {str(e)}"
-        #     logger.error(error_msg)
-        #     error_files.append({"uid": str(impression_id), "error": str(e)})
+        except Exception as e:
+            error_msg = f"Error processing {impression_id}: {str(e)}"
+            logger.error(error_msg)
+            error_files.append({"uid": str(impression_id), "error": str(e)})
 
     if error_files:
         logger.error(f"Failed to process {len(error_files)} files")
@@ -151,6 +204,11 @@ def main_process_func(data, model, device, args):
 
 
 def parse_args():
+    """Parse command line arguments
+
+    Returns:
+        argparse.Namespace: Parsed arguments
+    """
     parser = argparse.ArgumentParser(description="Generate embeddings from medical images")
     parser.add_argument(
         "--impressions_path", type=str, default="../data/Final_impressions.csv", help="Path to dataset CSV file"
@@ -183,16 +241,16 @@ if __name__ == "__main__":
     device = torch.device(f"cuda:{args.gpu}" if torch.cuda.is_available() else "cpu")
     logger.info(f"Using device: {device}")
 
-    # try:
-    # Setup dataset and model
-    dataset = setup_dataset(args)
-    model = setup_model(device, args.model_name)
+    try:
+        # Setup dataset and model
+        dataset = setup_dataset(args)
+        model = setup_model(device, args.model_name)
 
-    # Process train and validation splits
-    main_process_func(dataset, model, device, args)
+        # Process train and validation splits
+        main_process_func(dataset, model, device, args)
 
-    logger.info("Embedding generation process completed successfully")
+        logger.info("Embedding generation process completed successfully")
 
-    # except Exception as e:
-    #     logger.error(f"Fatal error in main process: {e}")
-    #     raise
+    except Exception as e:
+        logger.error(f"Fatal error in main process: {e}")
+        raise
