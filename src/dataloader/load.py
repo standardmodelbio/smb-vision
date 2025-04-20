@@ -14,6 +14,7 @@ from monai.transforms import (
     LoadImaged,
     Orientationd,
     ScaleIntensityRanged,
+    SpatialPadd,
     ToTensord,
     Transform,
 )
@@ -85,10 +86,10 @@ class CTDataset:
                 ),
                 # CropForegroundd(keys=["image"], source_key="image"),
                 CenterSpatialCropd(keys=["image"], roi_size=(self.img_size, self.img_size, self.depth)),
-                # SpatialPadd(
-                #     keys=["image"],
-                #     spatial_size=(self.img_size, self.img_size, self.depth),
-                # ),
+                SpatialPadd(
+                    keys=["image"],
+                    spatial_size=(16, 16, 16),
+                ),
                 ToTensord(keys=["image"], dtype=torch.bfloat16 if self.bf16 else torch.float32),
                 PermuteImage(),
             ]
