@@ -142,14 +142,14 @@ def save_embedding(embedding, impression_id, save_path, model_id):
         model_id (str): Identifier for the model used
     """
     try:
-        np_embedding = embedding.last_hidden_state.squeeze(0).float().cpu().numpy()
+        np_embedding = embedding.last_hidden_state.squeeze(0).float().cpu()
         # Store original shape before flattening
         original_shape = np_embedding.shape
         # Convert to nested list before storing in DataFrame
         df = pd.DataFrame(
             {
                 "uid": [impression_id],
-                "embedding": [np_embedding],
+                "embedding": [np_embedding.flatten()],
                 "embedding_shape": [original_shape],
                 "model_id": [model_id],
             }
