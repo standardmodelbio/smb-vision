@@ -18,11 +18,6 @@ from dataloader.load import CTDataset
 from models.videomae.modeling_videomae import VideoMAEForPreTraining
 
 
-# Use your AWS SSO profile directly
-for profile in boto3.session.Session().available_profiles:
-    print(profile)
-
-
 def build_json(impressions_path, image_dir, output_json_path):
     """Build a json file containing paths to nifti files from separate train/validation directories
 
@@ -272,6 +267,10 @@ def parse_args():
 
 
 if __name__ == "__main__":
+    # Use your AWS SSO profile directly
+    for profile in boto3.session.Session().available_profiles:
+        print(profile)
+
     # Set multiprocessing start method to 'spawn'
     torch.multiprocessing.set_start_method("spawn")
 
