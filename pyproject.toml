@@ -24,6 +24,7 @@ dependencies = [
     "monai",
     "loguru",
     "awswrangler",
+    "ninja",
 ]
 
 [project.optional-dependencies]

@@ -1,7 +1,9 @@
 # Standard library imports
 import argparse
 import json
+import multiprocessing as mp
 import os
+from functools import partial
 
 # Third-party library imports
 import awswrangler as wr
@@ -41,10 +43,6 @@ def build_json(impressions_path, image_dir, output_json_path):
 
     if missing_files:
         logger.warning(f"Total missing files: {len(missing_files)}")
-
-    # For this implementation, just putting all files in train
-    # Could split into train/val based on labels_path if needed
-    # data_dict = {"train": files, "validation": []}
 
     # Write to json file
     with open(output_json_path, "w") as f:
@@ -89,7 +87,7 @@ def setup_dataset(args):
         raise
 
 
-def setup_model(device, model_name):
+def setup_model(model_name, device):
     """Initialize the VideoMAE model
 
     Args:
@@ -170,24 +168,23 @@ def save_embedding(embedding, impression_id, save_path, model_id):
         raise
 
 
-def main_process_func(data, model, device, args):
-    """Main processing function to generate and save embeddings
+def process_batch(gpu_id, data_batch, args):
+    """Process a batch of data on specified GPU
 
     Args:
-        data: Dataset containing images
-        model: The VideoMAE model
-        device: PyTorch device
+        gpu_id: GPU device ID
+        data_batch: Batch of data to process
         args: Command line arguments
     """
-    logger.info("Processing data...")
-    logger.info(f"Processing {len(data)} total samples")
+    device = torch.device(f"cuda:{gpu_id}")
+    model = setup_model(args.model_name, device)
     error_files = []
 
-    for i, item in enumerate(data):
+    for item in data_batch:
         try:
             impression_id = item["uid"]
             image = item["image"]
-            logger.info(f"Processing image {i + 1}/{len(data)} with shape: {image.shape}")
+            logger.info(f"GPU {gpu_id} processing: {impression_id}")
 
             embedding = generate_embedding(model, image, device)
             save_embedding(embedding, impression_id, args.save_path, args.model_name)
@@ -196,6 +193,40 @@ def main_process_func(data, model, device, args):
             error_msg = f"Error processing {impression_id}: {str(e)}"
             logger.error(error_msg)
             error_files.append({"uid": str(impression_id), "error": str(e)})
+
+    return error_files
+
+
+def main_process_func(data, args):
+    """Main processing function using multiple GPUs
+
+    Args:
+        data: Dataset containing images
+        args: Command line arguments
+    """
+    logger.info("Processing data...")
+    num_gpus = torch.cuda.device_count()
+    logger.info(f"Using {num_gpus} GPUs")
+
+    # Split data into chunks for each GPU
+    chunk_size = len(data) // num_gpus
+    if len(data) % num_gpus != 0:
+        chunk_size += 1
+    data_chunks = [data[i : i + chunk_size] for i in range(0, len(data), chunk_size)]
+
+    # Create process pool
+    pool = mp.Pool(processes=num_gpus)
+    process_func = partial(process_batch, args=args)
+
+    # Process data in parallel
+    error_files = []
+    try:
+        results = pool.starmap(process_func, enumerate(data_chunks))
+        for result in results:
+            error_files.extend(result)
+    finally:
+        pool.close()
+        pool.join()
 
     if error_files:
         logger.error(f"Failed to process {len(error_files)} files")
@@ -220,7 +251,7 @@ def parse_args():
     parser.add_argument("--cache_dir", type=str, default="../data/cache", help="Cache directory")
     parser.add_argument("--batch_size", type=int, default=1, help="Training batch size")
     parser.add_argument("--val_batch_size", type=int, default=1, help="Validation batch size")
-    parser.add_argument("--num_workers", type=int, default=4, help="Number of data loading workers")
+    parser.add_argument("--num_workers", type=int, default=8, help="Number of data loading workers")
     parser.add_argument("--dist", action="store_true", help="Enable distributed training")
     parser.add_argument(
         "--model_name", type=str, default="standardmodelbio/smb-vision-base-20250122", help="Model name or path"
@@ -228,7 +259,6 @@ def parse_args():
     parser.add_argument(
         "--save_path", type=str, default="s3://bucket-name/folder-name", help="Save s3 path for embeddings"
     )
-    parser.add_argument("--gpu", type=int, default=0, help="GPU device ID")
     parser.add_argument("--bf16", action="store_true", help="Enable bfloat16 precision")
     return parser.parse_args()
 
@@ -237,17 +267,15 @@ if __name__ == "__main__":
     logger.info("Starting embedding generation process")
     args = parse_args()
 
-    # Setup device
-    device = torch.device(f"cuda:{args.gpu}" if torch.cuda.is_available() else "cpu")
-    logger.info(f"Using device: {device}")
-
     try:
-        # Setup dataset and model
-        dataset = setup_dataset(args)
-        model = setup_model(device, args.model_name)
+        if not torch.cuda.is_available():
+            raise RuntimeError("No CUDA devices available")
 
-        # Process train and validation splits
-        main_process_func(dataset, model, device, args)
+        # Setup dataset
+        dataset = setup_dataset(args)
+
+        # Process using multiple GPUs
+        main_process_func(dataset, args)
 
         logger.info("Embedding generation process completed successfully")
 
