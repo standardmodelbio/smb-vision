@@ -6,8 +6,6 @@ import os
 from functools import partial
 
 # Third-party library imports
-import awswrangler as wr
-import boto3
 import pandas as pd
 import torch
 from loguru import logger
