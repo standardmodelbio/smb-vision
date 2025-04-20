@@ -142,7 +142,7 @@ def save_embedding(embedding, impression_id, save_path, model_id):
         model_id (str): Identifier for the model used
     """
     try:
-        np_embedding = embedding.last_hidden_state.squeeze(0).float().cpu()
+        np_embedding = embedding.last_hidden_state.squeeze(0).float().cpu().numpy()
         # Store original shape before flattening
         original_shape = np_embedding.shape
         # Convert to nested list before storing in DataFrame
@@ -160,7 +160,7 @@ def save_embedding(embedding, impression_id, save_path, model_id):
             path=save_path,
             dataset=True,
             partition_cols=["model_id"],
-            mode="append",
+            mode="overwrite_partitions",
             compression="snappy",
             max_rows_by_file=1000000,
         )
