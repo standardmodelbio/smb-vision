@@ -136,7 +136,14 @@ class VideoMAEEmbeddings(nn.Module):
         embeddings = self.patch_embeddings(pixel_values)
 
         # add position embeddings
-        embeddings = embeddings + self.position_embeddings.type_as(embeddings).to(embeddings.device).clone().detach()
+        embeddings = (
+            embeddings
+            + self.position_embeddings[:, : embeddings.size(1)]
+            .type_as(embeddings)
+            .to(embeddings.device)
+            .clone()
+            .detach()
+        )
         # only keep visible patches
         # ~bool_masked_pos means visible
         if bool_masked_pos is not None:

@@ -9,7 +9,7 @@ import torch
 from loguru import logger
 
 from dataloader.load import CTDataset
-from transformers import VideoMAEForPreTraining
+from models.videomae.modeling_videomae import VideoMAEForPreTraining
 
 
 def build_json(impressions_path, image_dir, output_json_path):
