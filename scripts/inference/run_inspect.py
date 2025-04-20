@@ -27,28 +27,30 @@ def build_json(impressions_path, image_dir, output_json_path):
     Returns:
         tuple: List of files and path to created JSON
     """
-    # Read impressions CSV file
-    impressions_df = pd.read_csv(impressions_path)
-
-    # Create file list with image paths
     files = []
-    missing_files = []
-    for _, row in impressions_df.iterrows():
-        image_path = os.path.join(image_dir, f"{row['impression_id']}.nii.gz")
-        if os.path.exists(image_path):
-            files.append({"image": image_path, "uid": row["impression_id"]})
-        else:
-            missing_files.append(image_path)
-            logger.warning(f"Image file not found: {image_path}")
 
-    if missing_files:
-        logger.warning(f"Total missing files: {len(missing_files)}")
+    # If output_json_path exists, read existing files
+    existing_files = set()
+    if os.path.exists(output_json_path):
+        with open(output_json_path, "r") as f:
+            existing_data = json.load(f)
+            for item in existing_data:
+                existing_files.add(item["uid"])
+            # files.extend(existing_data)
+
+    # Read files from image_dir
+    for filename in os.listdir(image_dir):
+        if filename.endswith(".nii.gz"):
+            uid = filename.replace(".nii.gz", "")
+            if uid not in existing_files:
+                image_path = os.path.join(image_dir, filename)
+                files.append({"image": image_path, "uid": uid})
 
     # Write to json file
     with open(output_json_path, "w") as f:
         json.dump(files, f, indent=2)
 
-    logger.info(f"Created dataset JSON file at {output_json_path}")
+    logger.info(f"Created/updated dataset JSON file at {output_json_path}")
     return files, output_json_path
 
 
@@ -178,6 +180,7 @@ def process_batch(gpu_id, data_batch, args):
     """
     device = torch.device(f"cuda:{gpu_id}")
     model = setup_model(args.model_name, device)
+    model_id = args.model_name.split("/")[-1]
     error_files = []
 
     for item in data_batch:
@@ -187,7 +190,7 @@ def process_batch(gpu_id, data_batch, args):
             logger.info(f"GPU {gpu_id} processing: {impression_id}")
 
             embedding = generate_embedding(model, image, device)
-            save_embedding(embedding, impression_id, args.save_path, args.model_name)
+            save_embedding(embedding, impression_id, args.save_path, model_id)
 
         except Exception as e:
             error_msg = f"Error processing {impression_id}: {str(e)}"
@@ -245,7 +248,7 @@ def parse_args():
         "--impressions_path", type=str, default="../data/Final_impressions.csv", help="Path to dataset CSV file"
     )
     parser.add_argument("--image_dir", type=str, default="../data/asset-inspect/CTPA", help="Path to image directory")
-    parser.add_argument("--saved_json_path", type=str, default="/tmp/asset-inspect.json", help="Path to JSON file")
+    parser.add_argument("--saved_json_path", type=str, default="../data/asset-inspect.json", help="Path to JSON file")
     parser.add_argument("--img_size", type=int, default=512, help="Image size")
     parser.add_argument("--depth", type=int, default=320, help="Image depth")
     parser.add_argument("--cache_dir", type=str, default="../data/cache", help="Cache directory")
