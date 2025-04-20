@@ -70,7 +70,7 @@ class CTDataset:
             [
                 LoadImaged(keys=["image"]),
                 EnsureChannelFirstd(keys=["image"]),
-                Orientationd(keys=["image"], axcodes="RAS"),
+                # Orientationd(keys=["image"], axcodes="RAS"),
                 # Spacingd(
                 #     keys=["image"],
                 #     pixdim=self.downsample_ratio,
