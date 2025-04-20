@@ -18,33 +18,35 @@ from dataloader.load import CTDataset
 from models.videomae.modeling_videomae import VideoMAEForPreTraining
 
 
-def build_json(impressions_path, image_dir, output_json_path):
-    """Build a json file containing paths to nifti files from separate train/validation directories
+def build_json(image_dir, save_dir, output_json_path):
+    """Build a json file containing paths to nifti files and track processed files
 
     Args:
-        impressions_path (str): Path to CSV file containing image impressions
-        image_dir (str): Directory containing the image files
+        image_dir (str): Directory containing the nifti image files
+        save_dir (str): Directory where processed embeddings are saved
         output_json_path (str): Path to save the output JSON file
 
     Returns:
-        tuple: List of files and path to created JSON
+        tuple: List of unprocessed files and path to created JSON file
     """
     files = []
+    processed_uids = set()
 
-    # If output_json_path exists, read existing files
-    existing_files = set()
-    if os.path.exists(output_json_path):
-        with open(output_json_path, "r") as f:
-            existing_data = json.load(f)
-            for item in existing_data:
-                existing_files.add(item["uid"])
-            # files.extend(existing_data)
+    # Read processed UIDs from parquet files in save_dir
+    if os.path.exists(save_dir):
+        for model_dir in os.listdir(save_dir):
+            model_path = os.path.join(save_dir, model_dir)
+            if os.path.isdir(model_path):
+                for parquet_file in os.listdir(model_path):
+                    if parquet_file.endswith(".parquet"):
+                        processed_uids.add(parquet_file.replace(".parquet", ""))
+        logger.info(f"Found {len(processed_uids)} previously processed UIDs from parquet files")
 
     # Read files from image_dir
     for filename in tqdm(os.listdir(image_dir), desc="Building file list"):
         if filename.endswith(".nii.gz"):
             uid = filename.replace(".nii.gz", "")
-            if uid not in existing_files:
+            if uid not in processed_uids:
                 image_path = os.path.join(image_dir, filename)
                 files.append({"image": image_path, "uid": uid})
 
@@ -52,7 +54,7 @@ def build_json(impressions_path, image_dir, output_json_path):
     with open(output_json_path, "w") as f:
         json.dump(files, f, indent=2)
 
-    logger.info(f"Created/updated dataset JSON file at {output_json_path}")
+    logger.info(f"Created/updated dataset JSON file at {output_json_path} with {len(files)} unprocessed files")
     return files, output_json_path
 
 
@@ -66,7 +68,7 @@ def setup_dataset(args):
         CTDataset: The configured dataset
     """
     logger.info("Building JSON file...")
-    data_dict, output_json_path = build_json(args.impressions_path, args.image_dir, args.saved_json_path)
+    data_dict, output_json_path = build_json(args.image_dir, args.save_dir, args.saved_json_path)
 
     logger.info("Samples (first 3):")
     for sample in data_dict[:3]:
@@ -135,12 +137,12 @@ def generate_embedding(model, image, device):
 
 
 def save_embedding(embedding, impression_id, save_path, model_id):
-    """Save generated embedding to S3
+    """Save generated embedding locally
 
     Args:
         embedding: The embedding tensor
         impression_id: Unique identifier for the image
-        save_path (str): S3 path to save embeddings
+        save_path (str): Local path to save embeddings
         model_id (str): Identifier for the model used
     """
     try:
@@ -157,14 +159,15 @@ def save_embedding(embedding, impression_id, save_path, model_id):
             }
         )
 
-        wr.s3.to_parquet(
-            df=df,
-            path=save_path,
-            dataset=True,
-            partition_cols=["model_id"],
-            mode="append",
+        # Create model directory if it doesn't exist
+        model_dir = os.path.join(save_path, f"model_id={model_id}")
+        os.makedirs(model_dir, exist_ok=True)
+
+        # Save locally as parquet file
+        output_file = os.path.join(model_dir, f"{impression_id}.parquet")
+        df.to_parquet(
+            output_file,
             compression="snappy",
-            max_rows_by_file=1000000,
         )
     except Exception as e:
         logger.error(f"Failed to save embedding to {save_path}: {e}")
@@ -189,7 +192,7 @@ def process_batch(gpu_id, data_batch, args):
             impression_id = item["uid"]
             image = item["image"]
             embedding = generate_embedding(model, image, device)
-            save_embedding(embedding, impression_id, args.save_path, model_id)
+            save_embedding(embedding, impression_id, args.save_dir, model_id)
 
         except Exception as e:
             error_msg = f"Error processing {impression_id}: {str(e)}"
@@ -260,7 +263,7 @@ def parse_args():
         "--model_name", type=str, default="standardmodelbio/smb-vision-base-20250122", help="Model name or path"
     )
     parser.add_argument(
-        "--save_path", type=str, default="s3://bucket-name/folder-name", help="Save s3 path for embeddings"
+        "--save_dir", type=str, default="s3://bucket-name/folder-name", help="Save s3 path for embeddings"
     )
     parser.add_argument("--bf16", action="store_true", help="Enable bfloat16 precision")
     return parser.parse_args()
