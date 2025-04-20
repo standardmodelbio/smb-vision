@@ -165,7 +165,6 @@ def save_embedding(embedding, impression_id, save_path, model_id):
             compression="snappy",
             max_rows_by_file=1000000,
         )
-        logger.info(f"Saved embedding to {save_path}")
     except Exception as e:
         logger.error(f"Failed to save embedding to {save_path}: {e}")
         raise
@@ -188,8 +187,6 @@ def process_batch(gpu_id, data_batch, args):
         try:
             impression_id = item["uid"]
             image = item["image"]
-            logger.info(f"GPU {gpu_id} processing: {impression_id}")
-
             embedding = generate_embedding(model, image, device)
             save_embedding(embedding, impression_id, args.save_path, model_id)
 
