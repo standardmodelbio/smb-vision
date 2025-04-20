@@ -26,9 +26,9 @@ from torch import nn
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
 
 from transformers.activations import ACT2FN
-from transformers.configuration_videomae import VideoMAEConfig
 from transformers.modeling_outputs import BaseModelOutput, ImageClassifierOutput
 from transformers.modeling_utils import ALL_ATTENTION_FUNCTIONS, PreTrainedModel
+from transformers.models.videomae.configuration_videomae import VideoMAEConfig
 from transformers.pytorch_utils import find_pruneable_heads_and_indices, prune_linear_layer
 from transformers.utils import (
     ModelOutput,
