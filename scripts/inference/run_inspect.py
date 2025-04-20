@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+from re import A
 
 import awswrangler as wr
 import pandas as pd
@@ -60,6 +61,7 @@ def setup_dataset(args):
             val_batch_size=args.val_batch_size,
             num_workers=args.num_workers,
             dist=args.dist,
+            bf16=args.bf16,
         )
         logger.info("Dataset setup successful")
         return dataset.setup()
@@ -169,6 +171,7 @@ def parse_args():
         "--save_path", type=str, default="s3://bucket-name/folder-name", help="Save s3 path for embeddings"
     )
     parser.add_argument("--gpu", type=int, default=0, help="GPU device ID")
+    parser.add_argument("--bf16", action="store_true", help="Enable bfloat16 precision")
     return parser.parse_args()
 
 

@@ -1,6 +1,6 @@
-import json
 from typing import Optional, Sequence
 
+import torch
 import torch.distributed as ptdist
 from monai.data import (
     CacheDataset,
@@ -42,6 +42,7 @@ class CTDataset:
         cache_rate: float = 0.0,
         cache_dir: Optional[str] = None,
         dist: bool = False,
+        bf16: bool = False,
     ):
         super().__init__()
         self.data_list = data_list
@@ -55,6 +56,7 @@ class CTDataset:
         self.cache_num = cache_num
         self.cache_rate = cache_rate
         self.dist = dist
+        self.bf16 = bf16
 
     def val_transforms(
         self,
@@ -88,7 +90,7 @@ class CTDataset:
                 #     keys=["image"],
                 #     spatial_size=(self.img_size, self.img_size, self.depth),
                 # ),
-                ToTensord(keys=["image"]),
+                ToTensord(keys=["image"], dtype=torch.bfloat16 if self.bf16 else torch.float32),
                 PermuteImage(),
             ]
         )
