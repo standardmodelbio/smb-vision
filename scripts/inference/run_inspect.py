@@ -96,7 +96,7 @@ def generate_embedding(model, image, device):
 
 def save_embedding(embedding, impression_id, save_path, model_id):
     try:
-        np_embedding = embedding.last_hidden_state.squeeze(0).cpu().numpy()
+        np_embedding = embedding.last_hidden_state.squeeze(0).float().cpu().numpy()
         # Store original shape before flattening
         original_shape = np_embedding.shape
         # Flatten the embedding array to 1D
