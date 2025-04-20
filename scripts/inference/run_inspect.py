@@ -264,6 +264,9 @@ def parse_args():
 
 
 if __name__ == "__main__":
+    # Set multiprocessing start method to 'spawn'
+    torch.multiprocessing.set_start_method("spawn")
+
     logger.info("Starting embedding generation process")
     args = parse_args()
 
