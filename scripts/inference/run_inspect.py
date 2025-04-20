@@ -7,8 +7,7 @@ from functools import partial
 
 # Third-party library imports
 import awswrangler as wr
-
-# import boto3
+import boto3
 import pandas as pd
 import torch
 from loguru import logger
@@ -20,7 +19,8 @@ from models.videomae.modeling_videomae import VideoMAEForPreTraining
 
 
 # Use your AWS SSO profile directly
-wr.config.profile = "smb-dev"
+boto3.setup_default_session(profile_name="smb-dev")
+client = boto3.client("s3")
 
 
 def build_json(impressions_path, image_dir, output_json_path):
