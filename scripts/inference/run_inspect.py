@@ -160,7 +160,7 @@ def save_embedding(embedding, impression_id, save_path, model_id):
             path=save_path,
             dataset=True,
             partition_cols=["model_id"],
-            mode="overwrite_partitions",
+            mode="append",
             compression="snappy",
             max_rows_by_file=1000000,
         )
