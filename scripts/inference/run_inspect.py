@@ -10,6 +10,7 @@ import awswrangler as wr
 import pandas as pd
 import torch
 from loguru import logger
+from tqdm import tqdm
 
 # Local imports
 from dataloader.load import CTDataset
@@ -39,7 +40,7 @@ def build_json(impressions_path, image_dir, output_json_path):
             # files.extend(existing_data)
 
     # Read files from image_dir
-    for filename in os.listdir(image_dir):
+    for filename in tqdm(os.listdir(image_dir), desc="Building file list"):
         if filename.endswith(".nii.gz"):
             uid = filename.replace(".nii.gz", "")
             if uid not in existing_files:
@@ -183,7 +184,7 @@ def process_batch(gpu_id, data_batch, args):
     model_id = args.model_name.split("/")[-1]
     error_files = []
 
-    for item in data_batch:
+    for item in tqdm(data_batch, desc=f"GPU {gpu_id} processing"):
         try:
             impression_id = item["uid"]
             image = item["image"]
@@ -224,8 +225,9 @@ def main_process_func(data, args):
     # Process data in parallel
     error_files = []
     try:
-        results = pool.starmap(process_func, enumerate(data_chunks))
-        for result in results:
+        for result in tqdm(
+            pool.starmap(process_func, enumerate(data_chunks)), total=len(data_chunks), desc="Processing batches"
+        ):
             error_files.extend(result)
     finally:
         pool.close()
