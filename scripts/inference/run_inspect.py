@@ -84,14 +84,14 @@ def setup_model(device, model_name):
 
 
 def generate_embedding(model, image, device):
-    try:
-        image = image.to(device)
-        with torch.no_grad():
-            embedding = model.videomae(image.unsqueeze(0))
-        return embedding
-    except Exception as e:
-        logger.error(f"Failed to generate embedding: {e}")
-        raise
+    # try:
+    image = image.to(device)
+    with torch.no_grad():
+        embedding = model.videomae(image.unsqueeze(0))
+    return embedding
+    # except Exception as e:
+    #     logger.error(f"Failed to generate embedding: {e}")
+    #     raise
 
 
 def save_embedding(embedding, impression_id, save_path, model_id):
@@ -131,18 +131,18 @@ def main_process_func(data, model, device, args):
     error_files = []
 
     for i, item in enumerate(data):
-        try:
-            impression_id = item["uid"]
-            image = item["image"]
-            logger.info(f"Processing image {i + 1}/{len(data)} with shape: {image.shape}")
+        # try:
+        impression_id = item["uid"]
+        image = item["image"]
+        logger.info(f"Processing image {i + 1}/{len(data)} with shape: {image.shape}")
 
-            embedding = generate_embedding(model, image, device)
-            save_embedding(embedding, impression_id, args.save_path, args.model_name)
+        embedding = generate_embedding(model, image, device)
+        save_embedding(embedding, impression_id, args.save_path, args.model_name)
 
-        except Exception as e:
-            error_msg = f"Error processing {impression_id}: {str(e)}"
-            logger.error(error_msg)
-            error_files.append({"uid": str(impression_id), "error": str(e)})
+        # except Exception as e:
+        #     error_msg = f"Error processing {impression_id}: {str(e)}"
+        #     logger.error(error_msg)
+        #     error_files.append({"uid": str(impression_id), "error": str(e)})
 
     if error_files:
         logger.error(f"Failed to process {len(error_files)} files")
@@ -183,16 +183,16 @@ if __name__ == "__main__":
     device = torch.device(f"cuda:{args.gpu}" if torch.cuda.is_available() else "cpu")
     logger.info(f"Using device: {device}")
 
-    try:
-        # Setup dataset and model
-        dataset = setup_dataset(args)
-        model = setup_model(device, args.model_name)
+    # try:
+    # Setup dataset and model
+    dataset = setup_dataset(args)
+    model = setup_model(device, args.model_name)
 
-        # Process train and validation splits
-        main_process_func(dataset, model, device, args)
+    # Process train and validation splits
+    main_process_func(dataset, model, device, args)
 
-        logger.info("Embedding generation process completed successfully")
+    logger.info("Embedding generation process completed successfully")
 
-    except Exception as e:
-        logger.error(f"Fatal error in main process: {e}")
-        raise
+    # except Exception as e:
+    #     logger.error(f"Fatal error in main process: {e}")
+    #     raise
