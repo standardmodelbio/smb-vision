@@ -270,7 +270,7 @@ if __name__ == "__main__":
     # Use your AWS SSO profile directly
     # for profile in boto3.session.Session().available_profiles:
     #     print(profile)
-    boto_session = boto3.Session(profile_name="smb-dev")
+    boto3.setup_default_session(region_name="us-east-2", profile_name="smb-dev")
 
     # Set multiprocessing start method to 'spawn'
     torch.multiprocessing.set_start_method("spawn")
