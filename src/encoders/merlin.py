@@ -89,7 +89,7 @@ def parse_args():
     parser.add_argument("--encoder", type=str, choices=["merlin", "smb-vision"], required=True)
     parser.add_argument("--image_dir", type=str, required=True)
     parser.add_argument("--save_dir", type=str, required=True)
-    parser.add_argument("--output_json_path", type=str, required=True)
+    parser.add_argument("--saved_json_path", type=str, required=True)
 
     # Dataset-specific arguments
     parser.add_argument("--cache_dir", type=str, default=None, help="Cache directory for Merlin")

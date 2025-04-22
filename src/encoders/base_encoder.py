@@ -82,7 +82,7 @@ class BaseEncoderRunner:
     def setup_dataset(self, args: argparse.Namespace) -> Dataset:
         """Set up the dataset for processing"""
         logger.info("Building JSON file...")
-        data_dict, _ = self.build_json(args.image_dir, args.save_dir, args.output_json_path)
+        data_dict, _ = self.build_json(args.image_dir, args.save_dir, args.saved_json_path)
 
         logger.info("Samples (first 3):")
         for sample in data_dict[:3]:

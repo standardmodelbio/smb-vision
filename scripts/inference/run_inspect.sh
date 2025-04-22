@@ -13,6 +13,7 @@ S3_PATH=s3://smb-data-us-east-2/embeddings/dataset=inspect
 # aws s3 sync /workspace/embeddings/dataset=inspect $S3_PATH --profile smb-dev
 
 python src/encoders/merlin.py \
+    --encoder merlin \
     --image_dir $HOME/CTPA/ \
     --saved_json_path $HOME/asset-inspect.json \
     --cache_dir $HOME/cache \
