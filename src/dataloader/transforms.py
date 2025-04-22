@@ -35,8 +35,6 @@ ct_transforms = {
             ToTensord(keys=["image"]),
             PermuteImage(),
         ],
-        lazy=False,
-        log_stats=True,
     ),
     "merlin": Compose(
         [
@@ -52,7 +50,5 @@ ct_transforms = {
             ),
             ToTensord(keys=["image"]),
         ],
-        lazy=False,
-        log_stats=True,
     ),
 }
