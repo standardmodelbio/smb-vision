@@ -1,68 +1,104 @@
-from typing import Optional
+import shutil
+import tempfile
+from copy import deepcopy
+from pathlib import Path
+from typing import List
 
-import torch.distributed as ptdist
-from monai.data import (
-    CacheDataset,
-    Dataset,
-    partition_dataset,
-)
+import monai
+import torch
+from merlin.data.monai_transforms import ImageTransforms
+from monai.data.utils import SUPPORTED_PICKLE_MOD
+from monai.utils import look_up_option
 
 from .transforms import ct_transforms
 
 
-class CTDataset:
+class CTPersistentDataset(monai.data.PersistentDataset):
+    def __init__(self, data, transform, cache_dir=None):
+        super().__init__(data=data, transform=transform, cache_dir=cache_dir)
+
+        print(f"Size of dataset: {self.__len__()}\n")
+
+    def _cachecheck(self, item_transformed):
+        hashfile = None
+        _item_transformed = deepcopy(item_transformed)
+        image_data = {"image": item_transformed.get("image")}  # Assuming the image data is under the 'image' key
+
+        if self.cache_dir is not None and image_data is not None:
+            data_item_md5 = self.hash_func(image_data).decode("utf-8")  # Hash based on image data
+            hashfile = self.cache_dir / f"{data_item_md5}.pt"
+
+        if hashfile is not None and hashfile.is_file():
+            cached_image = torch.load(hashfile)
+            _item_transformed["image"] = cached_image
+            return _item_transformed
+
+        _image_transformed = self._pre_transform(image_data)["image"]
+        _item_transformed["image"] = _image_transformed
+        if hashfile is None:
+            return _item_transformed
+        try:
+            # NOTE: Writing to a temporary directory and then using a nearly atomic rename operation
+            #       to make the cache more robust to manual killing of parent process
+            #       which may leave partially written cache files in an incomplete state
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                temp_hash_file = Path(tmpdirname) / hashfile.name
+                torch.save(
+                    obj=_image_transformed,
+                    f=temp_hash_file,
+                    pickle_module=look_up_option(self.pickle_module, SUPPORTED_PICKLE_MOD),
+                    pickle_protocol=self.pickle_protocol,
+                )
+                if temp_hash_file.is_file() and not hashfile.is_file():
+                    # On Unix, if target exists and is a file, it will be replaced silently if the user has permission.
+                    # for more details: https://docs.python.org/3/library/shutil.html#shutil.move.
+                    try:
+                        shutil.move(str(temp_hash_file), hashfile)
+                    except FileExistsError:
+                        pass
+        except PermissionError:  # project-monai/monai issue #3613
+            pass
+        return _item_transformed
+
+    def _transform(self, index: int):
+        pre_random_item = self._cachecheck(self.data[index])
+        return self._post_transform(pre_random_item)
+
+
+class MerlinDataset(CTPersistentDataset):
+    def __init__(self, data, transform=ct_transforms["merlin"], cache_dir=None):
+        super().__init__(data=data, transform=transform, cache_dir=cache_dir)
+
+        print(f"Size of dataset: {self.__len__()}\n")
+
+
+class SMBVisionDataset(CTPersistentDataset):
+    def __init__(self, data, transform=ct_transforms["smb-vision"], cache_dir=None):
+        super().__init__(data=data, transform=transform, cache_dir=cache_dir)
+
+        print(f"Size of dataset: {self.__len__()}\n")
+
+
+class DataLoader(monai.data.DataLoader):
     def __init__(
         self,
-        data_list,
-        args,
+        datalist: List[dict],
+        cache_dir: str,
+        batchsize: int,
+        shuffle: bool = True,
+        num_workers: int = 0,
     ):
-        super().__init__()
-        self.data_list = data_list
-        self.num_workers = args.num_workers
-        self.cache_num = args.cache_num
-        self.cache_rate = args.cache_rate
-        self.cache_dir = args.cache_dir
-        self.dist = args.dist
-        self.model_class = args.model_id
-
-    def val_transforms(
-        self,
-        model_class: str,
-    ):
-        return ct_transforms[model_class]
-
-    def train_transforms(
-        self,
-        model_class: str,
-    ):
-        return ct_transforms[model_class]
-
-    def setup(
-        self,
-    ):
-        if self.dist:
-            train_partition = partition_dataset(
-                data=self.data_list,
-                num_partitions=ptdist.get_world_size(),
-                shuffle=True,
-                even_divisible=True,
-                drop_last=False,
-            )[ptdist.get_rank()]
-        else:
-            train_partition = self.data_list
-
-        if any([self.cache_num, self.cache_rate]) > 0:
-            train_ds = CacheDataset(
-                train_partition,
-                cache_num=self.cache_num,
-                cache_rate=self.cache_rate,
-                num_workers=self.num_workers,
-                transform=self.train_transforms(self.model_class),
-            )
-        else:
-            train_ds = Dataset(
-                train_partition,
-                transform=self.train_transforms(self.model_class),
-            )
-
-        return train_ds
+        self.datalist = datalist
+        self.cache_dir = cache_dir
+        self.batchsize = batchsize
+        self.dataset = CTPersistentDataset(
+            data=datalist,
+            transform=ImageTransforms,
+            cache_dir=cache_dir,
+        )
+        super().__init__(
+            self.dataset,
+            batch_size=batchsize,
+            shuffle=shuffle,
+            num_workers=num_workers,
+        )

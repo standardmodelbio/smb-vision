@@ -9,14 +9,14 @@ from loguru import logger
 from merlin import Merlin
 from tqdm import tqdm
 
-from dataloader.load import CTDataset
+from dataloader.load import MerlinDataset
 
 
 class MerlinEncoder(BaseEncoder):
     """Merlin model encoder implementation"""
 
     def create_dataset(self, data_dict: List[Dict], args: argparse.Namespace):
-        return CTDataset(data_dict, args).setup()
+        return MerlinDataset(data_dict, args.cache_dir)
 
     def setup_model(self, image_embedding: bool = True):
         logger.info(f"Setting up Merlin model on {self.device}...")

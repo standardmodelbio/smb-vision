@@ -21,7 +21,7 @@ class PermuteImage(Transform):
 
 
 ct_transforms = {
-    "standardmodelbio/smb-vision-base-20250122": Compose(
+    "smb-vision": Compose(
         [
             LoadImaged(keys=["image"]),
             EnsureChannelFirstd(keys=["image"]),
@@ -34,7 +34,9 @@ ct_transforms = {
             ),
             ToTensord(keys=["image"]),
             PermuteImage(),
-        ]
+        ],
+        lazy=False,
+        log_stats=True,
     ),
     "merlin": Compose(
         [
@@ -49,6 +51,8 @@ ct_transforms = {
                 keys=["image"],
             ),
             ToTensord(keys=["image"]),
-        ]
+        ],
+        lazy=False,
+        log_stats=True,
     ),
 }
