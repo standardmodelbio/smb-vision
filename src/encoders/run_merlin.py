@@ -16,7 +16,7 @@ class MerlinEncoder(BaseEncoder):
     """Merlin model encoder implementation"""
 
     def create_dataset(self, data_dict: List[Dict], args: argparse.Namespace):
-        return MerlinDataset(data_dict, args.cache_dir)
+        return MerlinDataset(data_dict, cache_dir=args.cache_dir)
 
     def setup_model(self, image_embedding: bool = True):
         logger.info(f"Setting up Merlin model on {self.device}...")
