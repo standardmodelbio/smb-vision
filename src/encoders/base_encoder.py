@@ -36,7 +36,7 @@ class BaseEncoder(ABC):
         pass
 
     @abstractmethod
-    def save_embedding(self, embedding: torch.Tensor, uid: str, save_dir: str, **kwargs):
+    def save_embedding(self, embedding: torch.Tensor, uid: str, save_dir: str, model_id: str, **kwargs):
         """Save generated embedding"""
         pass
 
@@ -82,7 +82,9 @@ class BaseEncoderRunner:
     def setup_dataset(self, args: argparse.Namespace) -> Dataset:
         """Set up the dataset for processing"""
         logger.info("Building JSON file...")
-        data_dict, _ = self.build_json(args.image_dir, args.save_dir, args.saved_json_path)
+        data_dict, _ = self.build_json(
+            args.image_dir, os.path.join(args.save_dir, f"model_id={args.model_id}"), args.saved_json_path
+        )
 
         logger.info("Samples (first 3):")
         for sample in data_dict[:3]:

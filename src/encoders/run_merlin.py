@@ -40,7 +40,7 @@ class MerlinEncoder(BaseEncoder):
             logger.error(f"Failed to generate embedding: {e}")
             raise
 
-    def save_embedding(self, embedding: torch.Tensor, uid: str, save_dir: str):
+    def save_embedding(self, embedding: torch.Tensor, uid: str, save_dir: str, model_id: str):
         try:
             np_embedding = embedding[0].float().cpu().numpy()
             original_shape = np_embedding.shape
@@ -50,11 +50,11 @@ class MerlinEncoder(BaseEncoder):
                     "uid": [uid],
                     "embedding": [np_embedding.flatten()],
                     "embedding_shape": [original_shape],
-                    "model_id": ["merlin"],
+                    "model_id": [model_id],
                 }
             )
 
-            model_dir = os.path.join(save_dir, "model_id=merlin")
+            model_dir = os.path.join(save_dir, f"model_id={model_id}")
             os.makedirs(model_dir, exist_ok=True)
             output_file = os.path.join(model_dir, f"{uid}.parquet")
             df.to_parquet(output_file, compression="snappy")
@@ -73,7 +73,7 @@ class MerlinEncoder(BaseEncoder):
                 uid = batch["uid"]
                 image = batch["image"]
                 embedding = self.generate_embedding(model, image)
-                self.save_embedding(embedding, uid, args.save_dir)
+                self.save_embedding(embedding, uid, args.save_dir, args.model_id)
             except Exception as e:
                 error_msg = f"Error processing {uid}: {str(e)}"
                 logger.error(error_msg)
@@ -85,7 +85,7 @@ class MerlinEncoder(BaseEncoder):
 def parse_args():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(description="Run encoder inference")
-    parser.add_argument("--encoder", type=str, choices=["merlin", "smb-vision"], required=True)
+    parser.add_argument("--model_id", type=str, required=True)
     parser.add_argument("--image_dir", type=str, required=True)
     parser.add_argument("--save_dir", type=str, required=True)
     parser.add_argument("--saved_json_path", type=str, required=True)
