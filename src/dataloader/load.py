@@ -6,7 +6,8 @@ from monai.data import (
     Dataset,
     partition_dataset,
 )
-from transforms import ct_transforms
+
+from .transforms import ct_transforms
 
 
 class CTDataset:
