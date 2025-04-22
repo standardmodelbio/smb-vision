@@ -32,9 +32,10 @@ class MerlinEncoder(BaseEncoder):
 
     def generate_embedding(self, model, image: torch.Tensor) -> torch.Tensor:
         try:
-            image = image.to(self.device)
+            image = image.unsqueeze(0).to(self.device)
             with torch.no_grad():
                 embedding = model(image)
+                logger.info(f"Embedding shape: {embedding.shape}")
             return embedding
         except Exception as e:
             logger.error(f"Failed to generate embedding: {e}")
