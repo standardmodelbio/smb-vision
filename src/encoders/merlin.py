@@ -111,7 +111,7 @@ def main():
         # "videomae": VideoMAEEncoder,
     }
     encoder_class = encoder_classes[args.encoder]
-    runner = BaseEncoderRunner(encoder_class)
+    runner = BaseEncoderRunner(encoder_class("cpu"))
 
     try:
         if not torch.cuda.is_available():
