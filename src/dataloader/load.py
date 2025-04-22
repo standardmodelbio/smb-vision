@@ -1,101 +1,40 @@
-from typing import Optional, Sequence
+from typing import Optional
 
-import torch
 import torch.distributed as ptdist
 from monai.data import (
     CacheDataset,
     Dataset,
     partition_dataset,
 )
-from monai.transforms import (
-    CenterSpatialCropd,
-    Compose,
-    EnsureChannelFirstd,
-    LoadImaged,
-    Orientationd,
-    ScaleIntensityRanged,
-    SpatialPadd,
-    ToTensord,
-    Transform,
-)
-
-
-class PermuteImage(Transform):
-    """Permute the dimensions of the image"""
-
-    def __call__(self, data):
-        data["image"] = data["image"].permute(3, 0, 1, 2)  # Adjust permutation order as needed
-        return data
+from transforms import ct_transforms
 
 
 class CTDataset:
     def __init__(
         self,
         data_list,
-        img_size: int,
-        depth: int,
-        downsample_ratio: Optional[Sequence[float]] = None,
-        batch_size: int = 1,
-        val_batch_size: int = 1,
-        num_workers: int = 4,
-        cache_num: int = 0,
-        cache_rate: float = 0.0,
-        cache_dir: Optional[str] = None,
-        dist: bool = False,
-        bf16: bool = False,
+        args,
     ):
         super().__init__()
         self.data_list = data_list
-        self.img_size = img_size
-        self.depth = depth
-        self.cache_dir = cache_dir
-        self.downsample_ratio = downsample_ratio
-        self.batch_size = batch_size
-        self.val_batch_size = val_batch_size
-        self.num_workers = num_workers
-        self.cache_num = cache_num
-        self.cache_rate = cache_rate
-        self.dist = dist
-        self.bf16 = bf16
+        self.num_workers = args.num_workers
+        self.cache_num = args.cache_num
+        self.cache_rate = args.cache_rate
+        self.cache_dir = args.cache_dir
+        self.dist = args.dist
+        self.model_class = args.model_class
 
     def val_transforms(
         self,
+        model_class: str,
     ):
-        return self.train_transforms()
+        return ct_transforms[model_class]
 
     def train_transforms(
         self,
+        model_class: str,
     ):
-        transforms = Compose(
-            [
-                LoadImaged(keys=["image"]),
-                EnsureChannelFirstd(keys=["image"]),
-                # Orientationd(keys=["image"], axcodes="RAS"),
-                # Spacingd(
-                #     keys=["image"],
-                #     pixdim=self.downsample_ratio,
-                #     mode=("bilinear"),
-                # ),
-                ScaleIntensityRanged(
-                    keys=["image"],
-                    a_min=-1000,
-                    a_max=300,
-                    b_min=0.0,
-                    b_max=1.0,
-                    clip=True,
-                ),
-                # CropForegroundd(keys=["image"], source_key="image"),
-                CenterSpatialCropd(keys=["image"], roi_size=(self.img_size, self.img_size, self.depth)),
-                SpatialPadd(
-                    keys=["image"],
-                    spatial_size=(16, 16, 16),
-                ),
-                ToTensord(keys=["image"], dtype=torch.bfloat16 if self.bf16 else torch.float32),
-                PermuteImage(),
-            ]
-        )
-
-        return transforms
+        return ct_transforms[model_class]
 
     def setup(
         self,
@@ -117,12 +56,12 @@ class CTDataset:
                 cache_num=self.cache_num,
                 cache_rate=self.cache_rate,
                 num_workers=self.num_workers,
-                transform=self.train_transforms(),
+                transform=self.train_transforms(self.model_class),
             )
         else:
             train_ds = Dataset(
                 train_partition,
-                transform=self.train_transforms(),
+                transform=self.train_transforms(self.model_class),
             )
 
         return train_ds

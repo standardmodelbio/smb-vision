@@ -104,10 +104,13 @@ def setup_model(model_name, device):
     logger.info(f"Setting up model on {device}...")
     try:
         model = VideoMAEForPreTraining.from_pretrained(
-            model_name, torch_dtype=torch.bfloat16, attn_implementation="flash_attention_2", trust_remote_code=True
+            model_name,
+            torch_dtype=torch.bfloat16,
+            attn_implementation="flash_attention_2",
+            trust_remote_code=True,
         ).to(device)
         logger.info("Model setup successful")
-        return model
+        return model.eval()
     except Exception as e:
         logger.error(f"Failed to setup model: {e}")
         raise
