@@ -109,7 +109,7 @@ def main():
         "merlin": MerlinEncoder,
         # "videomae": VideoMAEEncoder,
     }
-    encoder_class = encoder_classes[args.encoder]
+    encoder_class = encoder_classes[args.model_id]
     runner = BaseEncoderRunner(encoder_class("cpu"))
 
     try:
@@ -120,7 +120,7 @@ def main():
         torch.multiprocessing.set_start_method("spawn")
         dataset = runner.setup_dataset(args)
         runner.main_process_func(dataset, args)
-        logger.info(f"{args.encoder} inference completed successfully")
+        logger.info(f"{args.model_id} inference completed successfully")
 
     except Exception as e:
         logger.error(f"Fatal error in main process: {e}")
