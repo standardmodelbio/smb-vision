@@ -35,7 +35,7 @@ class MerlinEncoder(BaseEncoder):
             image = image.unsqueeze(0).to(self.device)
             with torch.no_grad():
                 embedding = model(image)
-                logger.info(f"Embedding shape: {embedding.shape}")
+                # logger.info(f"Embedding shape: {embedding.shape}")
             return embedding
         except Exception as e:
             logger.error(f"Failed to generate embedding: {e}")
@@ -46,7 +46,7 @@ class MerlinEncoder(BaseEncoder):
             bs, dim, h, w, d = embedding.shape
             np_embedding = embedding.view(bs, dim, -1).permute(0, 2, 1).squeeze(0).float().cpu().numpy()
             original_shape = np_embedding.shape
-            logger.info(f"Embedding shape: {original_shape}")
+            # logger.info(f"Embedding shape: {original_shape}")
 
             df = pd.DataFrame(
                 {
