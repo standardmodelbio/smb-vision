@@ -14,7 +14,7 @@ from dataloader.load import CTDataset
 class MerlinEncoder(BaseEncoder):
     """Merlin model encoder implementation"""
 
-    def setup_dataset(self, data_dict: List[Dict], args: argparse.Namespace):
+    def create_dataset(self, data_dict: List[Dict], args: argparse.Namespace):
         return CTDataset(data_list=data_dict, args=args).setup()
 
     def setup_model(self, image_embedding: bool = True):

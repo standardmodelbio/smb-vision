@@ -21,7 +21,7 @@ class BaseEncoder(ABC):
         self.device = device
 
     @abstractmethod
-    def setup_dataset(self, data_dict: List[Dict], args: argparse.Namespace) -> Dataset:
+    def create_dataset(self, data_dict: List[Dict], args: argparse.Namespace) -> Dataset:
         """Initialize the dataset"""
         pass
 
@@ -90,7 +90,7 @@ class BaseEncoderRunner:
 
         logger.info("Setting up dataset...")
         try:
-            dataset = self.encoder_class.setup_dataset(data_dict, args)
+            dataset = self.encoder_class.create_dataset(data_dict, args)
             logger.info("Dataset setup successful")
             return dataset
         except Exception as e:
