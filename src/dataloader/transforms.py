@@ -21,7 +21,7 @@ class PermuteImage(Transform):
 
 
 ct_transforms = {
-    "smb-vision": Compose(
+    "standardmodelbio/smb-vision-base-20250122": Compose(
         [
             LoadImaged(keys=["image"]),
             EnsureChannelFirstd(keys=["image"]),

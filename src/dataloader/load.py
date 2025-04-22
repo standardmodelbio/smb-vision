@@ -23,7 +23,7 @@ class CTDataset:
         self.cache_rate = args.cache_rate
         self.cache_dir = args.cache_dir
         self.dist = args.dist
-        self.model_class = args.encoder
+        self.model_class = args.model_id
 
     def val_transforms(
         self,
