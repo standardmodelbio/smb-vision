@@ -58,12 +58,9 @@ class BaseEncoderRunner:
         processed_uids = set()
 
         if os.path.exists(save_dir):
-            for model_dir in os.listdir(save_dir):
-                model_path = os.path.join(save_dir, model_dir)
-                if os.path.isdir(model_path):
-                    for parquet_file in os.listdir(model_path):
-                        if parquet_file.endswith(".parquet"):
-                            processed_uids.add(parquet_file.replace(".parquet", ""))
+            for parquet_file in os.listdir(save_dir):
+                if parquet_file.endswith(".parquet"):
+                    processed_uids.add(parquet_file.replace(".parquet", ""))
             logger.info(f"Found {len(processed_uids)} previously processed UIDs")
 
         for filename in tqdm(os.listdir(image_dir), desc="Building file list"):
