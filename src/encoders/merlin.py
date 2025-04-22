@@ -6,6 +6,7 @@ import pandas as pd
 import torch
 from base_encoder import BaseEncoder, BaseEncoderRunner
 from loguru import logger
+from merlin import Merlin
 from tqdm import tqdm
 
 from dataloader.load import CTDataset
@@ -20,8 +21,6 @@ class MerlinEncoder(BaseEncoder):
     def setup_model(self, image_embedding: bool = True):
         logger.info(f"Setting up Merlin model on {self.device}...")
         try:
-            from merlin import Merlin
-
             model = Merlin(ImageEmbedding=image_embedding)
             model.eval()
             model.to(self.device)
