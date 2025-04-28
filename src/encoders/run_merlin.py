@@ -44,7 +44,8 @@ class MerlinEncoder(BaseEncoder):
     def save_embedding(self, embedding: torch.Tensor, uid: str, save_dir: str, model_id: str):
         try:
             bs, l, dim = embedding.shape
-            np_embedding = embedding.squeeze(0).float().cpu().numpy()
+            np_embedding = embedding.squeeze(0).cpu().numpy()
+            print(np_embedding)
             original_shape = np_embedding.shape
             # logger.info(f"Embedding shape: {original_shape}")
 
