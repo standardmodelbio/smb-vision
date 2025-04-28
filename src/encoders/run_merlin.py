@@ -45,7 +45,6 @@ class MerlinEncoder(BaseEncoder):
         try:
             bs, l, dim = embedding.shape
             np_embedding = embedding.squeeze(0).cpu().numpy()
-            print(np_embedding)
             original_shape = np_embedding.shape
             # logger.info(f"Embedding shape: {original_shape}")
 
