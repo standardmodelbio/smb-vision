@@ -16,7 +16,8 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "torch>=2.4.0",
+    "torch==2.5.1",
+    "torchvision==0.20.1",
     "transformers>=4.28.0",
     "peft",
     "accelerate",
