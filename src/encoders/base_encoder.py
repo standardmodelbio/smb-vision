@@ -138,22 +138,34 @@ class BaseEncoderRunner:
 
         # Process data using DataLoader
         error_files = []
+        total_batches = len(dataloader)
+        logger.info(f"Processing {total_batches} batches with batch size {batch_size}")
+
         try:
-            for batch in tqdm(dataloader, desc="Processing batches"):
+            for batch_idx, batch in enumerate(tqdm(dataloader, desc="Processing batches", total=total_batches)):
                 try:
                     # Process batch on the first available GPU
                     gpu_id = 0  # Use first GPU for now
                     result = self.encoder_class.process_batch(gpu_id, batch, args)
                     error_files.extend(result)
+
+                    # Log progress
+                    if (batch_idx + 1) % 10 == 0:
+                        logger.info(f"Processed {batch_idx + 1}/{total_batches} batches")
+
                 except Exception as e:
-                    logger.error(f"Error processing batch: {str(e)}")
-                    error_files.append({"error": str(e)})
+                    logger.error(f"Error processing batch {batch_idx}: {str(e)}")
+                    error_files.append({"batch_idx": batch_idx, "error": str(e)})
 
         except Exception as e:
             logger.error(f"Fatal error in data processing: {e}")
             raise
 
         if error_files:
-            logger.error(f"Failed to process {len(error_files)} files")
-            with open("error_files.json", "w") as f:
+            logger.error(f"Failed to process {len(error_files)} batches")
+            error_file_path = os.path.join(args.save_dir, "error_files.json")
+            with open(error_file_path, "w") as f:
                 json.dump(error_files, f, indent=2)
+            logger.info(f"Error details saved to {error_file_path}")
+        else:
+            logger.info("All batches processed successfully")

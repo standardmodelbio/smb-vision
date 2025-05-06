@@ -19,6 +19,8 @@ class SiglipEncoder(BaseEncoder):
     def __init__(self, model_id: str, device: str):
         super().__init__(device)
         self.model_id = model_id
+        self.model = None
+        self.processor = None
 
     def create_dataset(self, data_dict: List[Dict], args: argparse.Namespace) -> Dataset:
         """Create and return the dataset.
@@ -41,21 +43,22 @@ class SiglipEncoder(BaseEncoder):
         Returns:
             Tuple[SiglipModel, Optional[SiglipProcessor]]: The model and optionally the processor
         """
-        logger.info(f"Setting up SigLIP model on {self.device}...")
-        try:
-            model = SiglipModel.from_pretrained(f"google/{self.model_id}")
-            model.eval()
-            model.to(self.device)
+        if self.model is None:
+            logger.info(f"Setting up SigLIP model on {self.device}...")
+            try:
+                self.model = SiglipModel.from_pretrained(f"google/{self.model_id}")
+                self.model.eval()
+                self.model.to(self.device)
 
-            processor = None
-            if image_embedding:
-                processor = SiglipProcessor.from_pretrained(f"google/{self.model_id}")
+                if image_embedding:
+                    self.processor = SiglipProcessor.from_pretrained(f"google/{self.model_id}")
 
-            logger.info("Model setup successful")
-            return model, processor
-        except Exception as e:
-            logger.error(f"Failed to setup model: {e}")
-            raise
+                logger.info("Model setup successful")
+            except Exception as e:
+                logger.error(f"Failed to setup model: {e}")
+                raise
+
+        return self.model, self.processor
 
     def generate_embedding(self, model, images: torch.Tensor) -> torch.Tensor:
         """Generate embeddings for a batch of images.
@@ -69,7 +72,7 @@ class SiglipEncoder(BaseEncoder):
         """
         try:
             images = images.to(self.device)
-            with torch.no_grad():
+            with torch.inference_mode():
                 outputs = model.get_image_features(images)
                 embeddings = outputs / outputs.norm(dim=-1, keepdim=True)
             return embeddings
@@ -110,12 +113,12 @@ class SiglipEncoder(BaseEncoder):
             logger.error(f"Failed to save embedding: {e}")
             raise
 
-    def process_batch(self, gpu_id: int, dataloader: DataLoader, args: argparse.Namespace) -> List[Dict]:
-        """Process batches of data using a DataLoader.
+    def process_batch(self, gpu_id: int, batch: Dict[str, Any], args: argparse.Namespace) -> List[Dict]:
+        """Process a single batch of data.
 
         Args:
             gpu_id (int): ID of the GPU to use
-            dataloader (DataLoader): DataLoader providing batches of data
+            batch (Dict[str, Any]): Batch of data to process
             args (argparse.Namespace): Command line arguments
 
         Returns:
@@ -126,17 +129,16 @@ class SiglipEncoder(BaseEncoder):
         model, _ = self.setup_model(image_embedding=True)
         error_files = []
 
-        for batch in tqdm(dataloader, desc=f"GPU {gpu_id} processing"):
-            try:
-                uids = batch["uid"]
-                images = batch["image"]
+        try:
+            uids = batch["uid"]
+            images = batch["image"]
 
-                embeddings = self.generate_embedding(model, images)
-                self.save_embedding(embeddings, uids, args.save_dir, args.model_id)
-            except Exception as e:
-                error_msg = f"Error processing batch: {str(e)}"
-                logger.error(error_msg)
-                error_files.append({"error": str(e)})
+            embeddings = self.generate_embedding(model, images)
+            self.save_embedding(embeddings, uids, args.save_dir, args.model_id)
+        except Exception as e:
+            error_msg = f"Error processing batch: {str(e)}"
+            logger.error(error_msg)
+            error_files.append({"error": str(e)})
 
         return error_files
 
