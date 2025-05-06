@@ -12,7 +12,7 @@ from monai.data.utils import SUPPORTED_PICKLE_MOD
 from monai.utils import look_up_option
 from PIL import Image
 from torch.utils.data import Dataset
-from transformers import SiglipProcessor
+from transformers import AutoProcessor
 
 from .transforms import ct_transforms
 
@@ -114,7 +114,7 @@ class SiglipDataset(Dataset):
     def __init__(self, model_id:str, data_dict: List[Dict], cache_dir: str = None):
         self.data_dict = self._validate_and_prepare_data(data_dict)
         self.cache_dir = cache_dir
-        self.processor = SiglipProcessor.from_pretrained(f"google/{model_id}")
+        self.processor = AutoProcessor.from_pretrained(f"google/{model_id}")
 
     def _validate_and_prepare_data(self, data_dict: List[Dict]) -> List[Dict]:
         """Validate and prepare the input data dictionary"""
@@ -139,8 +139,7 @@ class SiglipDataset(Dataset):
 
             # Validate image can be opened
             try:
-                with Image.open(image_path) as img:
-                    img.verify()  # Verify it's an image
+                image = Image.open(image_path)
             except Exception as e:
                 raise ValueError(f"Invalid image file {image_path}: {str(e)}")
 
