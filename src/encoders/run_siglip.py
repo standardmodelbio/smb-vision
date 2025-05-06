@@ -74,7 +74,7 @@ class SiglipEncoder(BaseEncoder):
             images = images.to(self.device)
             with torch.inference_mode():
                 outputs = model(images, output_hidden_states=True)
-                print(outputs)
+                print(outputs.hidden_states.shape)
                 outputs = outputs.hidden_states[-2]
                 embeddings = outputs[:, 1:]
                 # embeddings = outputs / outputs.norm(dim=-1, keepdim=True)
