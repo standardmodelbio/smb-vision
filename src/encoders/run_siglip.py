@@ -15,20 +15,33 @@ from dataloader.load import SiglipDataset
 class SiglipEncoder(BaseEncoder):
     """SigLIP model encoder implementation for 2D x-ray images"""
 
-    def __init__(self, device: str):
+    def __init__(self, model_id: str, device: str):
         super().__init__(device)
-        self.model_id = "siglip"  # Add model_id for the base class to use
+        self.model_id = model_id  # Add model_id for the base class to use
 
     def create_dataset(self, data_dict: List[Dict], args: argparse.Namespace):
         return SiglipDataset(data_dict, cache_dir=args.cache_dir)
 
     def setup_model(self, image_embedding: bool = True):
+        """Setup the SigLIP model for inference.
+
+        Args:
+            image_embedding (bool): Whether to setup for image embedding. If False,
+                                  only the model is returned without the processor.
+
+        Returns:
+            Tuple[SiglipModel, Optional[SiglipProcessor]]: The model and optionally the processor
+        """
         logger.info(f"Setting up SigLIP model on {self.device}...")
         try:
-            processor = SiglipProcessor.from_pretrained("google/siglip-base-patch16-224")
-            model = SiglipModel.from_pretrained("google/siglip-base-patch16-224")
+            model = SiglipModel.from_pretrained(f"google/{self.model_id}")
             model.eval()
             model.to(self.device)
+
+            processor = None
+            if image_embedding:
+                processor = SiglipProcessor.from_pretrained(f"google/{self.model_id}")
+
             logger.info("Model setup successful")
             return model, processor
         except Exception as e:
@@ -71,16 +84,13 @@ class SiglipEncoder(BaseEncoder):
     def process_batch(self, gpu_id, data_batch, args):
         device = torch.device(f"cuda:{gpu_id}")
         self.device = device
-        model, processor = self.setup_model(image_embedding=True)
+        model, _ = self.setup_model(image_embedding=True)  # We don't need the processor here
         error_files = []
 
         for batch in tqdm(data_batch, desc=f"GPU {gpu_id} processing"):
             try:
                 uid = batch["uid"]
-                image = batch["image"]
-                # Process image through SigLIP processor
-                inputs = processor(images=image, return_tensors="pt")
-                image = inputs.pixel_values.squeeze(0)
+                image = batch["image"]  # Image is already processed by the dataset
                 embedding = self.generate_embedding(model, image)
                 self.save_embedding(embedding, uid, args.save_dir, args.model_id)
             except Exception as e:
@@ -113,7 +123,7 @@ def main():
         "siglip": SiglipEncoder,
     }
     encoder_class = encoder_classes[args.model_id]
-    runner = BaseEncoderRunner(encoder_class("cpu"))
+    runner = BaseEncoderRunner(encoder_class(args.model_id, "cpu"))
 
     try:
         if not torch.cuda.is_available():
