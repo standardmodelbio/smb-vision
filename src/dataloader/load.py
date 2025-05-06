@@ -10,7 +10,7 @@ import torch
 from merlin.data.monai_transforms import ImageTransforms
 from monai.data.utils import SUPPORTED_PICKLE_MOD
 from monai.utils import look_up_option
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from torch.utils.data import Dataset
 from transformers import AutoProcessor
 
@@ -139,11 +139,16 @@ class SiglipDataset(Dataset):
 
             # Validate image can be opened
             try:
-                image = Image.open(image_path)
+                with Image.open(image_path) as img:
+                    # Try to load the image to verify it's valid
+                    img.load()
+                validated_data.append(item)
+            except (UnidentifiedImageError, OSError) as e:
+                # Skip invalid image files but continue processing
+                print(f"Warning: Skipping invalid image file {image_path}: {str(e)}")
+                continue
             except Exception as e:
-                raise ValueError(f"Invalid image file {image_path}: {str(e)}")
-
-            validated_data.append(item)
+                raise ValueError(f"Unexpected error processing image {image_path}: {str(e)}")
 
         if not validated_data:
             raise ValueError("No valid images found in the input data")
