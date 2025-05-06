@@ -175,7 +175,6 @@ class SiglipDataset(Dataset):
 
     def __getitem__(self, idx):
         data = self.data_dict[idx]
-        uid = data["uid"]
         image_path = data["image_path"]
 
         # Load and preprocess image
@@ -185,7 +184,4 @@ class SiglipDataset(Dataset):
         inputs = self.processor(images=image, return_tensors="pt")
         image = inputs.pixel_values.squeeze(0)
 
-        return {
-            "uid": uid,
-            "image": image,
-        }
+        return image
