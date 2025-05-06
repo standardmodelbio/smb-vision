@@ -3,6 +3,9 @@ import tempfile
 from copy import deepcopy
 from pathlib import Path
 from typing import List, Dict
+import multiprocessing as mp
+from functools import partial
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import monai
 import numpy as np
@@ -111,44 +114,55 @@ class DataLoader(monai.data.DataLoader):
 class SiglipDataset(Dataset):
     """Dataset class for loading and preprocessing x-ray images for SigLIP model"""
 
-    def __init__(self, model_id:str, data_dict: List[Dict], cache_dir: str = None):
+    def __init__(self, model_id: str, data_dict: List[Dict], cache_dir: str = None):
         self.data_dict = self._validate_and_prepare_data(data_dict)
         self.cache_dir = cache_dir
         self.processor = AutoProcessor.from_pretrained(f"google/{model_id}")
 
+    def _validate_single_image(self, item: Dict) -> Dict:
+        """Validate a single image item."""
+        if not isinstance(item, dict):
+            return None
+
+        # Check required fields
+        if "uid" not in item or "image_path" not in item:
+            return None
+
+        # Validate image path exists
+        image_path = Path(item["image_path"])
+        if not image_path.exists():
+            return None
+
+        # Validate image can be opened
+        try:
+            with Image.open(image_path) as img:
+                img.load()
+            return item
+        except (UnidentifiedImageError, OSError) as e:
+            print(f"Warning: Skipping invalid image file {image_path}: {str(e)}")
+            return None
+        except Exception as e:
+            print(f"Warning: Unexpected error processing image {image_path}: {str(e)}")
+            return None
+
     def _validate_and_prepare_data(self, data_dict: List[Dict]) -> List[Dict]:
-        """Validate and prepare the input data dictionary"""
+        """Validate and prepare the input data dictionary using parallel processing."""
         if not isinstance(data_dict, list):
             raise ValueError("Input data must be a list of dictionaries")
 
+        # Use ThreadPoolExecutor for I/O-bound operations
+        num_workers = min(mp.cpu_count(), len(data_dict))
         validated_data = []
-        for item in data_dict:
-            if not isinstance(item, dict):
-                raise ValueError(f"Each item must be a dictionary, got {type(item)}")
 
-            # Check required fields
-            if "uid" not in item:
-                raise ValueError("Each item must have a 'uid' field")
-            if "image_path" not in item:
-                raise ValueError("Each item must have an 'image_path' field")
+        with ThreadPoolExecutor(max_workers=num_workers) as executor:
+            # Submit all validation tasks
+            future_to_item = {executor.submit(self._validate_single_image, item): item for item in data_dict}
 
-            # Validate image path exists
-            image_path = Path(item["image_path"])
-            if not image_path.exists():
-                raise ValueError(f"Image path does not exist: {image_path}")
-
-            # Validate image can be opened
-            try:
-                with Image.open(image_path) as img:
-                    # Try to load the image to verify it's valid
-                    img.load()
-                validated_data.append(item)
-            except (UnidentifiedImageError, OSError) as e:
-                # Skip invalid image files but continue processing
-                print(f"Warning: Skipping invalid image file {image_path}: {str(e)}")
-                continue
-            except Exception as e:
-                raise ValueError(f"Unexpected error processing image {image_path}: {str(e)}")
+            # Process completed validations
+            for future in as_completed(future_to_item):
+                result = future.result()
+                if result is not None:
+                    validated_data.append(result)
 
         if not validated_data:
             raise ValueError("No valid images found in the input data")
