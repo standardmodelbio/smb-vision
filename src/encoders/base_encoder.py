@@ -52,36 +52,55 @@ class BaseEncoderRunner:
     def __init__(self, encoder_class: BaseEncoder):
         self.encoder_class = encoder_class
 
-    def build_json(self, image_dir: str, save_dir: str, output_json_path: str) -> Tuple[List, str]:
-        """Build a json file containing paths to files and track processed files"""
-        files = []
-        processed_uids = set()
+    def load_input_json(self, input_json_path: str) -> List[Dict]:
+        """Load and validate the input JSON file"""
+        try:
+            with open(input_json_path, "r") as f:
+                data = json.load(f)
 
-        if os.path.exists(save_dir):
-            for parquet_file in os.listdir(save_dir):
+            if not isinstance(data, dict) or "images" not in data:
+                raise ValueError("JSON file must contain an 'images' key with a list of image data")
+
+            if not isinstance(data["images"], list):
+                raise ValueError("'images' must be a list")
+
+            return data["images"]
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON file: {str(e)}")
+        except Exception as e:
+            raise ValueError(f"Error loading JSON file: {str(e)}")
+
+    def filter_processed_files(self, files: List[Dict], save_dir: str) -> List[Dict]:
+        """Filter out already processed files"""
+        processed_uids = set()
+        model_save_dir = os.path.join(save_dir, f"model_id={self.encoder_class.model_id}")
+
+        if os.path.exists(model_save_dir):
+            for parquet_file in os.listdir(model_save_dir):
                 if parquet_file.endswith(".parquet"):
                     processed_uids.add(parquet_file.replace(".parquet", ""))
             logger.info(f"Found {len(processed_uids)} previously processed UIDs")
 
-        for filename in tqdm(os.listdir(image_dir), desc="Building file list"):
-            if filename.endswith(self.encoder_class.FILE_EXTENSION):
-                uid = filename.replace(self.encoder_class.FILE_EXTENSION, "")
-                if uid not in processed_uids:
-                    image_path = os.path.join(image_dir, filename)
-                    files.append({"image": image_path, "uid": uid})
-
-        with open(output_json_path, "w") as f:
-            json.dump(files, f, indent=2)
-
-        logger.info(f"Created/updated dataset JSON file with {len(files)} unprocessed files")
-        return files, output_json_path
+        unprocessed_files = [f for f in files if f["uid"] not in processed_uids]
+        logger.info(f"Found {len(unprocessed_files)} unprocessed files out of {len(files)} total files")
+        return unprocessed_files
 
     def setup_dataset(self, args: argparse.Namespace) -> Dataset:
         """Set up the dataset for processing"""
-        logger.info("Building JSON file...")
-        data_dict, _ = self.build_json(
-            args.image_dir, os.path.join(args.save_dir, f"model_id={args.model_id}"), args.saved_json_path
-        )
+        logger.info("Loading input JSON file...")
+        try:
+            data_dict = self.load_input_json(args.input_json)
+            logger.info(f"Loaded {len(data_dict)} images from input JSON")
+        except Exception as e:
+            logger.error(f"Failed to load input JSON: {e}")
+            raise
+
+        # Filter out already processed files
+        data_dict = self.filter_processed_files(data_dict, args.save_dir)
+
+        if not data_dict:
+            logger.warning("No unprocessed files found. Exiting.")
+            return None
 
         logger.info("Samples (first 3):")
         for sample in data_dict[:3]:
@@ -98,6 +117,10 @@ class BaseEncoderRunner:
 
     def main_process_func(self, data: Dataset, args: argparse.Namespace):
         """Main processing function using multiple GPUs"""
+        if data is None:
+            logger.info("No data to process. Exiting.")
+            return
+
         logger.info("Processing data...")
         num_gpus = torch.cuda.device_count()
         logger.info(f"Using {num_gpus} GPUs")

@@ -2,13 +2,17 @@ import shutil
 import tempfile
 from copy import deepcopy
 from pathlib import Path
-from typing import List
+from typing import List, Dict
 
 import monai
+import numpy as np
 import torch
 from merlin.data.monai_transforms import ImageTransforms
 from monai.data.utils import SUPPORTED_PICKLE_MOD
 from monai.utils import look_up_option
+from PIL import Image
+from torch.utils.data import Dataset
+from transformers import SiglipProcessor
 
 from .transforms import ct_transforms
 
@@ -102,3 +106,67 @@ class DataLoader(monai.data.DataLoader):
             shuffle=shuffle,
             num_workers=num_workers,
         )
+
+
+class SiglipDataset(Dataset):
+    """Dataset class for loading and preprocessing x-ray images for SigLIP model"""
+
+    def __init__(self, data_dict: List[Dict], cache_dir: str = None):
+        self.data_dict = self._validate_and_prepare_data(data_dict)
+        self.cache_dir = cache_dir
+        self.processor = SiglipProcessor.from_pretrained("google/siglip-base-patch16-224")
+
+    def _validate_and_prepare_data(self, data_dict: List[Dict]) -> List[Dict]:
+        """Validate and prepare the input data dictionary"""
+        if not isinstance(data_dict, list):
+            raise ValueError("Input data must be a list of dictionaries")
+
+        validated_data = []
+        for item in data_dict:
+            if not isinstance(item, dict):
+                raise ValueError(f"Each item must be a dictionary, got {type(item)}")
+
+            # Check required fields
+            if "uid" not in item:
+                raise ValueError("Each item must have a 'uid' field")
+            if "image_path" not in item:
+                raise ValueError("Each item must have an 'image_path' field")
+
+            # Validate image path exists
+            image_path = Path(item["image_path"])
+            if not image_path.exists():
+                raise ValueError(f"Image path does not exist: {image_path}")
+
+            # Validate image can be opened
+            try:
+                with Image.open(image_path) as img:
+                    img.verify()  # Verify it's an image
+            except Exception as e:
+                raise ValueError(f"Invalid image file {image_path}: {str(e)}")
+
+            validated_data.append(item)
+
+        if not validated_data:
+            raise ValueError("No valid images found in the input data")
+
+        return validated_data
+
+    def __len__(self):
+        return len(self.data_dict)
+
+    def __getitem__(self, idx):
+        data = self.data_dict[idx]
+        uid = data["uid"]
+        image_path = data["image_path"]
+
+        # Load and preprocess image
+        image = Image.open(image_path).convert("RGB")
+
+        # Process image through SigLIP processor
+        inputs = self.processor(images=image, return_tensors="pt")
+        image = inputs.pixel_values.squeeze(0)
+
+        return {
+            "uid": uid,
+            "image": image,
+        }
