@@ -20,7 +20,7 @@ class SiglipEncoder(BaseEncoder):
         self.model_id = model_id  # Add model_id for the base class to use
 
     def create_dataset(self, data_dict: List[Dict], args: argparse.Namespace):
-        return SiglipDataset(data_dict, cache_dir=args.cache_dir)
+        return SiglipDataset(self.model_id, data_dict, cache_dir=args.cache_dir)
 
     def setup_model(self, image_embedding: bool = True):
         """Setup the SigLIP model for inference.

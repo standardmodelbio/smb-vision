@@ -111,10 +111,10 @@ class DataLoader(monai.data.DataLoader):
 class SiglipDataset(Dataset):
     """Dataset class for loading and preprocessing x-ray images for SigLIP model"""
 
-    def __init__(self, data_dict: List[Dict], cache_dir: str = None):
+    def __init__(self, model_id:str, data_dict: List[Dict], cache_dir: str = None):
         self.data_dict = self._validate_and_prepare_data(data_dict)
         self.cache_dir = cache_dir
-        self.processor = SiglipProcessor.from_pretrained("google/siglip-base-patch16-224")
+        self.processor = SiglipProcessor.from_pretrained(f"google/{model_id}")
 
     def _validate_and_prepare_data(self, data_dict: List[Dict]) -> List[Dict]:
         """Validate and prepare the input data dictionary"""
