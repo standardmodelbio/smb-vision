@@ -115,7 +115,8 @@ class SiglipDataset(Dataset):
     """Dataset class for loading and preprocessing x-ray images for SigLIP model"""
 
     def __init__(self, model_id: str, data_dict: List[Dict], cache_dir: str = None):
-        self.data_dict = self._validate_and_prepare_data(data_dict)
+        # self.data_dict = self._validate_and_prepare_data(data_dict)
+        self.data_dict = data_dict
         self.cache_dir = cache_dir
         self.processor = AutoProcessor.from_pretrained(f"google/{model_id}")
 
