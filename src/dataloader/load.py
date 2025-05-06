@@ -122,7 +122,8 @@ class SiglipDataset(Dataset):
             data_dict (List[Dict]): List of dictionaries containing image data
             cache_dir (str, optional): Directory for caching processed images
         """
-        self.data_dict = self._validate_data(data_dict)
+        # self.data_dict = self._validate_data(data_dict)
+        self.data_dict = data_dict
         self.cache_dir = cache_dir
         self.processor = AutoProcessor.from_pretrained(f"google/{model_id}")
 
