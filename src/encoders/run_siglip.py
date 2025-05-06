@@ -46,7 +46,11 @@ class SiglipEncoder(BaseEncoder):
         if self.model is None:
             logger.info(f"Setting up SigLIP model on {self.device}...")
             try:
-                self.model = SiglipVisionModel.from_pretrained(f"google/{self.model_id}")
+                self.model = SiglipVisionModel.from_pretrained(
+                    f"google/{self.model_id}",
+                    attn_implementation="flash_attention_2",
+                    torch_dtype=torch.bfloat16,
+                )
                 self.model.eval()
                 self.model.to(self.device)
 
