@@ -8,7 +8,7 @@ from base_encoder import BaseEncoder, BaseEncoderRunner
 from loguru import logger
 from transformers import SiglipProcessor, SiglipModel
 from tqdm import tqdm
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 
 from dataloader.load import SiglipDataset
 
@@ -110,12 +110,12 @@ class SiglipEncoder(BaseEncoder):
             logger.error(f"Failed to save embedding: {e}")
             raise
 
-    def process_batch(self, gpu_id: int, data_batch: Dict[str, Any], args: argparse.Namespace) -> List[Dict]:
-        """Process a batch of data.
+    def process_batch(self, gpu_id: int, dataloader: DataLoader, args: argparse.Namespace) -> List[Dict]:
+        """Process batches of data using a DataLoader.
 
         Args:
             gpu_id (int): ID of the GPU to use
-            data_batch (Dict[str, Any]): Batch of data to process
+            dataloader (DataLoader): DataLoader providing batches of data
             args (argparse.Namespace): Command line arguments
 
         Returns:
@@ -126,16 +126,17 @@ class SiglipEncoder(BaseEncoder):
         model, _ = self.setup_model(image_embedding=True)
         error_files = []
 
-        try:
-            uids = data_batch["uid"]
-            images = data_batch["image"]
+        for batch in tqdm(dataloader, desc=f"GPU {gpu_id} processing"):
+            try:
+                uids = batch["uid"]
+                images = batch["image"]
 
-            embeddings = self.generate_embedding(model, images)
-            self.save_embedding(embeddings, uids, args.save_dir, args.model_id)
-        except Exception as e:
-            error_msg = f"Error processing batch: {str(e)}"
-            logger.error(error_msg)
-            error_files.append({"error": str(e)})
+                embeddings = self.generate_embedding(model, images)
+                self.save_embedding(embeddings, uids, args.save_dir, args.model_id)
+            except Exception as e:
+                error_msg = f"Error processing batch: {str(e)}"
+                logger.error(error_msg)
+                error_files.append({"error": str(e)})
 
         return error_files
 
@@ -147,7 +148,8 @@ def parse_args():
     parser.add_argument("--input_json", type=str, required=True, help="Path to JSON file containing image paths")
     parser.add_argument("--save_dir", type=str, required=True)
     parser.add_argument("--cache_dir", type=str, default=None, help="Cache directory for SigLIP")
-    parser.add_argument("--num_workers", type=int, default=4, help="Number of workers")
+    parser.add_argument("--num_workers", type=int, default=4, help="Number of workers for data loading")
+    parser.add_argument("--batch_size", type=int, default=32, help="Batch size for processing")
     parser.add_argument("--dist", action="store_true", help="Enable distributed training")
     parser.add_argument("--bf16", action="store_true", help="Enable bfloat16 precision")
 
