@@ -149,10 +149,6 @@ class BaseEncoderRunner:
                     result = self.encoder_class.process_batch(gpu_id, batch, args)
                     error_files.extend(result)
 
-                    # Log progress
-                    if (batch_idx + 1) % 10 == 0:
-                        logger.info(f"Processed {batch_idx + 1}/{total_batches} batches")
-
                 except Exception as e:
                     logger.error(f"Error processing batch {batch_idx}: {str(e)}")
                     error_files.append({"batch_idx": batch_idx, "error": str(e)})

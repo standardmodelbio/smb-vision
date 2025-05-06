@@ -6,7 +6,7 @@ import pandas as pd
 import torch
 from base_encoder import BaseEncoder, BaseEncoderRunner
 from loguru import logger
-from transformers import SiglipProcessor, SiglipModel
+from transformers import SiglipProcessor, SiglipVisionModel
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
 
@@ -41,12 +41,12 @@ class SiglipEncoder(BaseEncoder):
             image_embedding (bool): Whether to setup for image embedding
 
         Returns:
-            Tuple[SiglipModel, Optional[SiglipProcessor]]: The model and optionally the processor
+            Tuple[SiglipVisionModel, Optional[SiglipProcessor]]: The model and optionally the processor
         """
         if self.model is None:
             logger.info(f"Setting up SigLIP model on {self.device}...")
             try:
-                self.model = SiglipModel.from_pretrained(f"google/{self.model_id}")
+                self.model = SiglipVisionModel.from_pretrained(f"google/{self.model_id}")
                 self.model.eval()
                 self.model.to(self.device)
 
@@ -73,8 +73,11 @@ class SiglipEncoder(BaseEncoder):
         try:
             images = images.to(self.device)
             with torch.inference_mode():
-                outputs = model.get_image_features(images)
-                embeddings = outputs / outputs.norm(dim=-1, keepdim=True)
+                outputs = model(images, output_hidden_states=True)
+                print(outputs.shape)
+                outputs = outputs.hidden_states[-2]
+                embeddings = outputs[:, 1:]
+                # embeddings = outputs / outputs.norm(dim=-1, keepdim=True)
             return embeddings
         except Exception as e:
             logger.error(f"Failed to generate embedding: {e}")
