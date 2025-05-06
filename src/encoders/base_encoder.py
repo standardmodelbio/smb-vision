@@ -116,7 +116,7 @@ class BaseEncoderRunner:
             raise
 
     def main_process_func(self, data: Dataset, args: argparse.Namespace):
-        """Main processing function using multiple GPUs"""
+        """Main processing function using DataLoader for batch processing"""
         if data is None:
             logger.info("No data to process. Exiting.")
             return
@@ -125,35 +125,33 @@ class BaseEncoderRunner:
         num_gpus = torch.cuda.device_count()
         logger.info(f"Using {num_gpus} GPUs")
 
-        # Create DataLoader for each GPU
+        # Create DataLoader
         batch_size = args.batch_size if hasattr(args, "batch_size") else 32
-        dataloaders = []
+        dataloader = DataLoader(
+            data,
+            batch_size=batch_size,
+            shuffle=False,
+            num_workers=args.num_workers,
+            collate_fn=data.collate_fn if hasattr(data, "collate_fn") else None,
+            pin_memory=True,
+        )
 
-        for gpu_id in range(num_gpus):
-            dataloader = DataLoader(
-                data,
-                batch_size=batch_size,
-                shuffle=False,
-                num_workers=args.num_workers,
-                collate_fn=data.collate_fn if hasattr(data, "collate_fn") else None,
-                pin_memory=True,
-            )
-            dataloaders.append(dataloader)
-
-        # Create process pool
-        pool = mp.Pool(processes=num_gpus)
-        process_func = partial(self.encoder_class.process_batch, args=args)
-
-        # Process data in parallel
+        # Process data using DataLoader
         error_files = []
         try:
-            for result in tqdm(
-                pool.starmap(process_func, enumerate(dataloaders)), total=len(dataloaders), desc="Processing batches"
-            ):
-                error_files.extend(result)
-        finally:
-            pool.close()
-            pool.join()
+            for batch in tqdm(dataloader, desc="Processing batches"):
+                try:
+                    # Process batch on the first available GPU
+                    gpu_id = 0  # Use first GPU for now
+                    result = self.encoder_class.process_batch(gpu_id, batch, args)
+                    error_files.extend(result)
+                except Exception as e:
+                    logger.error(f"Error processing batch: {str(e)}")
+                    error_files.append({"error": str(e)})
+
+        except Exception as e:
+            logger.error(f"Fatal error in data processing: {e}")
+            raise
 
         if error_files:
             logger.error(f"Failed to process {len(error_files)} files")
