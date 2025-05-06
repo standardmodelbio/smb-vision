@@ -119,11 +119,7 @@ def main():
     """Main entry point"""
     args = parse_args()
 
-    encoder_classes = {
-        "siglip": SiglipEncoder,
-    }
-    encoder_class = encoder_classes[args.model_id]
-    runner = BaseEncoderRunner(encoder_class(args.model_id, "cpu"))
+    runner = BaseEncoderRunner(SiglipEncoder(args.model_id, "cpu"))
 
     try:
         if not torch.cuda.is_available():
