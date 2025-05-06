@@ -2,7 +2,7 @@ import shutil
 import tempfile
 from copy import deepcopy
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Any
 import multiprocessing as mp
 from functools import partial
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -115,73 +115,95 @@ class SiglipDataset(Dataset):
     """Dataset class for loading and preprocessing x-ray images for SigLIP model"""
 
     def __init__(self, model_id: str, data_dict: List[Dict], cache_dir: str = None):
-        # self.data_dict = self._validate_and_prepare_data(data_dict)
-        self.data_dict = data_dict
+        """Initialize the dataset.
+
+        Args:
+            model_id (str): The model ID to use for the processor
+            data_dict (List[Dict]): List of dictionaries containing image data
+            cache_dir (str, optional): Directory for caching processed images
+        """
+        self.data_dict = self._validate_data(data_dict)
         self.cache_dir = cache_dir
         self.processor = AutoProcessor.from_pretrained(f"google/{model_id}")
 
-    def _validate_single_image(self, item: Dict) -> Dict:
-        """Validate a single image item."""
-        if not isinstance(item, dict):
-            return None
+    def _validate_data(self, data_dict: List[Dict]) -> List[Dict]:
+        """Validate the input data dictionary.
 
-        # Check required fields
-        if "uid" not in item or "image_path" not in item:
-            return None
+        Args:
+            data_dict (List[Dict]): List of dictionaries containing image data
 
-        # Validate image path exists
-        image_path = Path(item["image_path"])
-        if not image_path.exists():
-            return None
-
-        # Validate image can be opened
-        try:
-            with Image.open(image_path) as img:
-                img.load()
-            return item
-        except (UnidentifiedImageError, OSError) as e:
-            print(f"Warning: Skipping invalid image file {image_path}: {str(e)}")
-            return None
-        except Exception as e:
-            print(f"Warning: Unexpected error processing image {image_path}: {str(e)}")
-            return None
-
-    def _validate_and_prepare_data(self, data_dict: List[Dict]) -> List[Dict]:
-        """Validate and prepare the input data dictionary using parallel processing."""
+        Returns:
+            List[Dict]: Validated data dictionary
+        """
         if not isinstance(data_dict, list):
             raise ValueError("Input data must be a list of dictionaries")
 
-        # Use ThreadPoolExecutor for I/O-bound operations
-        num_workers = min(mp.cpu_count(), len(data_dict))
         validated_data = []
+        for item in data_dict:
+            if not isinstance(item, dict):
+                continue
 
-        with ThreadPoolExecutor(max_workers=num_workers) as executor:
-            # Submit all validation tasks
-            future_to_item = {executor.submit(self._validate_single_image, item): item for item in data_dict}
+            if "uid" not in item or "image_path" not in item:
+                continue
 
-            # Process completed validations
-            for future in as_completed(future_to_item):
-                result = future.result()
-                if result is not None:
-                    validated_data.append(result)
+            image_path = Path(item["image_path"])
+            if not image_path.exists():
+                continue
+
+            try:
+                with Image.open(image_path) as img:
+                    img.verify()
+                validated_data.append(item)
+            except Exception as e:
+                print(f"Warning: Invalid image file {image_path}: {str(e)}")
+                continue
 
         if not validated_data:
             raise ValueError("No valid images found in the input data")
 
         return validated_data
 
-    def __len__(self):
+    def __len__(self) -> int:
+        """Get the number of items in the dataset."""
         return len(self.data_dict)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> Dict[str, Any]:
+        """Get a single item from the dataset.
+
+        Args:
+            idx (int): Index of the item to get
+
+        Returns:
+            Dict[str, Any]: Dictionary containing the processed image and metadata
+        """
         data = self.data_dict[idx]
+        uid = data["uid"]
         image_path = data["image_path"]
 
         # Load and preprocess image
         image = Image.open(image_path).convert("RGB")
-
-        # Process image through SigLIP processor
         inputs = self.processor(images=image, return_tensors="pt")
         image = inputs.pixel_values.squeeze(0)
 
-        return image
+        return {
+            "uid": uid,
+            "image": image,
+        }
+
+    @staticmethod
+    def collate_fn(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Collate function for the DataLoader.
+
+        Args:
+            batch (List[Dict[str, Any]]): List of items from the dataset
+
+        Returns:
+            Dict[str, Any]: Batched data
+        """
+        uids = [item["uid"] for item in batch]
+        images = torch.stack([item["image"] for item in batch])
+
+        return {
+            "uid": uids,
+            "image": images,
+        }

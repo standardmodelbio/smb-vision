@@ -1,6 +1,6 @@
 import argparse
 import os
-from typing import Dict, List
+from typing import Dict, List, Any
 
 import pandas as pd
 import torch
@@ -8,6 +8,7 @@ from base_encoder import BaseEncoder, BaseEncoderRunner
 from loguru import logger
 from transformers import SiglipProcessor, SiglipModel
 from tqdm import tqdm
+from torch.utils.data import Dataset
 
 from dataloader.load import SiglipDataset
 
@@ -17,17 +18,25 @@ class SiglipEncoder(BaseEncoder):
 
     def __init__(self, model_id: str, device: str):
         super().__init__(device)
-        self.model_id = model_id  # Add model_id for the base class to use
+        self.model_id = model_id
 
-    def create_dataset(self, data_dict: List[Dict], args: argparse.Namespace):
+    def create_dataset(self, data_dict: List[Dict], args: argparse.Namespace) -> Dataset:
+        """Create and return the dataset.
+
+        Args:
+            data_dict (List[Dict]): List of dictionaries containing image data
+            args (argparse.Namespace): Command line arguments
+
+        Returns:
+            Dataset: The created dataset
+        """
         return SiglipDataset(self.model_id, data_dict, cache_dir=args.cache_dir)
 
     def setup_model(self, image_embedding: bool = True):
         """Setup the SigLIP model for inference.
 
         Args:
-            image_embedding (bool): Whether to setup for image embedding. If False,
-                                  only the model is returned without the processor.
+            image_embedding (bool): Whether to setup for image embedding
 
         Returns:
             Tuple[SiglipModel, Optional[SiglipProcessor]]: The model and optionally the processor
@@ -48,55 +57,85 @@ class SiglipEncoder(BaseEncoder):
             logger.error(f"Failed to setup model: {e}")
             raise
 
-    def generate_embedding(self, model, image: torch.Tensor) -> torch.Tensor:
+    def generate_embedding(self, model, images: torch.Tensor) -> torch.Tensor:
+        """Generate embeddings for a batch of images.
+
+        Args:
+            model: The SigLIP model
+            images (torch.Tensor): Batch of images to process
+
+        Returns:
+            torch.Tensor: Generated embeddings
+        """
         try:
-            image = image.unsqueeze(0).to(self.device)
+            images = images.to(self.device)
             with torch.no_grad():
-                outputs = model.get_image_features(image)
-                embedding = outputs / outputs.norm(dim=-1, keepdim=True)
-            return embedding
+                outputs = model.get_image_features(images)
+                embeddings = outputs / outputs.norm(dim=-1, keepdim=True)
+            return embeddings
         except Exception as e:
             logger.error(f"Failed to generate embedding: {e}")
             raise
 
-    def save_embedding(self, embedding: torch.Tensor, uid: str, save_dir: str, model_id: str):
+    def save_embedding(self, embeddings: torch.Tensor, uids: List[str], save_dir: str, model_id: str):
+        """Save generated embeddings.
+
+        Args:
+            embeddings (torch.Tensor): Batch of embeddings to save
+            uids (List[str]): List of UIDs corresponding to the embeddings
+            save_dir (str): Directory to save the embeddings
+            model_id (str): ID of the model used to generate embeddings
+        """
         try:
-            np_embedding = embedding.cpu().numpy()
-            original_shape = np_embedding.shape
-
-            df = pd.DataFrame(
-                {
-                    "uid": [uid],
-                    "embedding": [np_embedding.flatten()],
-                    "embedding_shape": [original_shape],
-                    "model_id": [model_id],
-                }
-            )
-
+            np_embeddings = embeddings.cpu().numpy()
             model_dir = os.path.join(save_dir, f"model_id={model_id}")
             os.makedirs(model_dir, exist_ok=True)
-            output_file = os.path.join(model_dir, f"{uid}.parquet")
-            df.to_parquet(output_file, compression="snappy")
+
+            for i, uid in enumerate(uids):
+                embedding = np_embeddings[i]
+                original_shape = embedding.shape
+
+                df = pd.DataFrame(
+                    {
+                        "uid": [uid],
+                        "embedding": [embedding.flatten()],
+                        "embedding_shape": [original_shape],
+                        "model_id": [model_id],
+                    }
+                )
+
+                output_file = os.path.join(model_dir, f"{uid}.parquet")
+                df.to_parquet(output_file, compression="snappy")
         except Exception as e:
             logger.error(f"Failed to save embedding: {e}")
             raise
 
-    def process_batch(self, gpu_id, data_batch, args):
+    def process_batch(self, gpu_id: int, data_batch: Dict[str, Any], args: argparse.Namespace) -> List[Dict]:
+        """Process a batch of data.
+
+        Args:
+            gpu_id (int): ID of the GPU to use
+            data_batch (Dict[str, Any]): Batch of data to process
+            args (argparse.Namespace): Command line arguments
+
+        Returns:
+            List[Dict]: List of errors encountered during processing
+        """
         device = torch.device(f"cuda:{gpu_id}")
         self.device = device
-        model, _ = self.setup_model(image_embedding=True)  # We don't need the processor here
+        model, _ = self.setup_model(image_embedding=True)
         error_files = []
 
-        for batch in tqdm(data_batch, desc=f"GPU {gpu_id} processing"):
-            try:
-                uid = batch["uid"]
-                image = batch["image"]  # Image is already processed by the dataset
-                embedding = self.generate_embedding(model, image)
-                self.save_embedding(embedding, uid, args.save_dir, args.model_id)
-            except Exception as e:
-                error_msg = f"Error processing {uid}: {str(e)}"
-                logger.error(error_msg)
-                error_files.append({"uid": str(uid), "error": str(e)})
+        try:
+            uids = data_batch["uid"]
+            images = data_batch["image"]
+
+            embeddings = self.generate_embedding(model, images)
+            self.save_embedding(embeddings, uids, args.save_dir, args.model_id)
+        except Exception as e:
+            error_msg = f"Error processing batch: {str(e)}"
+            logger.error(error_msg)
+            error_files.append({"error": str(e)})
 
         return error_files
 

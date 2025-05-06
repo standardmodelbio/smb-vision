@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Tuple
 
 import torch
 from loguru import logger
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
 
 
@@ -41,7 +41,7 @@ class BaseEncoder(ABC):
         pass
 
     @abstractmethod
-    def process_batch(self, gpu_id: int, data_batch: List, args: argparse.Namespace) -> List[Dict]:
+    def process_batch(self, gpu_id: int, data_batch: Dict[str, Any], args: argparse.Namespace) -> List[Dict]:
         """Process a batch of data"""
         pass
 
@@ -125,9 +125,20 @@ class BaseEncoderRunner:
         num_gpus = torch.cuda.device_count()
         logger.info(f"Using {num_gpus} GPUs")
 
-        # Split data into chunks for each GPU
-        chunk_size = len(data) // num_gpus + (1 if len(data) % num_gpus else 0)
-        data_chunks = [data[i : i + chunk_size] for i in range(0, len(data), chunk_size)]
+        # Create DataLoader for each GPU
+        batch_size = args.batch_size if hasattr(args, "batch_size") else 32
+        dataloaders = []
+
+        for gpu_id in range(num_gpus):
+            dataloader = DataLoader(
+                data,
+                batch_size=batch_size,
+                shuffle=False,
+                num_workers=args.num_workers,
+                collate_fn=data.collate_fn if hasattr(data, "collate_fn") else None,
+                pin_memory=True,
+            )
+            dataloaders.append(dataloader)
 
         # Create process pool
         pool = mp.Pool(processes=num_gpus)
@@ -137,7 +148,7 @@ class BaseEncoderRunner:
         error_files = []
         try:
             for result in tqdm(
-                pool.starmap(process_func, enumerate(data_chunks)), total=len(data_chunks), desc="Processing batches"
+                pool.starmap(process_func, enumerate(dataloaders)), total=len(dataloaders), desc="Processing batches"
             ):
                 error_files.extend(result)
         finally:
