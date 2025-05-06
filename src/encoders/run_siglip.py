@@ -96,7 +96,7 @@ class SiglipEncoder(BaseEncoder):
             model_id (str): ID of the model used to generate embeddings
         """
         try:
-            np_embeddings = embeddings.cpu().numpy()
+            np_embeddings = embeddings.cpu().float().numpy()
             model_dir = os.path.join(save_dir, f"model_id={model_id}")
             os.makedirs(model_dir, exist_ok=True)
 
