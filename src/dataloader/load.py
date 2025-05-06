@@ -122,13 +122,13 @@ class SiglipDataset(Dataset):
             data_dict (List[Dict]): List of dictionaries containing image data
             cache_dir (str, optional): Directory for caching processed images
         """
-        # self.data_dict = self._validate_data(data_dict)
-        self.data_dict = data_dict
+        self.data_dict = self._validate_data(data_dict)
+        # self.data_dict = data_dict
         self.cache_dir = cache_dir
         self.processor = AutoProcessor.from_pretrained(f"google/{model_id}")
 
     def _validate_data(self, data_dict: List[Dict]) -> List[Dict]:
-        """Validate the input data dictionary.
+        """Validate the input data dictionary using multithreading.
 
         Args:
             data_dict (List[Dict]): List of dictionaries containing image data
@@ -139,25 +139,44 @@ class SiglipDataset(Dataset):
         if not isinstance(data_dict, list):
             raise ValueError("Input data must be a list of dictionaries")
 
-        validated_data = []
-        for item in data_dict:
+        def validate_item(item: Dict) -> Dict:
+            """Validate a single data item.
+
+            Args:
+                item (Dict): Dictionary containing image data
+
+            Returns:
+                Dict: Validated item or None if invalid
+            """
             if not isinstance(item, dict):
-                continue
+                return None
 
             if "uid" not in item or "image_path" not in item:
-                continue
+                return None
 
             image_path = Path(item["image_path"])
             if not image_path.exists():
-                continue
+                return None
 
             try:
                 with Image.open(image_path) as img:
                     img.verify()
-                validated_data.append(item)
+                return item
             except Exception as e:
                 print(f"Warning: Invalid image file {image_path}: {str(e)}")
-                continue
+                return None
+
+        # Use ThreadPoolExecutor for parallel validation
+        validated_data = []
+        with ThreadPoolExecutor(max_workers=min(32, len(data_dict))) as executor:
+            # Submit all validation tasks
+            future_to_item = {executor.submit(validate_item, item): item for item in data_dict}
+
+            # Process results as they complete
+            for future in as_completed(future_to_item):
+                result = future.result()
+                if result is not None:
+                    validated_data.append(result)
 
         if not validated_data:
             raise ValueError("No valid images found in the input data")
