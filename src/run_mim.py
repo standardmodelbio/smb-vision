@@ -7,7 +7,8 @@ from typing import Optional
 import torch
 
 import transformers
-from dataloader.mim import MIMDataset
+# from dataloader.mim import MIMDataset
+from dataloader.load import MIMDataset
 from transformers import (
     MODEL_FOR_MASKED_IMAGE_MODELING_MAPPING,
     AutoConfig,
@@ -265,22 +266,23 @@ def main():
     #         token=model_args.token,
     #         trust_remote_code=model_args.trust_remote_code,
     #     )
-    mim_data = MIMDataset(
-        json_path=data_args.json_path,
-        img_size=model_args.image_size,
-        depth=model_args.depth,
-        mask_patch_size=data_args.mask_patch_size,
-        patch_size=model_args.patch_size,
-        cache_dir=model_args.cache_dir,
-        downsample_ratio=[1.0, 1.0, 1.0],
-        mask_ratio=data_args.mask_ratio,
-        # dist=True,
-    )
-    ds = mim_data.setup("train")
+    # mim_data = MIMDataset(
+    #     json_path=data_args.json_path,
+    #     img_size=model_args.image_size,
+    #     depth=model_args.depth,
+    #     mask_patch_size=data_args.mask_patch_size,
+    #     patch_size=model_args.patch_size,
+    #     cache_dir=model_args.cache_dir,
+    #     downsample_ratio=[1.0, 1.0, 1.0],
+    #     mask_ratio=data_args.mask_ratio,
+    #     # dist=True,
+    # )
+    # ds = mim_data.setup("train")
+    ds = MIMDataset(data=data_args.json_path, cache_dir=model_args.cache_dir)
 
-    assert "train" in ds.keys() and "validation" in ds.keys(), (
-        "Dataset should contain both train and validation splits"
-    )
+    # assert "train" in ds.keys() and "validation" in ds.keys(), (
+    #     "Dataset should contain both train and validation splits"
+    # )
 
     # If we don't have a validation split, split off a percentage of train as validation.
     # data_args.train_val_split = None if "validation" in ds.keys() else data_args.train_val_split
@@ -422,7 +424,7 @@ def main():
         model=model,
         args=training_args,
         train_dataset=ds["train"] if training_args.do_train else None,
-        eval_dataset=ds["validation"] if training_args.do_eval else None,
+        # eval_dataset=ds["validation"] if training_args.do_eval else None,
         # processing_class=image_processor,
         data_collator=collate_fn,
         compute_metrics=lambda eval_pred: {"loss": eval_pred.predictions[0].item()},
