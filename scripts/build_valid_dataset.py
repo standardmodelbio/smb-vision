@@ -3,7 +3,6 @@ import glob
 import json
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from pathlib import Path
 from typing import Dict, List, Tuple
 
 import torch
@@ -23,7 +22,7 @@ def collect_nifti_files(directory_path: str) -> List[Dict[str, str]]:
         List[Dict[str, str]]: List of dictionaries with image paths
     """
     nifti_files = []
-    for ext in ["*.nii", "*.nii.gz"]:
+    for ext in tqdm(["*.nii", "*.nii.gz"], desc="Searching for files"):
         paths = glob.glob(os.path.join(directory_path, "**", ext), recursive=True)
         nifti_files.extend([{"image": path} for path in paths])
 
@@ -77,11 +76,22 @@ def validate_files(
         # Submit all validation tasks
         future_to_args = {executor.submit(validate_single_file, args): args for args in validation_args}
 
-        # Process results as they complete
-        for future in tqdm(as_completed(future_to_args), total=len(validation_args), desc="Validating files"):
+        # Process results as they complete with progress bar
+        pbar = tqdm(
+            total=len(validation_args),
+            desc="Validating files",
+            unit="files",
+            dynamic_ncols=True,
+            bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]",
+        )
+
+        for future in as_completed(future_to_args):
             file_dict, is_valid = future.result()
             if is_valid:
                 valid_files.append(file_dict)
+            pbar.update(1)
+            pbar.set_postfix({"valid": len(valid_files)})
+        pbar.close()
 
     # Split into train/val sets (80/20 split)
     split_idx = int(len(valid_files) * 0.8)

@@ -3,17 +3,14 @@ import tempfile
 from copy import deepcopy
 from pathlib import Path
 from typing import List, Dict, Any
-import multiprocessing as mp
-from functools import partial
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import monai
-import numpy as np
 import torch
 from merlin.data.monai_transforms import ImageTransforms
 from monai.data.utils import SUPPORTED_PICKLE_MOD
 from monai.utils import look_up_option
-from PIL import Image, UnidentifiedImageError
+from PIL import Image
 from torch.utils.data import Dataset
 from transformers import AutoProcessor
 
