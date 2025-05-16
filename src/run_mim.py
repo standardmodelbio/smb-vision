@@ -7,6 +7,7 @@ from typing import Optional
 
 import torch
 from monai.data import PersistentDataset, Dataset, list_data_collate
+from monai.data.utils import pad_list_data_collate
 
 import transformers
 
@@ -471,7 +472,7 @@ def main():
         args=training_args,
         train_dataset=ds_train if training_args.do_train else None,
         eval_dataset=ds_val if training_args.do_eval else None,
-        data_collator=collate_fn,
+        data_collator=pad_list_data_collate,
         compute_metrics=lambda eval_pred: {"loss": eval_pred.predictions[0].item()},
     )
 
