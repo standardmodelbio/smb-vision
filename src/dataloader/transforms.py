@@ -101,6 +101,9 @@ class GenerateMask(MapTransform):
 class PermuteImage(MapTransform):
     """Permute the dimensions of the image"""
 
+    def __init__(self, keys=["image"], allow_missing_keys=False):
+        MapTransform.__init__(self, keys, allow_missing_keys)
+
     def __call__(self, data):
         print("\nPermuteImage transform:")
         print("Input shape:", data["image"].shape)
