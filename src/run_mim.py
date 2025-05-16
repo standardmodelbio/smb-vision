@@ -291,7 +291,6 @@ def main():
     ds_train = Dataset(
         data=data["train"],
         transform=ct_transforms["mim"],
-        copy=True,  # Ensure we make a copy of the data
     )
     print(f"Training dataset size: {len(ds_train)}")
     if len(ds_train) > 0:
@@ -306,7 +305,6 @@ def main():
     ds_val = Dataset(
         data=data["validation"],
         transform=ct_transforms["mim"],
-        copy=True,  # Ensure we make a copy of the data
     )
     print(f"Validation dataset size: {len(ds_val)}")
     if len(ds_val) > 0:
