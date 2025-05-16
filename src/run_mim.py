@@ -266,7 +266,8 @@ def main():
     ds_train = PersistentDataset(data=data["train"], transform=ct_transforms["mim"], cache_dir=model_args.cache_dir)
     print(f"Training dataset size: {len(ds_train)}")
     if len(ds_train) > 0:
-        print("First training item after transform:", ds_train[0])
+        print("First training item after transform:", ds_train[0]["image"].shape)
+        print("First training item after transform:", ds_train[0]["mask"].shape)
     else:
         print("No data in training dataset")
 
