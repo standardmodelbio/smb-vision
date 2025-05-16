@@ -1,6 +1,6 @@
 #!/bin/bash
 export WANDB_PROJECT=smb-vision
-export WANDB_LOG_MODEL=checkpoint
+# export WANDB_LOG_MODEL=checkpoint
 
 # python scripts/download_from_s3.py
 
@@ -12,27 +12,26 @@ export WANDB_LOG_MODEL=checkpoint
 
 # train
 python src/run_mim.py \
-    --json_path ./smb-vision-train-mim.json \
-    --cache_dir ../data/cache/ \
+    --json_path /workspace/smb_vision_dataset.json \
+    --cache_dir /workspace/cache/ \
     --model_name_or_path standardmodelbio/smb-vision-base \
     --learning_rate 5e-5 \
     --lr_scheduler_type cosine \
     --max_grad_norm 1.0 \
     --warmup_ratio 0.01 \
-    --num_train_epochs 10 \
+    --num_train_epochs 3 \
     --per_device_train_batch_size 16 \
     --per_device_eval_batch_size 1 \
     --gradient_accumulation_steps 4 \
     --do_train true \
     --do_eval true \
     --overwrite_output_dir true \
-    --output_dir ./saves/smb-vision-base-20250122 \
+    --output_dir /workspace/saves/smb-vision-base-05152025 \
     --eval_strategy "no" \
     --eval_steps 500 \
     --save_steps 500 \
     --bf16 true \
     --gradient_checkpointing true \
-    --resume_from_checkpoint ./saves/smb-vision-base-20250122/checkpoint-500/ \
     --logging_steps 1 \
     --report_to wandb \
-    --run_name smb-vision-base-20250122
+    --run_name smb-vision-base-05152025

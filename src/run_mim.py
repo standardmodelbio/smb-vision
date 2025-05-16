@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import sys
@@ -7,6 +8,7 @@ from typing import Optional
 import torch
 
 import transformers
+
 # from dataloader.mim import MIMDataset
 from dataloader.load import MIMDataset
 from transformers import (
@@ -278,7 +280,9 @@ def main():
     #     # dist=True,
     # )
     # ds = mim_data.setup("train")
-    ds = MIMDataset(data=data_args.json_path, cache_dir=model_args.cache_dir)
+    with open(data_args.json_path, "r") as f:
+        data = json.load(f)
+    ds = MIMDataset(data=data, cache_dir=model_args.cache_dir)
 
     # assert "train" in ds.keys() and "validation" in ds.keys(), (
     #     "Dataset should contain both train and validation splits"
@@ -424,7 +428,7 @@ def main():
         model=model,
         args=training_args,
         train_dataset=ds["train"] if training_args.do_train else None,
-        # eval_dataset=ds["validation"] if training_args.do_eval else None,
+        eval_dataset=ds["validation"] if training_args.do_eval else None,
         # processing_class=image_processor,
         data_collator=collate_fn,
         compute_metrics=lambda eval_pred: {"loss": eval_pred.predictions[0].item()},
