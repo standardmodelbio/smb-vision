@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 import torch
-from monai.data import PersistentDataset, Dataset
+from monai.data import PersistentDataset, Dataset, list_data_collate
 
 import transformers
 
@@ -195,10 +195,8 @@ class ModelArguments:
 
 
 def collate_fn(examples):
-    logger.info(examples[0])
-    logger.info(examples[1])
-    pixel_values = torch.stack([example[0]["image"] for example in examples])
-    mask = torch.stack([example[0]["mask"] for example in examples])
+    pixel_values = torch.stack([example["image"] for example in examples])
+    mask = torch.stack([example["mask"] for example in examples])
     return {"pixel_values": pixel_values, "bool_masked_pos": mask}
 
 
@@ -415,7 +413,7 @@ def main():
         train_dataset=ds_train if training_args.do_train else None,
         eval_dataset=ds_val if training_args.do_eval else None,
         # processing_class=image_processor,
-        data_collator=collate_fn,
+        data_collator=list_data_collate,
         compute_metrics=lambda eval_pred: {"loss": eval_pred.predictions[0].item()},
     )
 

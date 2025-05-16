@@ -58,7 +58,7 @@ class MaskGenerator:
         mask = mask.reshape((self.rand_depth, self.rand_size, self.rand_size))
         mask = mask.repeat(self.scale, axis=0).repeat(self.scale, axis=1).repeat(self.scale, axis=2)
 
-        return torch.tensor(mask.flatten())
+        return torch.tensor(mask.flatten()).bool()
 
 
 class GenerateMask(Transform):
