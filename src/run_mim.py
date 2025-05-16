@@ -298,7 +298,7 @@ def main():
         print("First training item after transform:", ds_train[0])
         print("First training item keys:", ds_train[0].keys())
         print("First training item image shape:", ds_train[0]["image"].shape)
-        print("First training item mask shape:", ds_train[0]["mask"].shape)
+        # print("First training item mask shape:", ds_train[0]["mask"].shape)
     else:
         print("No data in training dataset")
 
@@ -312,7 +312,7 @@ def main():
         print("First validation item after transform:", ds_val[0])
         print("First validation item keys:", ds_val[0].keys())
         print("First validation item image shape:", ds_val[0]["image"].shape)
-        print("First validation item mask shape:", ds_val[0]["mask"].shape)
+        # print("First validation item mask shape:", ds_val[0]["mask"].shape)
     else:
         print("No data in validation dataset")
 
