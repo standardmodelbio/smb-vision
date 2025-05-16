@@ -282,7 +282,8 @@ def main():
     # ds = mim_data.setup("train")
     with open(data_args.json_path, "r") as f:
         data = json.load(f)
-    ds = MIMDataset(data=data, cache_dir=model_args.cache_dir)
+    ds_train = MIMDataset(data=data["train"], cache_dir=model_args.cache_dir)
+    ds_val = MIMDataset(data=data["validation"], cache_dir=model_args.cache_dir)
 
     # assert "train" in ds.keys() and "validation" in ds.keys(), (
     #     "Dataset should contain both train and validation splits"
@@ -427,8 +428,8 @@ def main():
     trainer = Trainer(
         model=model,
         args=training_args,
-        train_dataset=ds["train"] if training_args.do_train else None,
-        eval_dataset=ds["validation"] if training_args.do_eval else None,
+        train_dataset=ds_train if training_args.do_train else None,
+        eval_dataset=ds_val if training_args.do_eval else None,
         # processing_class=image_processor,
         data_collator=collate_fn,
         compute_metrics=lambda eval_pred: {"loss": eval_pred.predictions[0].item()},

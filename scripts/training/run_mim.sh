@@ -24,7 +24,7 @@ python src/run_mim.py \
     --per_device_eval_batch_size 1 \
     --gradient_accumulation_steps 4 \
     --do_train true \
-    --do_eval true \
+    --do_eval false \
     --overwrite_output_dir true \
     --output_dir /workspace/saves/smb-vision-base-05152025 \
     --eval_strategy "no" \
