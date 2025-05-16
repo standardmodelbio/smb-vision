@@ -13,7 +13,7 @@ export WANDB_PROJECT=smb-vision
 # train
 python src/run_mim.py \
     --json_path /workspace/smb_vision_dataset.json \
-    --cache_dir /workspace/cache/ \
+    --cache_dir /workspace/image_cache/ \
     --model_name_or_path standardmodelbio/smb-vision-base \
     --learning_rate 5e-5 \
     --lr_scheduler_type cosine \
