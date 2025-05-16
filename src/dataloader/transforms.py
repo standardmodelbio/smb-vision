@@ -49,14 +49,29 @@ class MaskGenerator:
 
         self.token_count = self.rand_size**2 * self.rand_depth
         self.mask_count = int(np.ceil(self.token_count * self.mask_ratio))
+        
+        print("\nMaskGenerator initialization:")
+        print(f"Input size: {input_size}, Depth: {depth}")
+        print(f"Mask patch size: {mask_patch_size}, Model patch size: {model_patch_size}")
+        print(f"Random size: {self.rand_size}, Random depth: {self.rand_depth}")
+        print(f"Scale: {self.scale}")
+        print(f"Token count: {self.token_count}, Mask count: {self.mask_count}")
 
     def __call__(self):
         mask_idx = np.random.permutation(self.token_count)[: self.mask_count]
         mask = np.zeros(self.token_count, dtype=int)
         mask[mask_idx] = 1
 
+        print("\nMaskGenerator __call__:")
+        print(f"Initial mask shape: {mask.shape}")
+        print(f"Number of masked tokens: {np.sum(mask)}")
+
         mask = mask.reshape((self.rand_depth, self.rand_size, self.rand_size))
+        print(f"Reshaped mask shape: {mask.shape}")
+
         mask = mask.repeat(self.scale, axis=0).repeat(self.scale, axis=1).repeat(self.scale, axis=2)
+        print(f"Repeated mask shape: {mask.shape}")
+        print(f"Final number of masked tokens: {np.sum(mask)}")
 
         return torch.tensor(mask.flatten()).bool()
 
@@ -73,7 +88,13 @@ class GenerateMask(Transform):
         self.mask_generator = MaskGenerator(input_size, depth, mask_patch_size, model_patch_size, mask_ratio)
 
     def __call__(self, inputs):
-        inputs["mask"] = self.mask_generator()
+        print("\nGenerateMask transform:")
+        print("Input keys:", inputs.keys())
+        print("Image shape:", inputs["image"].shape)
+        mask = self.mask_generator()
+        print("Generated mask shape:", mask.shape)
+        print("Mask unique values:", torch.unique(mask))
+        inputs["mask"] = mask
         return inputs
 
 
@@ -81,7 +102,10 @@ class PermuteImage(Transform):
     """Permute the dimensions of the image"""
 
     def __call__(self, data):
+        print("\nPermuteImage transform:")
+        print("Input shape:", data["image"].shape)
         data["image"] = data["image"].permute(3, 0, 1, 2)  # Adjust permutation order as needed
+        print("Output shape:", data["image"].shape)
         return data
 
 
