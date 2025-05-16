@@ -13,7 +13,7 @@ export WANDB_PROJECT=smb-vision
 # train
 python src/run_mim.py \
     --json_path /workspace/smb_vision_dataset.json \
-    --cache_dir /workspace/image_cache/ \
+    --cache_dir /workspace/cache/ \
     --model_name_or_path standardmodelbio/smb-vision-base \
     --learning_rate 5e-5 \
     --lr_scheduler_type cosine \
@@ -24,7 +24,7 @@ python src/run_mim.py \
     --per_device_eval_batch_size 1 \
     --gradient_accumulation_steps 4 \
     --do_train true \
-    --do_eval false \
+    --do_eval true \
     --overwrite_output_dir true \
     --output_dir /workspace/saves/smb-vision-base-05152025 \
     --eval_strategy "no" \
