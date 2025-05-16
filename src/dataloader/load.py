@@ -19,11 +19,16 @@ from .transforms import ct_transforms
 
 class CTPersistentDataset(monai.data.PersistentDataset):
     def __init__(self, data, transform, cache_dir=None):
+        print("\nCTPersistentDataset initialization:")
+        print("Number of items in data:", len(data))
+        if len(data) > 0:
+            print("First item structure:", data[0])
         super().__init__(data=data, transform=transform, cache_dir=cache_dir)
-
         print(f"Size of dataset: {self.__len__()}\n")
 
     def _cachecheck(self, item_transformed):
+        print("\nCTPersistentDataset _cachecheck:")
+        print("Input item keys:", item_transformed.keys())
         hashfile = None
         _item_transformed = deepcopy(item_transformed)
         image_data = {"image": item_transformed.get("image")}  # Assuming the image data is under the 'image' key
@@ -35,11 +40,13 @@ class CTPersistentDataset(monai.data.PersistentDataset):
         if hashfile is not None and hashfile.is_file():
             cached_image = torch.load(hashfile)
             _item_transformed["image"] = cached_image
+            print("Using cached image")
             return _item_transformed
 
         _image_transformed = self._pre_transform(image_data)["image"]
         _item_transformed["image"] = _image_transformed
         if hashfile is None:
+            print("No cache file, returning transformed item")
             return _item_transformed
         try:
             # NOTE: Writing to a temporary directory and then using a nearly atomic rename operation
@@ -62,11 +69,16 @@ class CTPersistentDataset(monai.data.PersistentDataset):
                         pass
         except PermissionError:  # project-monai/monai issue #3613
             pass
+        print("Saved to cache and returning transformed item")
         return _item_transformed
 
     def _transform(self, index: int):
+        print(f"\nCTPersistentDataset _transform for index {index}:")
         pre_random_item = self._cachecheck(self.data[index])
-        return self._post_transform(pre_random_item)
+        print("Pre-random item keys:", pre_random_item.keys())
+        result = self._post_transform(pre_random_item)
+        print("Post-transform item keys:", result.keys())
+        return result
 
 
 class MerlinDataset(CTPersistentDataset):

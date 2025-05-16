@@ -257,48 +257,35 @@ def main():
             )
 
     # Initialize our dataset.
-    # if not data_args.dataset_name:
-    #     ds = load_dataset(
-    #         "json", data_files=data_args.json_path
-    #     )
-    # else:
-    #     ds = load_dataset(
-    #         data_args.dataset_name,
-    #         data_args.dataset_config_name,
-    #         data_files=data_args.data_files,
-    #         cache_dir=model_args.cache_dir,
-    #         token=model_args.token,
-    #         trust_remote_code=model_args.trust_remote_code,
-    #     )
-    # mim_data = MIMDataset(
-    #     json_path=data_args.json_path,
-    #     img_size=model_args.image_size,
-    #     depth=model_args.depth,
-    #     mask_patch_size=data_args.mask_patch_size,
-    #     patch_size=model_args.patch_size,
-    #     cache_dir=model_args.cache_dir,
-    #     downsample_ratio=[1.0, 1.0, 1.0],
-    #     mask_ratio=data_args.mask_ratio,
-    #     # dist=True,
-    # )
-    # ds = mim_data.setup("train")
     with open(data_args.json_path, "r") as f:
         data = json.load(f)
 
+    print("\nData loaded from JSON:")
+    print(f"Number of training samples: {len(data['train'])}")
+    print(f"Number of validation samples: {len(data['validation'])}")
+    print("\nSample training item structure:")
+    if data["train"]:
+        print("Keys in first training item:", data["train"][0].keys())
+        print("First training item:", data["train"][0])
+    else:
+        print("No training data found")
+
     # Initialize datasets with proper transforms
+    print("\nInitializing training dataset...")
     ds_train = MIMDataset(data=data["train"], transform=ct_transforms["mim"], cache_dir=model_args.cache_dir)
+    print(f"Training dataset size: {len(ds_train)}")
+    if len(ds_train) > 0:
+        print("First training item after transform:", ds_train[0])
+    else:
+        print("No data in training dataset")
+
+    print("\nInitializing validation dataset...")
     ds_val = MIMDataset(data=data["validation"], transform=ct_transforms["mim"], cache_dir=model_args.cache_dir)
-
-    # assert "train" in ds.keys() and "validation" in ds.keys(), (
-    #     "Dataset should contain both train and validation splits"
-    # )
-
-    # If we don't have a validation split, split off a percentage of train as validation.
-    # data_args.train_val_split = None if "validation" in ds.keys() else data_args.train_val_split
-    # if isinstance(data_args.train_val_split, float) and data_args.train_val_split > 0.0:
-    #     split = ds["train"].train_test_split(data_args.train_val_split)
-    #     ds["train"] = split["train"]
-    #     ds["validation"] = split["test"]
+    print(f"Validation dataset size: {len(ds_val)}")
+    if len(ds_val) > 0:
+        print("First validation item after transform:", ds_val[0])
+    else:
+        print("No data in validation dataset")
 
     # Create config
     # Distributed training:
