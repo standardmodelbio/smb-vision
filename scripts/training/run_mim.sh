@@ -12,8 +12,8 @@ export WANDB_PROJECT=smb-vision
 
 # train
 torchrun --nproc_per_node=1 src/run_mim.py \
-    --json_path /workspace/smb_vision_dataset.json \
-    --cache_dir /workspace/image_cache/ \
+    --json_path /home/user/smb_vision_dataset.json \
+    --cache_dir /home/user/cache/ \
     --model_name_or_path standardmodelbio/smb-vision-base \
     --learning_rate 5e-5 \
     --lr_scheduler_type cosine \
@@ -26,7 +26,7 @@ torchrun --nproc_per_node=1 src/run_mim.py \
     --do_train true \
     --do_eval true \
     --overwrite_output_dir true \
-    --output_dir /workspace/saves/smb-vision-base-05152025 \
+    --output_dir /home/user/saves/smb-vision-base-05152025 \
     --eval_strategy "no" \
     --eval_steps 500 \
     --save_steps 500 \
