@@ -58,7 +58,7 @@ class MaskGenerator:
         mask = mask.reshape((self.rand_depth, self.rand_size, self.rand_size))
         mask = mask.repeat(self.scale, axis=0).repeat(self.scale, axis=1).repeat(self.scale, axis=2)
 
-        return torch.tensor(mask.flatten()).bool()
+        return torch.tensor(mask.flatten())
 
 
 class GenerateMask(Transform):
@@ -107,8 +107,7 @@ ct_transforms = {
                 model_patch_size=16,
                 mask_ratio=0.5,
             ),
-        ],
-        lazy=False
+        ]
     ),
     "smb-vision": Compose(
         [
