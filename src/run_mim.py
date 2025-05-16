@@ -284,7 +284,7 @@ def main():
     with open(data_args.json_path, "r") as f:
         data = json.load(f)
     ds_train = MIMDataset(data=data["train"], cache_dir=model_args.cache_dir)
-    print(ds_train[0])
+    # print(ds_train[0])
     ds_val = MIMDataset(data=data["validation"], cache_dir=model_args.cache_dir)
 
     # assert "train" in ds.keys() and "validation" in ds.keys(), (
