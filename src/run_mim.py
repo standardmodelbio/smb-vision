@@ -195,9 +195,8 @@ class ModelArguments:
 
 
 def collate_fn(examples):
-    print(examples)
-    pixel_values = torch.stack([example["image"] for example in examples])
-    mask = torch.stack([example["mask"] for example in examples])
+    pixel_values = torch.stack([example[0]["image"] for example in examples])
+    mask = torch.stack([example[0]["mask"] for example in examples])
     return {"pixel_values": pixel_values, "bool_masked_pos": mask}
 
 

@@ -73,9 +73,7 @@ class GenerateMask(Transform):
         self.mask_generator = MaskGenerator(input_size, depth, mask_patch_size, model_patch_size, mask_ratio)
 
     def __call__(self, inputs):
-        print("GenerateMask transform input:", inputs.keys())
         inputs["mask"] = self.mask_generator()
-        print("GenerateMask transform output:", inputs.keys())
         return inputs
 
 
@@ -83,9 +81,7 @@ class PermuteImage(Transform):
     """Permute the dimensions of the image"""
 
     def __call__(self, data):
-        print("PermuteImage transform input:", data.keys())
         data["image"] = data["image"].permute(3, 0, 1, 2)  # Adjust permutation order as needed
-        print("PermuteImage transform output:", data.keys())
         return data
 
 
