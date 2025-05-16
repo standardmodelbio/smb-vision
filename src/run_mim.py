@@ -11,6 +11,7 @@ import transformers
 
 # from dataloader.mim import MIMDataset
 from dataloader.load import MIMDataset
+from dataloader.transforms import ct_transforms
 from transformers import (
     MODEL_FOR_MASKED_IMAGE_MODELING_MAPPING,
     AutoConfig,
@@ -283,9 +284,10 @@ def main():
     # ds = mim_data.setup("train")
     with open(data_args.json_path, "r") as f:
         data = json.load(f)
-    ds_train = MIMDataset(data=data["train"], cache_dir=model_args.cache_dir)
-    print(ds_train[2])
-    ds_val = MIMDataset(data=data["validation"], cache_dir=model_args.cache_dir)
+
+    # Initialize datasets with proper transforms
+    ds_train = MIMDataset(data=data["train"], transform=ct_transforms["mim"], cache_dir=model_args.cache_dir)
+    ds_val = MIMDataset(data=data["validation"], transform=ct_transforms["mim"], cache_dir=model_args.cache_dir)
 
     # assert "train" in ds.keys() and "validation" in ds.keys(), (
     #     "Dataset should contain both train and validation splits"
