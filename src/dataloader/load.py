@@ -91,9 +91,10 @@ class SMBVisionDataset(CTPersistentDataset):
         super().__init__(data=data, transform=transform, cache_dir=cache_dir)
 
 
-class MIMDataset(CTPersistentDataset):
+class MIMDataset(monai.data.PersistentDataset):
     def __init__(self, data, transform=ct_transforms["mim"], cache_dir=None):
         super().__init__(data=data, transform=transform, cache_dir=cache_dir)
+        print(f"Size of dataset: {self.__len__()}\n")
 
 
 class DataLoader(monai.data.DataLoader):
