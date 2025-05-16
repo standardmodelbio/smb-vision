@@ -33,5 +33,5 @@ torchrun --nproc_per_node=1 src/run_mim.py \
     --bf16 true \
     --gradient_checkpointing true \
     --logging_steps 1 \
-    --report_to wandb \
+    --report_to none \
     --run_name smb-vision-base-05152025
