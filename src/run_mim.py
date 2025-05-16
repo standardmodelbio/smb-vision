@@ -288,18 +288,32 @@ def main():
 
     # Initialize datasets with proper transforms
     print("\nInitializing training dataset...")
-    ds_train = Dataset(data=data["train"], transform=ct_transforms["mim"])
+    ds_train = Dataset(
+        data=data["train"],
+        transform=ct_transforms["mim"],
+        copy=True,  # Ensure we make a copy of the data
+    )
     print(f"Training dataset size: {len(ds_train)}")
     if len(ds_train) > 0:
         print("First training item after transform:", ds_train[0])
+        print("First training item keys:", ds_train[0].keys())
+        print("First training item image shape:", ds_train[0]["image"].shape)
+        print("First training item mask shape:", ds_train[0]["mask"].shape)
     else:
         print("No data in training dataset")
 
     print("\nInitializing validation dataset...")
-    ds_val = Dataset(data=data["validation"], transform=ct_transforms["mim"])
+    ds_val = Dataset(
+        data=data["validation"],
+        transform=ct_transforms["mim"],
+        copy=True,  # Ensure we make a copy of the data
+    )
     print(f"Validation dataset size: {len(ds_val)}")
     if len(ds_val) > 0:
         print("First validation item after transform:", ds_val[0])
+        print("First validation item keys:", ds_val[0].keys())
+        print("First validation item image shape:", ds_val[0]["image"].shape)
+        print("First validation item mask shape:", ds_val[0]["mask"].shape)
     else:
         print("No data in validation dataset")
 
@@ -436,6 +450,23 @@ def main():
     print("Training dataset type:", type(ds_train))
     print("First training item type:", type(ds_train[0]))
     print("First training item keys:", ds_train[0].keys() if isinstance(ds_train[0], dict) else "Not a dict")
+
+    # Create a custom dataset class to ensure data is preserved
+    class PreserveDataDataset(torch.utils.data.Dataset):
+        def __init__(self, dataset):
+            self.dataset = dataset
+
+        def __len__(self):
+            return len(self.dataset)
+
+        def __getitem__(self, idx):
+            item = self.dataset[idx]
+            print(f"\nDataset __getitem__ for index {idx}:")
+            print("Item keys:", item.keys())
+            return item
+
+    ds_train = PreserveDataDataset(ds_train)
+    ds_val = PreserveDataDataset(ds_val)
 
     trainer = Trainer(
         model=model,
