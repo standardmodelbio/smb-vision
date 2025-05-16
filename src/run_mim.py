@@ -72,11 +72,11 @@ class DataTrainingArguments:
         default=0.15, metadata={"help": "Percent to split off of train for validation."}
     )
     mask_patch_size: int = field(
-        default=32,
+        default=16,
         metadata={"help": "The size of the square patches to use for masking."},
     )
     mask_ratio: float = field(
-        default=0.65,
+        default=0.5,
         metadata={"help": "Percentage of patches to mask."},
     )
     max_train_samples: Optional[int] = field(
@@ -169,7 +169,7 @@ class ModelArguments:
         },
     )
     image_size: Optional[int] = field(
-        default=512,
+        default=224,
         metadata={
             "help": (
                 "The size (resolution) of each image. If not specified, will use `image_size` of the configuration."
@@ -177,7 +177,7 @@ class ModelArguments:
         },
     )
     depth: Optional[int] = field(
-        default=320,
+        default=160,
         metadata={"help": ("The depth of the 3D volume.")},
     )
     patch_size: Optional[int] = field(
@@ -195,7 +195,8 @@ class ModelArguments:
 
 
 def collate_fn(examples):
-    print(len(examples))
+    print(examples[0].shape)
+    print(examples[1].shape)
     pixel_values = torch.stack([example[0]["image"] for example in examples])
     mask = torch.stack([example[0]["mask"] for example in examples])
     return {"pixel_values": pixel_values, "bool_masked_pos": mask}
