@@ -107,7 +107,8 @@ ct_transforms = {
                 model_patch_size=16,
                 mask_ratio=0.5,
             ),
-        ]
+        ],
+        lazy=False,
     ),
     "smb-vision": Compose(
         [
