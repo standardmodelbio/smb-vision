@@ -135,14 +135,14 @@ ct_transforms = {
                 keys=["image"],
             ),
             ToTensord(keys=["image"]),
-            PermuteImage(),
-            GenerateMask(
-                input_size=224,
-                depth=160,
-                mask_patch_size=16,
-                model_patch_size=16,
-                mask_ratio=0.5,
-            ),
+            # PermuteImage(),
+            # GenerateMask(
+            #     input_size=224,
+            #     depth=160,
+            #     mask_patch_size=16,
+            #     model_patch_size=16,
+            #     mask_ratio=0.5,
+            # ),
         ]
     ),
     "smb-vision": Compose(
