@@ -413,7 +413,7 @@ def main():
         train_dataset=ds_train if training_args.do_train else None,
         eval_dataset=ds_val if training_args.do_eval else None,
         # processing_class=image_processor,
-        data_collator=list_data_collate,
+        data_collator=collate_fn,
         compute_metrics=lambda eval_pred: {"loss": eval_pred.predictions[0].item()},
     )
 
