@@ -104,7 +104,6 @@ ct_transforms = {
             ),
             ToTensord(keys=["image"]),
             PermuteImage(),
-            # Add custom transform to generate mask
             GenerateMask(
                 input_size=224,
                 depth=160,
