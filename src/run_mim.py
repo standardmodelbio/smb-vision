@@ -260,16 +260,20 @@ def main():
             )
 
     # Initialize our dataset.
+    print("\nLoading data from:", data_args.json_path)
     with open(data_args.json_path, "r") as f:
         data = json.load(f)
+    print("Data keys:", data.keys())
+    print("Number of training samples:", len(data["train"]))
+    print("Number of validation samples:", len(data["validation"]))
+    print("First training sample:", data["train"][0])
 
     # Initialize datasets with proper transforms
     print("\nInitializing training dataset...")
     ds_train = Dataset(data=data["train"], transform=ct_transforms["mim"])
     print(f"Training dataset size: {len(ds_train)}")
     if len(ds_train) > 0:
-        print("First training item after transform:", ds_train[0]["image"].shape)
-        print("First training item after transform:", ds_train[0]["mask"].shape)
+        print("First training item after transform:", ds_train[0])
     else:
         print("No data in training dataset")
 

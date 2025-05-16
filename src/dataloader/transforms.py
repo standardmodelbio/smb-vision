@@ -49,7 +49,7 @@ class MaskGenerator:
 
         self.token_count = self.rand_size**2 * self.rand_depth
         self.mask_count = int(np.ceil(self.token_count * self.mask_ratio))
-        
+
         print("\nMaskGenerator initialization:")
         print(f"Input size: {input_size}, Depth: {depth}")
         print(f"Mask patch size: {mask_patch_size}, Model patch size: {model_patch_size}")
@@ -109,10 +109,19 @@ class PermuteImage(Transform):
         return data
 
 
+class DebugLoadImaged(LoadImaged):
+    def __call__(self, data):
+        print("\nLoadImaged transform:")
+        print("Input data:", data)
+        result = super().__call__(data)
+        print("Output data keys:", result.keys())
+        return result
+
+
 ct_transforms = {
     "mim": Compose(
         [
-            LoadImaged(keys=["image"]),
+            DebugLoadImaged(keys=["image"]),
             EnsureChannelFirstd(keys=["image"]),
             Orientationd(keys=["image"], axcodes="RAS"),
             Spacingd(keys=["image"], pixdim=(1.5, 1.5, 3.0), mode=("bilinear")),
@@ -131,8 +140,7 @@ ct_transforms = {
                 model_patch_size=16,
                 mask_ratio=0.5,
             ),
-        ],
-        lazy=False,
+        ]
     ),
     "smb-vision": Compose(
         [
