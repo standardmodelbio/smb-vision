@@ -451,28 +451,28 @@ def main():
     print("First training item keys:", ds_train[0].keys() if isinstance(ds_train[0], dict) else "Not a dict")
 
     # Create a custom dataset class to ensure data is preserved
-    class PreserveDataDataset(torch.utils.data.Dataset):
-        def __init__(self, dataset):
-            self.dataset = dataset
+    # class PreserveDataDataset(torch.utils.data.Dataset):
+    #     def __init__(self, dataset):
+    #         self.dataset = dataset
 
-        def __len__(self):
-            return len(self.dataset)
+    #     def __len__(self):
+    #         return len(self.dataset)
 
-        def __getitem__(self, idx):
-            item = self.dataset[idx]
-            print(f"\nDataset __getitem__ for index {idx}:")
-            print("Item keys:", item.keys())
-            return item
+    #     def __getitem__(self, idx):
+    #         item = self.dataset[idx]
+    #         print(f"\nDataset __getitem__ for index {idx}:")
+    #         print("Item keys:", item.keys())
+    #         return item
 
-    ds_train = PreserveDataDataset(ds_train)
-    ds_val = PreserveDataDataset(ds_val)
+    # ds_train = PreserveDataDataset(ds_train)
+    # ds_val = PreserveDataDataset(ds_val)
 
     trainer = Trainer(
         model=model,
         args=training_args,
         train_dataset=ds_train if training_args.do_train else None,
         eval_dataset=ds_val if training_args.do_eval else None,
-        data_collator=pad_list_data_collate,
+        data_collator=collate_fn,
         compute_metrics=lambda eval_pred: {"loss": eval_pred.predictions[0].item()},
     )
 
