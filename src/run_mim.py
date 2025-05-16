@@ -195,11 +195,29 @@ class ModelArguments:
 
 
 def collate_fn(examples):
-    for example in examples:
-        print(example.keys())
-        # print(example["mask"].shape)
+    print("\nCollate function input:")
+    for i, example in enumerate(examples):
+        print(f"Example {i} type:", type(example))
+        print(f"Example {i} keys:", example.keys() if isinstance(example, dict) else "Not a dict")
+        if isinstance(example, dict):
+            print(f"Example {i} image shape:", example["image"].shape if "image" in example else "No image")
+            print(f"Example {i} mask shape:", example["mask"].shape if "mask" in example else "No mask")
+
+    # Handle both direct dictionaries and list-wrapped dictionaries
+    if isinstance(examples[0], list):
+        examples = [example[0] for example in examples]
+
+    # Ensure we have the required keys
+    if not all("image" in example and "mask" in example for example in examples):
+        raise ValueError("Each example must contain both 'image' and 'mask' keys")
+
     pixel_values = torch.stack([example["image"] for example in examples])
     mask = torch.stack([example["mask"] for example in examples])
+
+    print("\nCollate function output:")
+    print("pixel_values shape:", pixel_values.shape)
+    print("mask shape:", mask.shape)
+
     return {"pixel_values": pixel_values, "bool_masked_pos": mask}
 
 
@@ -414,12 +432,16 @@ def main():
     #     ds["validation"].set_transform(preprocess_images)
 
     # Initialize our trainer
+    print("\nInitializing trainer...")
+    print("Training dataset type:", type(ds_train))
+    print("First training item type:", type(ds_train[0]))
+    print("First training item keys:", ds_train[0].keys() if isinstance(ds_train[0], dict) else "Not a dict")
+
     trainer = Trainer(
         model=model,
         args=training_args,
         train_dataset=ds_train if training_args.do_train else None,
         eval_dataset=ds_val if training_args.do_eval else None,
-        # processing_class=image_processor,
         data_collator=collate_fn,
         compute_metrics=lambda eval_pred: {"loss": eval_pred.predictions[0].item()},
     )
