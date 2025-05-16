@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 import torch
-from monai.data import PersistentDataset
+from monai.data import PersistentDataset, Dataset
 
 import transformers
 
@@ -263,7 +263,7 @@ def main():
 
     # Initialize datasets with proper transforms
     print("\nInitializing training dataset...")
-    ds_train = PersistentDataset(data=data["train"], transform=ct_transforms["mim"], cache_dir=model_args.cache_dir)
+    ds_train = Dataset(data=data["train"], transform=ct_transforms["mim"])
     print(f"Training dataset size: {len(ds_train)}")
     if len(ds_train) > 0:
         print("First training item after transform:", ds_train[0]["image"].shape)
@@ -272,7 +272,7 @@ def main():
         print("No data in training dataset")
 
     print("\nInitializing validation dataset...")
-    ds_val = PersistentDataset(data=data["validation"], transform=ct_transforms["mim"], cache_dir=model_args.cache_dir)
+    ds_val = Dataset(data=data["validation"], transform=ct_transforms["mim"])
     print(f"Validation dataset size: {len(ds_val)}")
     if len(ds_val) > 0:
         print("First validation item after transform:", ds_val[0])
