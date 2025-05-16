@@ -108,6 +108,7 @@ ct_transforms = {
                 mask_ratio=0.5,
             ),
         ],
+        lazy=False
     ),
     "smb-vision": Compose(
         [
