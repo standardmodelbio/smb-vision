@@ -11,7 +11,7 @@ export WANDB_PROJECT=smb-vision
 # python scripts/build_train_file.py
 
 # train
-python src/run_mim.py \
+torchrun --nproc_per_node=1 src/run_mim.py \
     --json_path /workspace/smb_vision_dataset.json \
     --cache_dir /workspace/image_cache/ \
     --model_name_or_path standardmodelbio/smb-vision-base \
