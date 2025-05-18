@@ -11,7 +11,7 @@ export WANDB_PROJECT=smb-vision
 # python scripts/build_train_file.py
 
 # train
-torchrun --nproc_per_node=1 src/run_mim.py \
+accelerate launch src/run_mim.py \
     --json_path /home/user/smb_vision_data.json \
     --cache_dir /home/user/cache/ \
     --model_name_or_path standardmodelbio/smb-vision-base \
