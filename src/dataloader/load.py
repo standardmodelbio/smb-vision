@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import monai
 import torch
-from merlin.data.monai_transforms import ImageTransforms
+# from merlin.data.monai_transforms import ImageTransforms
 from monai.data.utils import SUPPORTED_PICKLE_MOD
 from monai.utils import look_up_option
 from PIL import Image
@@ -97,29 +97,29 @@ class MIMDataset(monai.data.PersistentDataset):
         print(f"Size of dataset: {self.__len__()}\n")
 
 
-class DataLoader(monai.data.DataLoader):
-    def __init__(
-        self,
-        datalist: List[dict],
-        cache_dir: str,
-        batchsize: int,
-        shuffle: bool = True,
-        num_workers: int = 0,
-    ):
-        self.datalist = datalist
-        self.cache_dir = cache_dir
-        self.batchsize = batchsize
-        self.dataset = CTPersistentDataset(
-            data=datalist,
-            transform=ImageTransforms,
-            cache_dir=cache_dir,
-        )
-        super().__init__(
-            self.dataset,
-            batch_size=batchsize,
-            shuffle=shuffle,
-            num_workers=num_workers,
-        )
+# class DataLoader(monai.data.DataLoader):
+#     def __init__(
+#         self,
+#         datalist: List[dict],
+#         cache_dir: str,
+#         batchsize: int,
+#         shuffle: bool = True,
+#         num_workers: int = 0,
+#     ):
+#         self.datalist = datalist
+#         self.cache_dir = cache_dir
+#         self.batchsize = batchsize
+#         self.dataset = CTPersistentDataset(
+#             data=datalist,
+#             transform=ImageTransforms,
+#             cache_dir=cache_dir,
+#         )
+#         super().__init__(
+#             self.dataset,
+#             batch_size=batchsize,
+#             shuffle=shuffle,
+#             num_workers=num_workers,
+#         )
 
 
 class SiglipDataset(Dataset):
