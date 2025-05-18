@@ -69,7 +69,7 @@ class MaskGenerator:
         return torch.tensor(mask.flatten()).bool()
 
 
-class GenerateMask(MapTransform):
+class GenerateMask(Transform):
     def __init__(
         self,
         input_size=224,
@@ -85,10 +85,8 @@ class GenerateMask(MapTransform):
         return inputs
 
 
-class PermuteImage(MapTransform):
+class PermuteImage(Transform):
     """Permute the dimensions of the image"""
-    def __init__(self, keys=["image"], allow_missing_keys=False):
-        MapTransform.__init__(self, keys, allow_missing_keys)
 
     def __call__(self, data):
         data["image"] = data["image"].permute(3, 0, 1, 2)  # Adjust permutation order as needed
