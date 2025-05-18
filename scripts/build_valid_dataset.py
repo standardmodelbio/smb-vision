@@ -94,7 +94,7 @@ def validate_files(
         pbar.close()
 
     # Split into train/val sets (80/20 split)
-    split_idx = int(len(valid_files) * 0.8)
+    split_idx = int(len(valid_files) * 0.9)
     train_files = valid_files[:split_idx]
     val_files = valid_files[split_idx:]
 
