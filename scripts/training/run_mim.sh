@@ -26,6 +26,7 @@ accelerate launch src/run_mim.py \
     --do_train true \
     --do_eval true \
     --overwrite_output_dir true \
+    --remove_unused_columns false \
     --output_dir /home/user/saves/smb-vision-base-05152025 \
     --eval_strategy "no" \
     --eval_steps 500 \

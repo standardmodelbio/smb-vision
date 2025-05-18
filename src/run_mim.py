@@ -450,7 +450,6 @@ def main():
         eval_dataset=datasets["validation"] if training_args.do_eval else None,
         data_collator=collate_fn,
         compute_metrics=lambda eval_pred: {"loss": eval_pred.predictions[0].item()},
-        remove_unused_columns=False,
     )
 
     # Training
