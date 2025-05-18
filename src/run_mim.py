@@ -445,7 +445,7 @@ def main():
         args=training_args,
         train_dataset=datasets["train"] if training_args.do_train else None,
         eval_dataset=datasets["validation"] if training_args.do_eval else None,
-        data_collator=pad_list_data_collate,
+        data_collator=collate_fn,
         compute_metrics=lambda eval_pred: {"loss": eval_pred.predictions[0].item()},
     )
 
