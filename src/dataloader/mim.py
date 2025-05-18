@@ -18,6 +18,7 @@ from monai.transforms import (
     SpatialPadd,
     ToTensord,
     Transform,
+    MapTransform,
 )
 
 
@@ -68,7 +69,7 @@ class MaskGenerator:
         return torch.tensor(mask.flatten()).bool()
 
 
-class GenerateMask(Transform):
+class GenerateMask(MapTransform):
     def __init__(
         self,
         input_size=224,
@@ -84,7 +85,7 @@ class GenerateMask(Transform):
         return inputs
 
 
-class PermuteImage(Transform):
+class PermuteImage(MapTransform):
     """Permute the dimensions of the image"""
 
     def __call__(self, data):
