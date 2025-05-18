@@ -18,11 +18,11 @@ classifiers = [
 dependencies = [
     "torch==2.5.1",
     "torchvision==0.20.1",
-    "transformers==4.48.1",
+    "transformers==4.46.1",
     "peft",
     "accelerate",
     "datasets",
-    "monai==1.1.0",
+    "monai==1.3.0",
     "loguru",
     "awswrangler",
     "ninja",
