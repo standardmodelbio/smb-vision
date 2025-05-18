@@ -426,23 +426,6 @@ def main():
         datasets["train"][0].keys() if isinstance(datasets["train"][0], dict) else "Not a dict",
     )
 
-    # Create a custom dataset class to ensure data is preserved
-    # class PreserveDataDataset(torch.utils.data.Dataset):
-    #     def __init__(self, dataset):
-    #         self.dataset = dataset
-
-    #     def __len__(self):
-    #         return len(self.dataset)
-
-    #     def __getitem__(self, idx):
-    #         item = self.dataset[idx]
-    #         print(f"\nDataset __getitem__ for index {idx}:")
-    #         print("Item keys:", item.keys())
-    #         return item
-
-    # ds_train = PreserveDataDataset(ds_train)
-    # ds_val = PreserveDataDataset(ds_val)
-
     trainer = Trainer(
         model=model,
         args=training_args,
