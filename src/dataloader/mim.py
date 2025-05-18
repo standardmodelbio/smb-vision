@@ -170,7 +170,7 @@ class MIMDataset:
                 ),
                 # RandScaleIntensityd(keys="image", factors=0.1, prob=0.5),
                 # RandShiftIntensityd(keys="image", offsets=0.1, prob=0.5),
-                ToTensord(keys=["image"], track_meta=False),
+                # ToTensord(keys=["image"], track_meta=False),
                 PermuteImage(),
                 # Add custom transform to generate mask
                 GenerateMask(
