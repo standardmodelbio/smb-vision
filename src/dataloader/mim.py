@@ -87,6 +87,8 @@ class GenerateMask(MapTransform):
 
 class PermuteImage(MapTransform):
     """Permute the dimensions of the image"""
+    def __init__(self, keys):
+        super().__init__(keys)
 
     def __call__(self, data):
         data["image"] = data["image"].permute(3, 0, 1, 2)  # Adjust permutation order as needed
