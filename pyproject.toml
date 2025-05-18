@@ -22,7 +22,7 @@ dependencies = [
     "peft",
     "accelerate",
     "datasets",
-    "monai",
+    "monai==1.1.0",
     "loguru",
     "awswrangler",
     "ninja",
