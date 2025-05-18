@@ -15,9 +15,9 @@ accelerate launch src/run_mim.py \
     --json_path /workspace/smb_vision_dataset.json \
     --cache_dir /workspace/cache/ \
     --model_name_or_path standardmodelbio/smb-vision-base \
+    --lr_scheduler_type cosine \
     --learning_rate 5e-5 \
     --weight_decay 0.01 \
-    --lr_scheduler_type cosine \
     --max_grad_norm 1.0 \
     --warmup_ratio 0.01 \
     --num_train_epochs 3 \
