@@ -167,8 +167,6 @@ class MIMDataset:
                 CenterSpatialCropd(
                     keys=["image"],
                     roi_size=(self.img_size, self.img_size, self.depth),
-                    random_size=False,
-                    num_samples=1,
                 ),
                 # RandScaleIntensityd(keys="image", factors=0.1, prob=0.5),
                 # RandShiftIntensityd(keys="image", offsets=0.1, prob=0.5),
