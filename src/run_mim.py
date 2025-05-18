@@ -193,13 +193,13 @@ class ModelArguments:
 
 def collate_fn(examples):
     # Unpack nested lists (common in MONAI/PyTorch datasets)
-    unpacked = []
-    for ex in examples:
-        # Unpack until we get to the dictionary
-        while isinstance(ex, (list, tuple)) and len(ex) == 1:
-            ex = ex[0]
-        unpacked.append(ex)
-    examples = unpacked
+    # unpacked = []
+    # for ex in examples:
+    #     # Unpack until we get to the dictionary
+    #     while isinstance(ex, (list, tuple)) and len(ex) == 1:
+    #         ex = ex[0]
+    #     unpacked.append(ex)
+    # examples = unpacked
 
     # Debug: Print first example's structure
     # print("\nFirst unpacked example keys:", examples[0].keys() if isinstance(examples[0], dict) else "Not a dict")
@@ -213,8 +213,8 @@ def collate_fn(examples):
     #     raise ValueError("Batch contains examples without 'image' or 'mask' keys")
 
     # Stack tensors and rename keys
-    pixel_values = torch.stack([ex["image"] for ex in examples])
-    masks = torch.stack([ex["mask"] for ex in examples])
+    pixel_values = torch.stack([ex[0]["image"] for ex in examples])
+    masks = torch.stack([ex[0]["mask"] for ex in examples])
 
     return {"pixel_values": pixel_values, "bool_masked_pos": masks}
 
