@@ -12,6 +12,7 @@ from monai.transforms import (
     LoadImaged,
     Orientationd,
     RandSpatialCropSamplesd,
+    CenterSpatialCropd,
     ScaleIntensityRanged,
     Spacingd,
     SpatialPadd,
@@ -159,15 +160,15 @@ class MIMDataset:
                     clip=True,
                 ),
                 # CropForegroundd(keys=["image"], source_key="image", allow_smaller=False),
-                RandSpatialCropSamplesd(
+                SpatialPadd(
+                    keys=["image"],
+                    spatial_size=(self.img_size, self.img_size, self.depth),
+                ),
+                CenterSpatialCropd(
                     keys=["image"],
                     roi_size=(self.img_size, self.img_size, self.depth),
                     random_size=False,
                     num_samples=1,
-                ),
-                SpatialPadd(
-                    keys=["image"],
-                    spatial_size=(self.img_size, self.img_size, self.depth),
                 ),
                 # RandScaleIntensityd(keys="image", factors=0.1, prob=0.5),
                 # RandShiftIntensityd(keys="image", offsets=0.1, prob=0.5),
@@ -305,20 +306,20 @@ class MIMDataset:
 if __name__ == "__main__":
     # Initialize dataset with example parameters
     dataset = MIMDataset(
-        json_path="./smb-vision-train-mim.json",
-        img_size=512,
-        depth=320,
-        mask_patch_size=32,
+        json_path="/home/user/smb_vision_data.json",
+        img_size=224,
+        depth=160,
+        mask_patch_size=16,
         patch_size=16,
-        downsample_ratio=(1.0, 1.0, 1.0),
-        cache_dir="./cache",
+        downsample_ratio=(1.5, 1.5, 3.0),
+        cache_dir="/home/user/cache",
         batch_size=1,
         val_batch_size=1,
         num_workers=8,
         cache_num=0,
         cache_rate=0.0,
         dist=False,
-        mask_ratio=0.6,
+        mask_ratio=0.5,
     )
 
     # Setup dataset and get data loaders
