@@ -12,7 +12,7 @@ export WANDB_PROJECT=smb-vision
 
 # train
 accelerate launch src/run_mim.py \
-    --json_path /home/user/smb_vision_data.json \
+    --json_path /home/user/smb_vision_train_dataset.json \
     --cache_dir /home/user/cache/ \
     --model_name_or_path standardmodelbio/smb-vision-base \
     --learning_rate 5e-5 \
