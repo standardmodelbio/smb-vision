@@ -6,14 +6,11 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 import torch
-from monai.data import PersistentDataset, Dataset, list_data_collate
 from monai.data.utils import pad_list_data_collate
 
 import transformers
 
-# from dataloader.mim import MIMDataset
-from dataloader.load import MIMDataset
-from dataloader.transforms import ct_transforms
+from dataloader.mim import MIMDataset
 from transformers import (
     MODEL_FOR_MASKED_IMAGE_MODELING_MAPPING,
     AutoConfig,
@@ -279,42 +276,18 @@ def main():
             )
 
     # Initialize our dataset.
-    print("\nLoading data from:", data_args.json_path)
-    with open(data_args.json_path, "r") as f:
-        data = json.load(f)
-    print("Data keys:", data.keys())
-    print("Number of training samples:", len(data["train"]))
-    print("Number of validation samples:", len(data["validation"]))
-    print("First training sample:", data["train"][0])
-
-    # Initialize datasets with proper transforms
-    print("\nInitializing training dataset...")
-    ds_train = Dataset(
-        data=data["train"],
-        transform=ct_transforms["mim"],
+    dataset = MIMDataset(
+        json_path=data_args.json_path,
+        img_size=model_args.image_size,
+        depth=model_args.depth,
+        mask_patch_size=data_args.mask_patch_size,
+        patch_size=model_args.patch_size,
+        downsample_ratio=(1.5, 1.5, 3.0),
+        cache_dir=model_args.cache_dir,
+        dist=False,
+        mask_ratio=data_args.mask_ratio,
     )
-    print(f"Training dataset size: {len(ds_train)}")
-    if len(ds_train) > 0:
-        print("First training item after transform:", ds_train[0])
-        print("First training item keys:", ds_train[0].keys())
-        print("First training item image shape:", ds_train[0]["image"].shape)
-        # print("First training item mask shape:", ds_train[0]["mask"].shape)
-    else:
-        print("No data in training dataset")
-
-    print("\nInitializing validation dataset...")
-    ds_val = Dataset(
-        data=data["validation"],
-        transform=ct_transforms["mim"],
-    )
-    print(f"Validation dataset size: {len(ds_val)}")
-    if len(ds_val) > 0:
-        print("First validation item after transform:", ds_val[0])
-        print("First validation item keys:", ds_val[0].keys())
-        print("First validation item image shape:", ds_val[0]["image"].shape)
-        # print("First validation item mask shape:", ds_val[0]["mask"].shape)
-    else:
-        print("No data in validation dataset")
+    datasets = dataset.setup("train")
 
     # Create config
     # Distributed training:
@@ -446,9 +419,9 @@ def main():
 
     # Initialize our trainer
     print("\nInitializing trainer...")
-    print("Training dataset type:", type(ds_train))
-    print("First training item type:", type(ds_train[0]))
-    print("First training item keys:", ds_train[0].keys() if isinstance(ds_train[0], dict) else "Not a dict")
+    # print("Training dataset type:", type(ds_train))
+    print("First training item type:", type(datasets["train"][0]))
+    print("First training item keys:", datasets["train"][0].keys() if isinstance(datasets["train"][0], dict) else "Not a dict")
 
     # Create a custom dataset class to ensure data is preserved
     # class PreserveDataDataset(torch.utils.data.Dataset):
@@ -470,8 +443,8 @@ def main():
     trainer = Trainer(
         model=model,
         args=training_args,
-        train_dataset=ds_train if training_args.do_train else None,
-        eval_dataset=ds_val if training_args.do_eval else None,
+        train_dataset=datasets["train"] if training_args.do_train else None,
+        eval_dataset=datasets["val"] if training_args.do_eval else None,
         data_collator=collate_fn,
         compute_metrics=lambda eval_pred: {"loss": eval_pred.predictions[0].item()},
     )
