@@ -306,7 +306,7 @@ class MIMDataset:
 if __name__ == "__main__":
     # Initialize dataset with example parameters
     dataset = MIMDataset(
-        json_path="/home/user/smb_vision_data.json",
+        json_path="/home/user/smb_vision_train_dataset.json",
         img_size=224,
         depth=160,
         mask_patch_size=16,
