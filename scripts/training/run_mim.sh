@@ -31,7 +31,7 @@ accelerate launch src/run_mim.py \
     --output_dir /workspace/saves/smb-vision-base-05152025 \
     --eval_strategy "no" \
     --eval_steps 500 \
-    --save_steps 500 \
+    --save_steps 5000 \
     --bf16 true \
     --gradient_checkpointing true \
     --logging_steps 1 \
