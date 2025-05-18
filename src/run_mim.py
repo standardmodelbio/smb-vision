@@ -9,7 +9,6 @@ import torch
 from monai.data.utils import pad_list_data_collate
 
 import transformers
-
 from dataloader.mim import MIMDataset
 from transformers import (
     MODEL_FOR_MASKED_IMAGE_MODELING_MAPPING,
@@ -193,30 +192,19 @@ class ModelArguments:
 
 
 def collate_fn(examples):
-    print("\nCollate function input:")
-    for i, example in enumerate(examples):
-        print(f"Example {i} type:", type(example))
-        print(f"Example {i} keys:", example.keys() if isinstance(example, dict) else "Not a dict")
-        if isinstance(example, dict):
-            print(f"Example {i} image shape:", example["image"].shape if "image" in example else "No image")
-            print(f"Example {i} mask shape:", example["mask"].shape if "mask" in example else "No mask")
-
-    # Handle both direct dictionaries and list-wrapped dictionaries
+    # Unpack MONAI's list-wrapped items
     if isinstance(examples[0], list):
         examples = [example[0] for example in examples]
 
-    # Ensure we have the required keys
-    if not all("image" in example and "mask" in example for example in examples):
-        raise ValueError("Each example must contain both 'image' and 'mask' keys")
+    # Ensure keys exist
+    if not all("image" in e and "mask" in e for e in examples):
+        raise ValueError("Missing 'image' or 'mask' keys in batch")
 
-    pixel_values = torch.stack([example["image"] for example in examples])
-    mask = torch.stack([example["mask"] for example in examples])
+    # Stack tensors and rename keys
+    pixel_values = torch.stack([e["image"] for e in examples])
+    masks = torch.stack([e["mask"] for e in examples])
 
-    print("\nCollate function output:")
-    print("pixel_values shape:", pixel_values.shape)
-    print("mask shape:", mask.shape)
-
-    return {"pixel_values": pixel_values, "bool_masked_pos": mask}
+    return {"pixel_values": pixel_values, "bool_masked_pos": masks}
 
 
 def main():
@@ -421,7 +409,10 @@ def main():
     print("\nInitializing trainer...")
     # print("Training dataset type:", type(ds_train))
     print("First training item type:", type(datasets["train"][0]))
-    print("First training item keys:", datasets["train"][0].keys() if isinstance(datasets["train"][0], dict) else "Not a dict")
+    print(
+        "First training item keys:",
+        datasets["train"][0].keys() if isinstance(datasets["train"][0], dict) else "Not a dict",
+    )
 
     # Create a custom dataset class to ensure data is preserved
     # class PreserveDataDataset(torch.utils.data.Dataset):
