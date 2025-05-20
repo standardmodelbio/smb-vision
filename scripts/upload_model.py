@@ -18,6 +18,7 @@ def upload_model(folder_path: str, repo_id: str, repo_type: str = "model") -> No
         repo_id=repo_id,
         repo_type=repo_type,
         allow_patterns=["*.pt", "*.pth", "*.safetensors", "*.json", "*.yaml", "*.txt", "*.md"],
+        ignore_patterns=["*checkpoint*", "*pycache*", "*__pycache__*", "*logs*", "*wandb*", "*wandb*"],
     )
 
 
