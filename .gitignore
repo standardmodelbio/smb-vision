@@ -162,6 +162,7 @@ cython_debug/
 #.idea/
 
 # data
+dummy_data/
 saves/
 cache/
 nifti_files/

@@ -142,46 +142,47 @@ class MIMDataset:
     def train_transforms(
         self,
     ):
-        transforms = Compose(
-            [
-                LoadImaged(keys=["image"]),
-                EnsureChannelFirstd(keys=["image"]),
-                Orientationd(keys=["image"], axcodes="RAS"),
-                Spacingd(
-                    keys=["image"],
-                    pixdim=(1.5, 1.5, 3.0),
-                    mode=("bilinear"),
-                ),
-                ScaleIntensityRanged(
-                    keys=["image"],
-                    a_min=-1000,
-                    a_max=1000,
-                    b_min=0.0,
-                    b_max=1.0,
-                    clip=True,
-                ),
-                SpatialPadd(
-                    keys=["image"],
-                    spatial_size=(self.img_size, self.img_size, self.depth),
-                ),
-                CenterSpatialCropd(
-                    keys=["image"],
-                    roi_size=(self.img_size, self.img_size, self.depth),
-                ),
-                # ToTensord(keys=["image"]),
-                PermuteImage(),
-                # Add custom transform to generate mask
+        transforms_list = [
+            LoadImaged(keys=["image"]),
+            EnsureChannelFirstd(keys=["image"]),
+            Orientationd(keys=["image"], axcodes="RAS"),
+            Spacingd(
+                keys=["image"],
+                pixdim=(1.5, 1.5, 3.0),
+                mode=("bilinear"),
+            ),
+            ScaleIntensityRanged(
+                keys=["image"],
+                a_min=-1000,
+                a_max=1000,
+                b_min=0.0,
+                b_max=1.0,
+                clip=True,
+            ),
+            SpatialPadd(
+                keys=["image"],
+                spatial_size=(self.img_size, self.img_size, self.depth),
+            ),
+            CenterSpatialCropd(
+                keys=["image"],
+                roi_size=(self.img_size, self.img_size, self.depth),
+            ),
+            PermuteImage(),
+        ]
+
+        # Only add mask generator if mask_ratio is greater than 0
+        if self.mask_ratio > 0:
+            transforms_list.append(
                 GenerateMask(
                     input_size=self.img_size,
                     depth=self.depth,
                     mask_patch_size=self.mask_patch_size,
                     model_patch_size=self.patch_size,
                     mask_ratio=self.mask_ratio,
-                ),
-            ]
-        )
+                )
+            )
 
-        return transforms
+        return Compose(transforms_list)
 
     def setup(self, stage: Optional[str] = None):
         # Assign Train split(s) for use in Dataloaders

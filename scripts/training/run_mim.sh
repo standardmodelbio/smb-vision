@@ -1,6 +1,5 @@
 #!/bin/bash
 export WANDB_PROJECT=smb-vision
-# export WANDB_LOG_MODEL=checkpoint
 
 # python scripts/download_from_s3.py
 

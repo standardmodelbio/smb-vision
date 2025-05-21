@@ -2,6 +2,10 @@ import glob
 import json
 import os
 import random
+import sys
+
+import fire
+from loguru import logger
 
 
 random.seed(42)
@@ -10,6 +14,7 @@ random.seed(42)
 def collect_nifti_files(directory_path, output_file="nifti_files.json", val_size=100):
     # Get all nifti files in directory and subdirectories
     nifti_files = glob.glob(os.path.join(directory_path, "**", "*.nii.gz"), recursive=True)
+    logger.info(f"Found {len(nifti_files)} total NIfTI files in {directory_path}")
 
     # Randomly shuffle files
     random.shuffle(nifti_files)
@@ -30,16 +35,33 @@ def collect_nifti_files(directory_path, output_file="nifti_files.json", val_size
     with open(output_file, "w") as f:
         json.dump(data_split, f, indent=2)
 
+    logger.info(
+        f"Split dataset into {len(data_split['train'])} training files and {len(data_split['validation'])} validation files"
+    )
+    logger.info(f"Output saved to {output_file}")
+
     return data_split
 
 
-def main():
-    # Test the function
-    directory = "../data/nifti_files/"  # Replace with actual path
-    data = collect_nifti_files(directory, "./smb-vision-train-mim.json", val_size=100)
-    print(f"Found {len(data['train'])} training files")
-    print(f"Found {len(data['validation'])} validation files")
+def main(directory_path: str, output_file: str = "nifti_files.json", val_size: int = 100):
+    """
+    Collect NIfTI files from a directory and split them into training and validation sets.
+
+    Args:
+        directory_path: Path to the directory containing NIfTI files
+        output_file: Path to save the output JSON file (default: nifti_files.json)
+        val_size: Number of files to use for validation (default: 100)
+    """
+    logger.info(f"Starting to process NIfTI files from {directory_path}")
+    return collect_nifti_files(directory_path, output_file, val_size)
 
 
 if __name__ == "__main__":
-    main()
+    # Configure loguru
+    logger.remove()  # Remove default handler
+    logger.add(
+        sys.stderr,
+        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
+        level="INFO",
+    )
+    fire.Fire(main)

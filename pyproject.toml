@@ -22,11 +22,11 @@ dependencies = [
     "peft",
     "accelerate",
     "datasets",
+    "nibabel",
     "monai",
     "loguru",
     "awswrangler",
     "ninja",
-    "nibabel",
 ]
 
 [project.optional-dependencies]

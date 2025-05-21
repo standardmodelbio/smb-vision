@@ -1,52 +1,111 @@
+import json
 import shutil
+import sys
 import tempfile
+import warnings
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from copy import deepcopy
 from pathlib import Path
-from typing import List, Dict, Any
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Any, Dict, List, Union
 
 import monai
+import pandas as pd
 import torch
-# from merlin.data.monai_transforms import ImageTransforms
 from monai.data.utils import SUPPORTED_PICKLE_MOD
 from monai.utils import look_up_option
 from PIL import Image
 from torch.utils.data import Dataset
+
 from transformers import AutoProcessor
 
 from .transforms import ct_transforms
 
 
+def load_data(file_path: Union[str, Path], split: str = None) -> List[Dict]:
+    """Load data from various file formats (json, csv, parquet).
+
+    Args:
+        file_path (Union[str, Path]): Path to the data file
+        split (str, optional): If data is split into train/val/test, specify which split to load
+
+    Returns:
+        List[Dict]: List of data items as dictionaries
+    """
+    file_path = Path(file_path)
+    if not file_path.exists():
+        raise FileNotFoundError(f"File not found: {file_path}")
+
+    # Handle different file formats
+    if file_path.suffix.lower() == ".json":
+        with open(file_path, "r") as f:
+            data = json.load(f)
+            if split and isinstance(data, dict):
+                if split not in data:
+                    raise ValueError(f"Split '{split}' not found in data. Available splits: {list(data.keys())}")
+                return data[split]
+            return data if isinstance(data, list) else list(data.values())
+
+    elif file_path.suffix.lower() == ".csv":
+        df = pd.read_csv(file_path)
+        if split and "split" in df.columns:
+            df = df[df["split"] == split]
+        return df.to_dict("records")
+
+    elif file_path.suffix.lower() == ".parquet":
+        df = pd.read_parquet(file_path)
+        if split and "split" in df.columns:
+            df = df[df["split"] == split]
+        return df.to_dict("records")
+
+    else:
+        raise ValueError(f"Unsupported file format: {file_path.suffix}. Supported formats: .json, .csv, .parquet")
+
+
 class CTPersistentDataset(monai.data.PersistentDataset):
     def __init__(self, data, transform, cache_dir=None):
-        print("\nCTPersistentDataset initialization:")
-        print("Number of items in data:", len(data))
-        if len(data) > 0:
-            print("First item structure:", data[0])
         super().__init__(data=data, transform=transform, cache_dir=cache_dir)
         print(f"Size of dataset: {self.__len__()}\n")
 
     def _cachecheck(self, item_transformed):
-        print("\nCTPersistentDataset _cachecheck:")
-        print("Input item keys:", item_transformed.keys())
-        hashfile = None
-        _item_transformed = deepcopy(item_transformed)
-        image_data = {"image": item_transformed.get("image")}  # Assuming the image data is under the 'image' key
+        """
+        A function to cache the expensive input data transform operations
+        so that huge data sets (larger than computer memory) can be processed
+        on the fly as needed, and intermediate results written to disk for
+        future use.
 
-        if self.cache_dir is not None and image_data is not None:
-            data_item_md5 = self.hash_func(image_data).decode("utf-8")  # Hash based on image data
+        Args:
+            item_transformed: The current data element to be mutated into transformed representation
+
+        Returns:
+            The transformed data_element, either from cache, or explicitly computing it.
+
+        Warning:
+            The current implementation does not encode transform information as part of the
+            hashing mechanism used for generating cache names when `hash_transform` is None.
+            If the transforms applied are changed in any way, the objects in the cache dir will be invalid.
+
+        """
+        hashfile = None
+        if self.cache_dir is not None:
+            data_item_md5 = self.hash_func(item_transformed).decode("utf-8")
+            data_item_md5 += self.transform_hash
             hashfile = self.cache_dir / f"{data_item_md5}.pt"
 
-        if hashfile is not None and hashfile.is_file():
-            cached_image = torch.load(hashfile)
-            _item_transformed["image"] = cached_image
-            print("Using cached image")
-            return _item_transformed
+        if hashfile is not None and hashfile.is_file():  # cache hit
+            try:
+                return torch.load(hashfile, weights_only=False)
+            except PermissionError as e:
+                if sys.platform != "win32":
+                    raise e
+            except RuntimeError as e:
+                if "Invalid magic number; corrupt file" in str(e):
+                    warnings.warn(f"Corrupt cache file detected: {hashfile}. Deleting and recomputing.")
+                    hashfile.unlink()
+                else:
+                    raise e
 
-        _image_transformed = self._pre_transform(image_data)["image"]
-        _item_transformed["image"] = _image_transformed
+        _item_transformed = self._pre_transform(deepcopy(item_transformed))  # keep the original hashed
         if hashfile is None:
-            print("No cache file, returning transformed item")
             return _item_transformed
         try:
             # NOTE: Writing to a temporary directory and then using a nearly atomic rename operation
@@ -55,7 +114,7 @@ class CTPersistentDataset(monai.data.PersistentDataset):
             with tempfile.TemporaryDirectory() as tmpdirname:
                 temp_hash_file = Path(tmpdirname) / hashfile.name
                 torch.save(
-                    obj=_image_transformed,
+                    obj=_item_transformed,
                     f=temp_hash_file,
                     pickle_module=look_up_option(self.pickle_module, SUPPORTED_PICKLE_MOD),
                     pickle_protocol=self.pickle_protocol,
@@ -69,16 +128,11 @@ class CTPersistentDataset(monai.data.PersistentDataset):
                         pass
         except PermissionError:  # project-monai/monai issue #3613
             pass
-        print("Saved to cache and returning transformed item")
         return _item_transformed
 
     def _transform(self, index: int):
-        print(f"\nCTPersistentDataset _transform for index {index}:")
         pre_random_item = self._cachecheck(self.data[index])
-        print("Pre-random item keys:", pre_random_item.keys())
-        result = self._post_transform(pre_random_item)
-        print("Post-transform item keys:", result.keys())
-        return result
+        return self._post_transform(pre_random_item)
 
 
 class MerlinDataset(CTPersistentDataset):
@@ -87,54 +141,47 @@ class MerlinDataset(CTPersistentDataset):
 
 
 class SMBVisionDataset(CTPersistentDataset):
-    def __init__(self, data, transform=ct_transforms["smb-vision"], cache_dir=None):
+    def __init__(
+        self, data_path: Union[str, Path], flag: str = "train", transform=ct_transforms["smb-vision"], cache_dir=None
+    ):
+        """Initialize SMBVision dataset.
+
+        Args:
+            data_path (Union[str, Path]): Path to the data file (json, csv, or parquet)
+            flag (str, optional): Data split to use. Defaults to "train"
+            transform: Transform to apply to the data
+            cache_dir: Directory for caching transformed data
+        """
+        data = load_data(data_path, split=flag)
         super().__init__(data=data, transform=transform, cache_dir=cache_dir)
 
 
 class MIMDataset(monai.data.PersistentDataset):
-    def __init__(self, data, transform=ct_transforms["mim"], cache_dir=None):
+    def __init__(self, data_path: Union[str, Path], transform=ct_transforms["mim"], cache_dir=None):
+        """Initialize MIM dataset.
+
+        Args:
+            data_path (Union[str, Path]): Path to the data file (json, csv, or parquet)
+            transform: Transform to apply to the data
+            cache_dir: Directory for caching transformed data
+        """
+        data = load_data(data_path)
         super().__init__(data=data, transform=transform, cache_dir=cache_dir)
         print(f"Size of dataset: {self.__len__()}\n")
-
-
-# class DataLoader(monai.data.DataLoader):
-#     def __init__(
-#         self,
-#         datalist: List[dict],
-#         cache_dir: str,
-#         batchsize: int,
-#         shuffle: bool = True,
-#         num_workers: int = 0,
-#     ):
-#         self.datalist = datalist
-#         self.cache_dir = cache_dir
-#         self.batchsize = batchsize
-#         self.dataset = CTPersistentDataset(
-#             data=datalist,
-#             transform=ImageTransforms,
-#             cache_dir=cache_dir,
-#         )
-#         super().__init__(
-#             self.dataset,
-#             batch_size=batchsize,
-#             shuffle=shuffle,
-#             num_workers=num_workers,
-#         )
 
 
 class SiglipDataset(Dataset):
     """Dataset class for loading and preprocessing x-ray images for SigLIP model"""
 
-    def __init__(self, model_id: str, data_dict: List[Dict], cache_dir: str = None):
+    def __init__(self, model_id: str, data_path: Union[str, Path], cache_dir: str = None):
         """Initialize the dataset.
 
         Args:
             model_id (str): The model ID to use for the processor
-            data_dict (List[Dict]): List of dictionaries containing image data
+            data_path (Union[str, Path]): Path to the data file (json, csv, or parquet)
             cache_dir (str, optional): Directory for caching processed images
         """
-        self.data_dict = self._validate_data(data_dict)
-        # self.data_dict = data_dict
+        self.data_dict = self._validate_data(load_data(data_path))
         self.cache_dir = cache_dir
         self.processor = AutoProcessor.from_pretrained(f"google/{model_id}")
 
