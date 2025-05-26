@@ -22,7 +22,7 @@ from .transforms import ct_transforms
 
 
 def load_data(file_path: Union[str, Path], split: str = None) -> List[Dict]:
-    """Load data from various file formats (json, csv, parquet).
+    """Load data from various file formats (json, csv, parquet, xlsx).
 
     Args:
         file_path (Union[str, Path]): Path to the data file
@@ -45,8 +45,12 @@ def load_data(file_path: Union[str, Path], split: str = None) -> List[Dict]:
                 return data[split]
             return data if isinstance(data, list) else list(data.values())
 
-    elif file_path.suffix.lower() == ".csv":
-        df = pd.read_csv(file_path)
+    elif file_path.suffix.lower() in [".csv", ".xlsx"]:
+        if file_path.suffix.lower() == ".csv":
+            df = pd.read_csv(file_path)
+        else:  # .xlsx
+            df = pd.read_excel(file_path)
+
         if split and "split" in df.columns:
             df = df[df["split"] == split]
         return df.to_dict("records")
@@ -58,7 +62,9 @@ def load_data(file_path: Union[str, Path], split: str = None) -> List[Dict]:
         return df.to_dict("records")
 
     else:
-        raise ValueError(f"Unsupported file format: {file_path.suffix}. Supported formats: .json, .csv, .parquet")
+        raise ValueError(
+            f"Unsupported file format: {file_path.suffix}. Supported formats: .json, .csv, .parquet, .xlsx"
+        )
 
 
 class CTPersistentDataset(monai.data.PersistentDataset):

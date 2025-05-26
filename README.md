@@ -105,7 +105,7 @@ The expected format for each file type:
 
 1. **CSV/Parquet**
 
-| image_path | label | split |
+| image | label | split |
 |------------|-------|-------|
 | path/to/image1.nii.gz | 1 | train |
 | path/to/image2.nii.gz | 0 | train |
