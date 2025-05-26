@@ -61,10 +61,10 @@ def cox_loss(risk_scores, durations, events):
 
 
 class SurvivalTrainer(Trainer):
-    def compute_loss(self, model, inputs, return_outputs=False):
+    def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch=None):
         # Handle non-survival tasks with default loss
         if self.data_args.task_type not in ["survival", "cox_regression"]:
-            return super().compute_loss(model, inputs, return_outputs)
+            return super().compute_loss(model, inputs, return_outputs, num_items_in_batch)
 
         # Forward pass to get risk scores
         outputs = model(inputs["pixel_values"])

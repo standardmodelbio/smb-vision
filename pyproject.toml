@@ -26,6 +26,8 @@ dependencies = [
     "loguru",
     "awswrangler",
     "ninja",
+    "wandb",
+    "lifelines"
 ]
 
 [project.optional-dependencies]
