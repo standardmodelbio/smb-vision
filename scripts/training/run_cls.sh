@@ -3,10 +3,10 @@ export WANDB_PROJECT=smb-vision-cls
 
 # Paths and model configuration
 # TODO: change these paths to your own
-OUTPUT_DIR=/workspace/saves/smb-vision-cls-05202025
 DATA_PATH=/workspace/data/mdanderson_dataset.parquet
 DATA_CACHE_PATH=/workspace/cache/
 MODEL_NAME=standardmodelbio/smb-vision-ct-base-0519
+OUTPUT_DIR=/workspace/saves/smb-vision-survival-mdacc
 RUN_NAME=smb-vision-survival-mdacc
 
 # Model parameters
@@ -52,9 +52,9 @@ accelerate launch src/run_classification.py \
     --remove_unused_columns false \
     --output_dir $OUTPUT_DIR \
     --eval_strategy "steps" \
-    --eval_steps 2 \
+    --eval_steps 100 \
     --save_strategy "steps" \
-    --save_steps 10 \
+    --save_steps 100 \
     --save_total_limit 10 \
     --load_best_model_at_end true \
     --metric_for_best_model "c_index" \
@@ -62,5 +62,5 @@ accelerate launch src/run_classification.py \
     --bf16 true \
     --gradient_checkpointing true \
     --logging_steps 1 \
-    --report_to none \
+    --report_to wandb \
     --run_name $RUN_NAME
