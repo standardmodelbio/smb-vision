@@ -6,6 +6,8 @@ from typing import List, Optional
 
 import numpy as np
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
 import transformers
 from dataloader.load import SMBVisionDataset
@@ -33,19 +35,67 @@ require_version(
 )
 
 
+def cox_loss(risk_scores, durations, events):
+    # Sort by duration in descending order
+    sorted_duration, indices = torch.sort(durations, descending=True)
+    sorted_events = events[indices]
+    sorted_risks = risk_scores[indices]
+
+    # Compute exponentials of risks
+    exp_risks = torch.exp(sorted_risks)
+
+    # Compute cumulative sums
+    cumsum = torch.cumsum(exp_risks, dim=0)
+
+    # Avoid log(0) by adding a small epsilon
+    log_cumsum = torch.log(cumsum + 1e-8)
+
+    # Mask for event instances
+    event_mask = (sorted_events == 1).float()
+
+    # Compute individual loss terms
+    loss_terms = (sorted_risks - log_cumsum) * event_mask
+
+    # Sum terms and normalize by the number of events
+    total_loss = -loss_terms.sum() / (event_mask.sum() + 1e-8)
+
+    return total_loss
+
+
+class SurvivalTrainer(Trainer):
+    def compute_loss(self, model, inputs, return_outputs=False):
+        # Handle non-survival tasks with default loss
+        if self.data_args.task_type not in ["survival", "cox_regression"]:
+            return super().compute_loss(model, inputs, return_outputs)
+
+        # Forward pass to get risk scores
+        outputs = model(inputs["pixel_values"])
+        risk_scores = outputs.logits.squeeze(-1)  # (batch_size, 1) -> (batch_size,)
+
+        # Extract labels
+        labels = inputs["labels"]
+        durations = labels["duration"]
+        events = labels["event"]
+
+        # Compute Cox loss
+        loss = cox_loss(risk_scores, durations, events)
+
+        return (loss, outputs) if return_outputs else loss
+
+
 @dataclass
 class DataTrainingArguments:
     """
     Arguments pertaining to what data we are going to input our model for training and eval.
     """
 
-    train_data_path: Optional[str] = field(
-        default=None, metadata={"help": "The local train data path."}
-    )
+    train_data_path: Optional[str] = field(default=None, metadata={"help": "The local train data path."})
     val_data_path: Optional[str] = field(default=None, metadata={"help": "The local val data path."})
     task_type: str = field(
         default="classification",
-        metadata={"help": "Type of task: 'classification', 'multilabel_classification', or 'regression'"},
+        metadata={
+            "help": "Type of task: 'classification', 'multilabel_classification', 'regression', 'survival', or 'cox_regression'"
+        },
     )
     num_labels: int = field(
         default=2,
@@ -53,7 +103,9 @@ class DataTrainingArguments:
     )
     label_columns: List[str] = field(
         default_factory=lambda: ["label"],
-        metadata={"help": "List of label column names in the dataset for multilabel classification"},
+        metadata={
+            "help": "List of label column names in the dataset for multilabel classification or survival analysis"
+        },
     )
     max_train_samples: Optional[int] = field(
         default=None,
@@ -160,14 +212,21 @@ def collate_fn(examples, data_args):
     # Stack tensors and get labels
     pixel_values = torch.stack([ex["image"] for ex in examples])
 
-    # Handle multilabel classification
+    # Handle different task types
     if data_args.task_type == "multilabel_classification":
         # Stack all labels into a single tensor of shape (batch_size, num_labels)
-        # Convert to float for binary cross-entropy loss
-        labels = torch.stack([
-            torch.tensor([ex[label_col] for label_col in data_args.label_columns], dtype=torch.float32)
-            for ex in examples
-        ])
+        labels = torch.stack(
+            [
+                torch.tensor([ex[label_col] for label_col in data_args.label_columns], dtype=torch.float32)
+                for ex in examples
+            ]
+        )
+    elif data_args.task_type in ["survival", "cox_regression"]:
+        # For survival analysis, we need both duration and event
+        labels = {
+            "duration": torch.tensor([ex["os"] for ex in examples], dtype=torch.float32),
+            "event": torch.tensor([ex["os_event"] for ex in examples], dtype=torch.float32),
+        }
     else:
         labels = torch.tensor([ex["label"] for ex in examples])
 
@@ -180,15 +239,37 @@ def compute_metrics(eval_pred, data_args):
     if isinstance(predictions, tuple):
         predictions = predictions[0]
 
+    # Survival analysis metrics
+    if data_args.task_type in ["survival", "cox_regression"]:
+        risk_scores = predictions.squeeze()
+        true_duration = labels["duration"]
+        true_event = labels["event"]
+
+        # Flatten arrays if necessary
+        if risk_scores.ndim > 1:
+            risk_scores = risk_scores.squeeze(1)
+        if true_duration.ndim > 1:
+            true_duration = true_duration.squeeze(1)
+        if true_event.ndim > 1:
+            true_event = true_event.squeeze(1)
+
+        # Calculate C-index
+        from lifelines.utils import concordance_index
+
+        # try:
+        c_index = concordance_index(true_duration, risk_scores, true_event)
+        # except:
+        #     c_index = 0.5  # Fallback if calculation fails
+
+        return {"c_index": c_index}
+
     # For multilabel classification
-    if data_args.task_type == "multilabel_classification":
+    elif data_args.task_type == "multilabel_classification":
         metrics = {}
         for i, label_col in enumerate(data_args.label_columns):
-            # Convert predictions to binary using 0.5 threshold
             preds = (predictions[:, i] > 0.5).astype(int)
-            true_labels = labels[:, i].astype(int)  # Convert to int for metric calculation
+            true_labels = labels[:, i].astype(int)
 
-            # Calculate metrics for each label
             accuracy = (preds == true_labels).mean()
             precision = (preds * true_labels).sum() / (preds.sum() + 1e-8)
             recall = (preds * true_labels).sum() / (true_labels.sum() + 1e-8)
@@ -203,7 +284,6 @@ def compute_metrics(eval_pred, data_args):
                 }
             )
 
-        # Calculate average metrics across all labels
         metrics["avg_accuracy"] = np.mean([metrics[f"{col}_accuracy"] for col in data_args.label_columns])
         metrics["avg_f1"] = np.mean([metrics[f"{col}_f1"] for col in data_args.label_columns])
 
@@ -297,7 +377,7 @@ def main():
         config = VideoMAEConfig()
         logger.warning("Training new model from scratch")
 
-    # Update config for classification
+    # Update config for classification or survival
     config.update(
         {
             "image_size": model_args.image_size,
@@ -305,12 +385,20 @@ def main():
             "num_channels": 1,
             "num_frames": model_args.depth,
             "tubelet_size": model_args.patch_size,
-            "num_labels": len(data_args.label_columns)
-            if data_args.task_type == "multilabel_classification"
-            else data_args.num_labels,
-            "problem_type": "multi_label_classification"
-            if data_args.task_type == "multilabel_classification"
-            else "single_label_classification",
+            "num_labels": 1
+            if data_args.task_type in ["survival", "cox_regression"]
+            else (
+                len(data_args.label_columns)
+                if data_args.task_type == "multilabel_classification"
+                else data_args.num_labels
+            ),
+            "problem_type": (
+                "regression"
+                if data_args.task_type in ["survival", "cox_regression"]
+                else "multi_label_classification"
+                if data_args.task_type == "multilabel_classification"
+                else "single_label_classification"
+            ),
         }
     )
 
@@ -329,8 +417,9 @@ def main():
         logger.info("Training new model from scratch")
         model = VideoMAEForVideoClassification(config)
 
-    # Initialize trainer
-    trainer = Trainer(
+    # Initialize trainer with custom trainer for survival tasks
+    trainer_class = SurvivalTrainer if data_args.task_type in ["survival", "cox_regression"] else Trainer
+    trainer = trainer_class(
         model=model,
         args=training_args,
         train_dataset=train_dataset if training_args.do_train else None,
