@@ -61,6 +61,10 @@ def cox_loss(risk_scores, durations, events):
 
 
 class SurvivalTrainer(Trainer):
+    def __init__(self, *args, data_args=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.data_args = data_args
+
     def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch=None):
         # Handle non-survival tasks with default loss
         if self.data_args.task_type not in ["survival", "cox_regression"]:
@@ -420,6 +424,7 @@ def main():
     trainer = trainer_class(
         model=model,
         args=training_args,
+        data_args=data_args,
         train_dataset=train_dataset if training_args.do_train else None,
         eval_dataset=val_dataset if training_args.do_eval else None,
         data_collator=lambda examples: collate_fn(examples, data_args),
