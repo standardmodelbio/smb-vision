@@ -4,7 +4,7 @@ export WANDB_PROJECT=smb-vision-cls
 # Paths and model configuration
 # TODO: change these paths to your own
 OUTPUT_DIR=./saves/smb-vision-cls-05202025
-DATA_PATH=./dummy_data/dummy_dataset.json
+DATA_PATH=./dummy_data/dataset.parquet
 DATA_CACHE_PATH=./cache/
 MODEL_NAME=standardmodelbio/smb-vision-base
 RUN_NAME=smb-vision-cls-05202025
@@ -19,6 +19,7 @@ WEIGHT_DECAY=0.1
 MAX_GRAD_NORM=1.0
 WARMUP_RATIO=0.01
 NUM_EPOCHS=1
+LABEL_COLUMNS="histology_adc histology_squ histology_smc"
 
 # Batch size and device configuration
 # TODO: change these parameters to your own
@@ -29,10 +30,11 @@ GRAD_ACCUM_STEPS=$((GLOBAL_BATCH_SIZE / (BATCH_PER_DEVICE * NUM_DEVICES)))
 
 # train
 accelerate launch src/run_classification.py \
-    --json_path $DATA_PATH \
+    --train_data_path $DATA_PATH \
+    --val_data_path $DATA_PATH \
     --cache_dir $DATA_CACHE_PATH \
     --model_name_or_path $MODEL_NAME \
-    --task_type classification \
+    --task_type multilabel_classification \
     --num_labels $NUM_LABELS \
     --lr_scheduler_type cosine \
     --learning_rate $LEARNING_RATE \
@@ -48,6 +50,7 @@ accelerate launch src/run_classification.py \
     --do_train true \
     --do_eval true \
     --overwrite_output_dir true \
+    --label_columns $LABEL_COLUMNS \
     --remove_unused_columns false \
     --output_dir $OUTPUT_DIR \
     --eval_strategy "steps" \

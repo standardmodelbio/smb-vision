@@ -2,8 +2,9 @@ import logging
 import os
 import sys
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import List, Optional
 
+import numpy as np
 import torch
 
 import transformers
@@ -39,20 +40,20 @@ class DataTrainingArguments:
     """
 
     train_data_path: Optional[str] = field(
-        default=None, required=True, metadata={"help": "The local train data path."}
+        default=None, metadata={"help": "The local train data path."}
     )
-    val_data_path: Optional[str] = field(default=None, required=True, metadata={"help": "The local val data path."})
+    val_data_path: Optional[str] = field(default=None, metadata={"help": "The local val data path."})
     task_type: str = field(
         default="classification",
-        metadata={"help": "Type of task: 'classification' or 'regression'"},
+        metadata={"help": "Type of task: 'classification', 'multilabel_classification', or 'regression'"},
     )
     num_labels: int = field(
         default=2,
         metadata={"help": "Number of labels for classification task"},
     )
-    label_column: str = field(
-        default="label",
-        metadata={"help": "Name of the label column in the dataset"},
+    label_columns: List[str] = field(
+        default_factory=lambda: ["label"],
+        metadata={"help": "List of label column names in the dataset for multilabel classification"},
     )
     max_train_samples: Optional[int] = field(
         default=None,
@@ -147,7 +148,7 @@ class CustomTrainingArguments(TrainingArguments):
     )
 
 
-def collate_fn(examples):
+def collate_fn(examples, data_args):
     # Unpack nested lists (common in MONAI/PyTorch datasets)
     unpacked = []
     for ex in examples:
@@ -158,7 +159,17 @@ def collate_fn(examples):
 
     # Stack tensors and get labels
     pixel_values = torch.stack([ex["image"] for ex in examples])
-    labels = torch.tensor([ex["label"] for ex in examples])
+
+    # Handle multilabel classification
+    if data_args.task_type == "multilabel_classification":
+        # Stack all labels into a single tensor of shape (batch_size, num_labels)
+        # Convert to float for binary cross-entropy loss
+        labels = torch.stack([
+            torch.tensor([ex[label_col] for label_col in data_args.label_columns], dtype=torch.float32)
+            for ex in examples
+        ])
+    else:
+        labels = torch.tensor([ex["label"] for ex in examples])
 
     return {"pixel_values": pixel_values, "labels": labels}
 
@@ -169,11 +180,41 @@ def compute_metrics(eval_pred, data_args):
     if isinstance(predictions, tuple):
         predictions = predictions[0]
 
-    # For classification
-    if data_args.task_type == "classification":
+    # For multilabel classification
+    if data_args.task_type == "multilabel_classification":
+        metrics = {}
+        for i, label_col in enumerate(data_args.label_columns):
+            # Convert predictions to binary using 0.5 threshold
+            preds = (predictions[:, i] > 0.5).astype(int)
+            true_labels = labels[:, i].astype(int)  # Convert to int for metric calculation
+
+            # Calculate metrics for each label
+            accuracy = (preds == true_labels).mean()
+            precision = (preds * true_labels).sum() / (preds.sum() + 1e-8)
+            recall = (preds * true_labels).sum() / (true_labels.sum() + 1e-8)
+            f1 = 2 * (precision * recall) / (precision + recall + 1e-8)
+
+            metrics.update(
+                {
+                    f"{label_col}_accuracy": accuracy,
+                    f"{label_col}_precision": precision,
+                    f"{label_col}_recall": recall,
+                    f"{label_col}_f1": f1,
+                }
+            )
+
+        # Calculate average metrics across all labels
+        metrics["avg_accuracy"] = np.mean([metrics[f"{col}_accuracy"] for col in data_args.label_columns])
+        metrics["avg_f1"] = np.mean([metrics[f"{col}_f1"] for col in data_args.label_columns])
+
+        return metrics
+
+    # For single-label classification
+    elif data_args.task_type == "classification":
         predictions = predictions.argmax(axis=-1)
         accuracy = (predictions == labels).mean()
         return {"accuracy": accuracy}
+
     # For regression
     else:
         mse = ((predictions - labels) ** 2).mean()
@@ -231,12 +272,12 @@ def main():
 
     # Initialize our dataset.
     train_dataset = (
-        SMBVisionDataset(data_args.train_data_path, flag="train", cache_dir=model_args.cache_dir)
+        SMBVisionDataset(data_args.train_data_path, split="train", cache_dir=model_args.cache_dir)
         if data_args.train_data_path
         else None
     )
     val_dataset = (
-        SMBVisionDataset(data_args.val_data_path, flag="val", cache_dir=model_args.cache_dir)
+        SMBVisionDataset(data_args.val_data_path, split="val", cache_dir=model_args.cache_dir)
         if data_args.val_data_path
         else None
     )
@@ -264,8 +305,12 @@ def main():
             "num_channels": 1,
             "num_frames": model_args.depth,
             "tubelet_size": model_args.patch_size,
-            "num_labels": data_args.num_labels,
-            "problem_type": "single_label_classification" if data_args.task_type == "classification" else "regression",
+            "num_labels": len(data_args.label_columns)
+            if data_args.task_type == "multilabel_classification"
+            else data_args.num_labels,
+            "problem_type": "multi_label_classification"
+            if data_args.task_type == "multilabel_classification"
+            else "single_label_classification",
         }
     )
 
@@ -290,7 +335,7 @@ def main():
         args=training_args,
         train_dataset=train_dataset if training_args.do_train else None,
         eval_dataset=val_dataset if training_args.do_eval else None,
-        data_collator=collate_fn,
+        data_collator=lambda examples: collate_fn(examples, data_args),
         compute_metrics=lambda eval_pred: compute_metrics(eval_pred, data_args),
     )
 

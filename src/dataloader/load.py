@@ -142,17 +142,17 @@ class MerlinDataset(CTPersistentDataset):
 
 class SMBVisionDataset(CTPersistentDataset):
     def __init__(
-        self, data_path: Union[str, Path], flag: str = "train", transform=ct_transforms["smb-vision"], cache_dir=None
+        self, data_path: Union[str, Path], split: str = "train", transform=ct_transforms["smb-vision"], cache_dir=None
     ):
         """Initialize SMBVision dataset.
 
         Args:
             data_path (Union[str, Path]): Path to the data file (json, csv, or parquet)
-            flag (str, optional): Data split to use. Defaults to "train"
+            split (str, optional): Data split to use. Defaults to "train"
             transform: Transform to apply to the data
             cache_dir: Directory for caching transformed data
         """
-        data = load_data(data_path, split=flag)
+        data = load_data(data_path, split=split)
         super().__init__(data=data, transform=transform, cache_dir=cache_dir)
 
 
