@@ -13,12 +13,12 @@ RUN_NAME=smb-vision-survival-mdacc
 # TODO: change these parameters to your own
 NUM_LABELS=1
 LEARNING_RATE=1e-5
-VISION_LR=1e-6
-MERGER_LR=3e-4
-WEIGHT_DECAY=0.03
+VISION_LR=1e-5
+MERGER_LR=1e-5
+WEIGHT_DECAY=0.1
 MAX_GRAD_NORM=1.0
 WARMUP_RATIO=0.01
-NUM_EPOCHS=30
+NUM_EPOCHS=10
 
 # Batch size and device configuration
 # TODO: change these parameters to your own
