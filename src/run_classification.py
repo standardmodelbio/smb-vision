@@ -34,7 +34,7 @@ require_version(
 
 
 def cox_ph_loss_sorted(log_h: torch.Tensor, events: torch.Tensor, eps: float = 1e-7) -> torch.Tensor:
-    """Requires the input to be sorted by descending duration time.
+    r"""Requires the input to be sorted by descending duration time.
 
     We calculate the negative log of $(\frac{h_i}{\sum_{j \in R_i} h_j})^d$,
     where h = exp(log_h) are the hazards and R is the risk set, and d is event.
@@ -54,7 +54,7 @@ def cox_ph_loss_sorted(log_h: torch.Tensor, events: torch.Tensor, eps: float = 1
 def cox_loss(
     risk_scores: torch.Tensor, durations: torch.Tensor, events: torch.Tensor, eps: float = 1e-7
 ) -> torch.Tensor:
-    """Loss for CoxPH model. If data is sorted by descending duration, see `cox_ph_loss_sorted`.
+    r"""Loss for CoxPH model. If data is sorted by descending duration, see `cox_ph_loss_sorted`.
 
     We calculate the negative log of $(\frac{h_i}{\sum_{j \in R_i} h_j})^d$,
     where h = exp(log_h) are the hazards and R is the risk set, and d is event.
