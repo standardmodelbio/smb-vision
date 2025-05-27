@@ -463,7 +463,7 @@ def main():
     kwargs = {
         "finetuned_from": model_args.model_name_or_path,
         "tasks": data_args.task_type,
-        "dataset": data_args.json_path,
+        "dataset": data_args.train_data_path,
         "tags": [data_args.task_type],
     }
     if training_args.push_to_hub:
