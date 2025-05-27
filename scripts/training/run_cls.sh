@@ -5,7 +5,7 @@ export WANDB_PROJECT=smb-vision-cls
 # TODO: change these paths to your own
 DATA_PATH=/workspace/data/mdanderson_dataset.parquet
 DATA_CACHE_PATH=/workspace/cache/
-MODEL_NAME=standardmodelbio/smb-vision-ct-base-0519
+MODEL_NAME=standardmodelbio/smb-vision-base
 OUTPUT_DIR=/workspace/saves/smb-vision-survival-mdacc
 RUN_NAME=smb-vision-survival-mdacc
 
@@ -18,7 +18,7 @@ MERGER_LR=3e-4
 WEIGHT_DECAY=0.03
 MAX_GRAD_NORM=1.0
 WARMUP_RATIO=0.01
-NUM_EPOCHS=100
+NUM_EPOCHS=30
 
 # Batch size and device configuration
 # TODO: change these parameters to your own
@@ -52,9 +52,9 @@ accelerate launch src/run_classification.py \
     --remove_unused_columns false \
     --output_dir $OUTPUT_DIR \
     --eval_strategy "steps" \
-    --eval_steps 100 \
+    --eval_steps 20 \
     --save_strategy "steps" \
-    --save_steps 100 \
+    --save_steps 20 \
     --save_total_limit 10 \
     --load_best_model_at_end true \
     --metric_for_best_model "c_index" \
