@@ -118,10 +118,16 @@ def create_mdanderson_dataset(
     logger.info(f"Training samples: {num_train}")
     logger.info(f"Validation samples: {num_val}")
     logger.info(f"Test samples: {num_test}")
-    logger.info(f"1-year survival rate: {total_one_year / len(all_files):.2%}")
-    logger.info(f"Training 1-year survival: {train_one_year / num_train:.2%}")
-    logger.info(f"Validation 1-year survival: {val_one_year / num_val:.2%}")
-    logger.info(f"Test 1-year survival: {test_one_year / num_test:.2%}")
+
+    # Log survival rates with safety checks
+    if len(all_files) > 0:
+        logger.info(f"1-year survival rate: {total_one_year / len(all_files):.2%}")
+    if num_train > 0:
+        logger.info(f"Training 1-year survival: {train_one_year / num_train:.2%}")
+    if num_val > 0:
+        logger.info(f"Validation 1-year survival: {val_one_year / num_val:.2%}")
+    if num_test > 0:
+        logger.info(f"Test 1-year survival: {test_one_year / num_test:.2%}")
 
 
 if __name__ == "__main__":
