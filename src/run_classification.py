@@ -239,7 +239,8 @@ def collate_fn(examples, data_args):
             "event": torch.tensor([ex["os_event"] for ex in examples], dtype=torch.float32),
         }
     else:
-        labels = torch.tensor([ex["label"] for ex in examples])
+        label_col = data_args.label_columns[0]
+        labels = torch.tensor([ex[label_col] for ex in examples])
 
     return {"pixel_values": pixel_values, "labels": labels}
 
