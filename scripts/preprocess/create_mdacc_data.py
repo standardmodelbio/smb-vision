@@ -54,13 +54,20 @@ def create_mdanderson_dataset(
             logger.warning(f"Image not found for patient {patient_id} in either train or val directories")
             continue
 
+        # Calculate 1-year survival label
+        os_duration = float(row["OS"])
+        os_event = int(row["OS_events"])
+        # If OS > 12 months or (OS = 12 months and no event), label as 1-year survivor
+        one_year_survival = int(os_duration > 12 or (os_duration == 12 and os_event == 0))
+
         # Add to list with labels
         all_files.append(
             {
                 "image": str(image_path),
                 "patient_id": patient_id,
-                "os": float(row["OS"]),
-                "os_event": int(row["OS_events"]),
+                "os": os_duration,
+                "os_event": os_event,
+                "one_year_survival": one_year_survival,
                 "split": split,
             }
         )
@@ -99,12 +106,22 @@ def create_mdanderson_dataset(
     num_val = len([f for f in all_files if f["split"] == "val"])
     num_test = len([f for f in all_files if f["split"] == "test"])
 
+    # Log survival statistics
+    total_one_year = sum(f["one_year_survival"] for f in all_files)
+    train_one_year = sum(f["one_year_survival"] for f in all_files if f["split"] == "train")
+    val_one_year = sum(f["one_year_survival"] for f in all_files if f["split"] == "val")
+    test_one_year = sum(f["one_year_survival"] for f in all_files if f["split"] == "test")
+
     logger.info(f"Created parquet file at {parquet_file}")
     logger.info(f"Created dataset JSON file at {json_file}")
     logger.info(f"Total samples: {len(all_files)}")
     logger.info(f"Training samples: {num_train}")
     logger.info(f"Validation samples: {num_val}")
     logger.info(f"Test samples: {num_test}")
+    logger.info(f"1-year survival rate: {total_one_year / len(all_files):.2%}")
+    logger.info(f"Training 1-year survival: {train_one_year / num_train:.2%}")
+    logger.info(f"Validation 1-year survival: {val_one_year / num_val:.2%}")
+    logger.info(f"Test 1-year survival: {test_one_year / num_test:.2%}")
 
 
 if __name__ == "__main__":
