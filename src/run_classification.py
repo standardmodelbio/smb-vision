@@ -304,7 +304,36 @@ def compute_metrics(eval_pred, data_args):
     elif data_args.task_type == "classification":
         predictions = predictions.argmax(axis=-1)
         accuracy = (predictions == labels).mean()
-        return {"accuracy": accuracy}
+
+        # Calculate additional metrics
+        from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score, roc_auc_score
+
+        # For ROC AUC, we need probability scores for each class
+        if predictions.ndim > 1:  # If we have probability scores
+            try:
+                # Calculate ROC AUC for each class and average
+                auc_roc = roc_auc_score(labels, predictions, multi_class="ovr", average="macro")
+            except:
+                auc_roc = 0.0
+        else:
+            auc_roc = 0.0
+
+        # Calculate precision, recall, and F1
+        precision = precision_score(labels, predictions, average="macro", zero_division=0)
+        recall = recall_score(labels, predictions, average="macro", zero_division=0)
+        f1 = f1_score(labels, predictions, average="macro", zero_division=0)
+
+        # Calculate confusion matrix
+        cm = confusion_matrix(labels, predictions)
+
+        return {
+            "accuracy": accuracy,
+            "auc_roc": auc_roc,
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
+            "confusion_matrix": cm.tolist(),  # Convert to list for JSON serialization
+        }
 
     # For regression
     else:
