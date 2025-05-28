@@ -11,10 +11,10 @@ RUN_NAME=smb-vision-survival-mdacc
 
 # Model parameters
 # TODO: change these parameters to your own
-NUM_LABELS=1
+NUM_LABELS=2
 LEARNING_RATE=1e-5
-VISION_LR=1e-5
-MERGER_LR=1e-5
+VISION_LR=1e-6
+MERGER_LR=3e-5
 WEIGHT_DECAY=0.01
 MAX_GRAD_NORM=1.0
 WARMUP_RATIO=0.01
@@ -33,8 +33,9 @@ accelerate launch src/run_classification.py \
     --val_data_path $DATA_PATH \
     --cache_dir $DATA_CACHE_PATH \
     --model_name_or_path $MODEL_NAME \
-    --task_type survival \
+    --task_type classification \
     --num_labels $NUM_LABELS \
+    --label_columns "one_year_survival" \
     --lr_scheduler_type cosine \
     --learning_rate $LEARNING_RATE \
     --vision_lr $VISION_LR \
@@ -57,7 +58,7 @@ accelerate launch src/run_classification.py \
     --save_steps 20 \
     --save_total_limit 10 \
     --load_best_model_at_end true \
-    --metric_for_best_model "c_index" \
+    --metric_for_best_model "accuracy" \
     --greater_is_better true \
     --bf16 true \
     --gradient_checkpointing true \
