@@ -5,7 +5,7 @@ export WANDB_PROJECT=smb-vision-cls
 # TODO: change these paths to your own
 DATA_PATH=/workspace/data/mdanderson_dataset.parquet
 DATA_CACHE_PATH=/workspace/cache/
-MODEL_NAME=standardmodelbio/smb-vision-base
+MODEL_NAME=standardmodelbio/smb-vision-ct-base-0519
 OUTPUT_DIR=/workspace/saves/smb-vision-survival-mdacc
 RUN_NAME=smb-vision-survival-mdacc
 
@@ -14,7 +14,7 @@ RUN_NAME=smb-vision-survival-mdacc
 NUM_LABELS=2
 LEARNING_RATE=1e-5
 VISION_LR=1e-6
-MERGER_LR=1e-5
+MERGER_LR=3e-5
 WEIGHT_DECAY=0.01
 MAX_GRAD_NORM=1.0
 WARMUP_RATIO=0.01
