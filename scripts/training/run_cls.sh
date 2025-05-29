@@ -15,10 +15,10 @@ NUM_LABELS=2
 LEARNING_RATE=1e-5
 VISION_LR=1e-6
 MERGER_LR=1e-5
-WEIGHT_DECAY=0.05
+WEIGHT_DECAY=0.1
 MAX_GRAD_NORM=1.0
 WARMUP_RATIO=0.01
-NUM_EPOCHS=5
+NUM_EPOCHS=10
 
 # Batch size and device configuration
 # TODO: change these parameters to your own
