@@ -4,6 +4,7 @@ import sys
 from dataclasses import dataclass, field
 from typing import List, Optional
 
+import evaluate
 import numpy as np
 import torch
 
@@ -268,78 +269,71 @@ def compute_metrics(eval_pred, data_args):
         # Calculate C-index
         from lifelines.utils import concordance_index
 
-        # try:
         c_index = concordance_index(true_duration, risk_scores, true_event)
-        # except:
-        #     c_index = 0.5  # Fallback if calculation fails
-
         return {"c_index": c_index}
 
     # For multilabel classification
     elif data_args.task_type == "multilabel_classification":
-        metrics = {}
-        for i, label_col in enumerate(data_args.label_columns):
-            preds = (predictions[:, i] > 0.5).astype(int)
-            true_labels = labels[:, i].astype(int)
+        # Convert logits to multi-hot encoding
+        preds = np.array([np.where(p > 0, 1, 0) for p in predictions])
 
-            accuracy = (preds == true_labels).mean()
-            precision = (preds * true_labels).sum() / (preds.sum() + 1e-8)
-            recall = (preds * true_labels).sum() / (true_labels.sum() + 1e-8)
-            f1 = 2 * (precision * recall) / (precision + recall + 1e-8)
+        metric = evaluate.load("f1", config_name="multilabel", cache_dir=None)
+        result = metric.compute(predictions=preds, references=labels, average="micro")
 
-            metrics.update(
-                {
-                    f"{label_col}_accuracy": accuracy,
-                    f"{label_col}_precision": precision,
-                    f"{label_col}_recall": recall,
-                    f"{label_col}_f1": f1,
-                }
-            )
+        # Add additional metrics
+        from sklearn.metrics import precision_score, recall_score
 
-        metrics["avg_accuracy"] = np.mean([metrics[f"{col}_accuracy"] for col in data_args.label_columns])
-        metrics["avg_f1"] = np.mean([metrics[f"{col}_f1"] for col in data_args.label_columns])
+        precision = precision_score(labels, preds, average="micro", zero_division=0)
+        recall = recall_score(labels, preds, average="micro", zero_division=0)
 
-        return metrics
+        result.update(
+            {
+                "precision": precision,
+                "recall": recall,
+            }
+        )
+
+        if len(result) > 1:
+            result["combined_score"] = np.mean(list(result.values())).item()
+
+        return result
 
     # For single-label classification
     elif data_args.task_type == "classification":
-        predictions = predictions.argmax(axis=-1)
-        accuracy = (predictions == labels).mean()
+        # Convert logits to class predictions
+        preds = np.argmax(predictions, axis=1)
 
-        # Calculate additional metrics
-        from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score, roc_auc_score
+        # Load metrics
+        accuracy_metric = evaluate.load("accuracy", cache_dir=None)
+        auc_metric = evaluate.load("roc_auc", cache_dir=None)
+
+        # Compute base metrics
+        result = accuracy_metric.compute(predictions=preds, references=labels)
 
         # For ROC AUC, we need probability scores for each class
         if predictions.ndim > 1:  # If we have probability scores
-            try:
-                # Calculate ROC AUC for each class and average
-                auc_roc = roc_auc_score(labels, predictions, multi_class="ovr", average="macro")
-            except:
-                auc_roc = 0.0
+            auc_result = auc_metric.compute(prediction_scores=predictions[:, 1], references=labels)
+            result.update(auc_result)
         else:
-            auc_roc = 0.0
+            auc_result = auc_metric.compute(prediction_scores=predictions, references=labels)
+            result.update(auc_result)
 
-        # Calculate precision, recall, and F1
-        precision = precision_score(labels, predictions, average="macro", zero_division=0)
-        recall = recall_score(labels, predictions, average="macro", zero_division=0)
-        f1 = f1_score(labels, predictions, average="macro", zero_division=0)
+        if len(result) > 1:
+            result["combined_score"] = np.mean(list(result.values())).item()
 
-        # Calculate confusion matrix
-        cm = confusion_matrix(labels, predictions)
-
-        return {
-            "accuracy": accuracy,
-            "auc_roc": auc_roc,
-            "precision": precision,
-            "recall": recall,
-            "f1": f1,
-            "confusion_matrix": cm.tolist(),  # Convert to list for JSON serialization
-        }
+        return result
 
     # For regression
     else:
-        mse = ((predictions - labels) ** 2).mean()
-        return {"mse": mse}
+        preds = np.squeeze(predictions)
+
+        metric = evaluate.load("mse", cache_dir=None)
+        result = metric.compute(predictions=preds, references=labels)
+
+        if len(result) > 1:
+            result["combined_score"] = np.mean(list(result.values())).item()
+
+        return result
 
 
 def main():
