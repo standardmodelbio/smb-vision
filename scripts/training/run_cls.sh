@@ -18,7 +18,7 @@ MERGER_LR=3e-5
 WEIGHT_DECAY=0.01
 MAX_GRAD_NORM=1.0
 WARMUP_RATIO=0.01
-NUM_EPOCHS=5
+NUM_EPOCHS=10
 
 # Batch size and device configuration
 # TODO: change these parameters to your own
