@@ -13,12 +13,12 @@ RUN_NAME=smb-vision-survival-mdacc
 # TODO: change these parameters to your own
 NUM_LABELS=2
 LEARNING_RATE=1e-5
-VISION_LR=1e-7
-MERGER_LR=3e-4
+VISION_LR=1e-6
+MERGER_LR=1e-5
 WEIGHT_DECAY=0.01
 MAX_GRAD_NORM=1.0
-WARMUP_RATIO=0.01
-NUM_EPOCHS=10
+WARMUP_RATIO=0.0
+NUM_EPOCHS=3
 
 # Batch size and device configuration
 # TODO: change these parameters to your own
@@ -53,10 +53,10 @@ accelerate launch src/run_classification.py \
     --remove_unused_columns false \
     --output_dir $OUTPUT_DIR \
     --eval_strategy "steps" \
-    --eval_steps 20 \
+    --eval_steps 2 \
     --save_strategy "steps" \
-    --save_steps 20 \
-    --save_total_limit 10 \
+    --save_steps 2 \
+    --save_total_limit 1 \
     --load_best_model_at_end true \
     --metric_for_best_model "accuracy" \
     --greater_is_better true \
