@@ -5,7 +5,7 @@ export WANDB_PROJECT=smb-vision-cls
 # TODO: change these paths to your own
 DATA_PATH=/workspace/data/mdanderson_dataset.parquet
 DATA_CACHE_PATH=/workspace/cache/
-MODEL_NAME=standardmodelbio/smb-vision-base-cls
+MODEL_NAME=standardmodelbio/smb-vision-base
 OUTPUT_DIR=/workspace/saves/smb-vision-base-cls
 RUN_NAME=smb-vision-base-cls
 
