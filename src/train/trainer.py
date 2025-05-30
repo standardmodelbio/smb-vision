@@ -57,7 +57,7 @@ class VisionTrainer(Trainer):
             if self.args.vision_lr is not None:
                 lr_mapper["visual"] = self.args.vision_lr
                 visual_parameters = [
-                    name for name, _ in opt_model.named_parameters() if "videomae" in name and "classifier" not in name
+                    name for name, _ in opt_model.named_parameters() if ("videomae" in name or "dinov2" in name) and "classifier" not in name
                 ]
             if self.args.merger_lr is not None:
                 lr_mapper["merger"] = self.args.merger_lr
