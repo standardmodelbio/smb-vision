@@ -5,9 +5,9 @@ export WANDB_PROJECT=smb-vision-cls
 # TODO: change these paths to your own
 DATA_PATH=/workspace/data/mdanderson_dataset.parquet
 DATA_CACHE_PATH=/workspace/cache/
-MODEL_NAME=standardmodelbio/smb-vision-base
-OUTPUT_DIR=/workspace/saves/smb-vision-survival-mdacc
-RUN_NAME=smb-vision-survival-mdacc
+MODEL_NAME=facebook/dinov2-base
+OUTPUT_DIR=/workspace/saves/dinov2-base-survival-mdacc
+RUN_NAME=dinov2-base-survival-mdacc
 
 # Model parameters
 # TODO: change these parameters to your own
