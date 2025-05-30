@@ -142,7 +142,7 @@ class Dinov2PatchEmbeddings(nn.Module):
         self.num_patches = num_patches
 
         # Use Conv3d instead of Conv2d for 3D input
-        self.projection = nn.Conv3d(num_channels, hidden_size, kernel_size=patch_size, stride=patch_size)
+        self.projection_3d = nn.Conv3d(num_channels, hidden_size, kernel_size=patch_size, stride=patch_size)
 
     def forward(self, pixel_values: torch.Tensor) -> torch.Tensor:
         num_channels = pixel_values.shape[1]
@@ -152,7 +152,7 @@ class Dinov2PatchEmbeddings(nn.Module):
                 f" Expected {self.num_channels} but got {num_channels}."
             )
         # Flatten the 3D patches into sequence
-        embeddings = self.projection(pixel_values).flatten(2).transpose(1, 2)
+        embeddings = self.projection_3d(pixel_values).flatten(2).transpose(1, 2)
         return embeddings
 
 
