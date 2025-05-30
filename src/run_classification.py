@@ -10,6 +10,7 @@ import torch
 
 import transformers
 from dataloader.load import SMBVisionDataset
+from models.dinov2.modeling_dinov2 import Dinov2ForImageClassification
 from transformers import (
     AutoConfig,
     HfArgumentParser,
@@ -17,7 +18,6 @@ from transformers import (
     TrainingArguments,
     VideoMAEConfig,
     VideoMAEForVideoClassification,
-    Dinov2ForImageClassification,
 )
 from transformers.trainer_utils import get_last_checkpoint
 from transformers.utils import check_min_version, send_example_telemetry
