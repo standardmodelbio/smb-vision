@@ -17,6 +17,7 @@ from transformers import (
     TrainingArguments,
     VideoMAEConfig,
     VideoMAEForVideoClassification,
+    Dinov2ForImageClassification,
 )
 from transformers.trainer_utils import get_last_checkpoint
 from transformers.utils import check_min_version, send_example_telemetry
@@ -438,8 +439,9 @@ def main():
     )
 
     # Create model
-    if model_args.model_name_or_path:
-        model = VideoMAEForVideoClassification.from_pretrained(
+    if "dino" in model_args.model_name_or_path:
+        logger.info("Loading pretrained Dinov2 model")
+        model = Dinov2ForImageClassification.from_pretrained(
             model_args.model_name_or_path,
             from_tf=bool(".ckpt" in model_args.model_name_or_path),
             config=config,
@@ -449,8 +451,16 @@ def main():
             trust_remote_code=model_args.trust_remote_code,
         )
     else:
-        logger.info("Training new model from scratch")
-        model = VideoMAEForVideoClassification(config)
+        logger.info("Loading pretrained VideoMAE model")
+        model = VideoMAEForVideoClassification.from_pretrained(
+            model_args.model_name_or_path,
+            from_tf=bool(".ckpt" in model_args.model_name_or_path),
+            config=config,
+            cache_dir=model_args.cache_dir,
+            revision=model_args.model_revision,
+            token=model_args.token,
+            trust_remote_code=model_args.trust_remote_code,
+        )
 
     # Initialize trainer with custom trainer for survival tasks
     trainer_class = SurvivalTrainer if data_args.task_type in ["survival", "cox_regression"] else Trainer
