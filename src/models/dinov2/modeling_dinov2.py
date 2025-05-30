@@ -133,6 +133,7 @@ class Dinov2PatchEmbeddings(nn.Module):
         # Handle 3D image size and patch size
         image_size = image_size if isinstance(image_size, collections.abc.Iterable) else (image_size, image_size)
         patch_size = patch_size if isinstance(patch_size, collections.abc.Iterable) else (patch_size, patch_size, patch_size)
+        print(image_size, depth, patch_size)
         num_patches = (image_size[0] // patch_size[0]) * (image_size[1] // patch_size[1]) * (depth // patch_size[2])
         self.image_size = image_size
         self.depth = depth
