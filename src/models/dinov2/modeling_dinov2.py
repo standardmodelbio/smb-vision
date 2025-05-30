@@ -51,7 +51,8 @@ class Dinov2Embeddings(nn.Module):
         if config.use_mask_token:
             self.mask_token = nn.Parameter(torch.zeros(1, config.hidden_size))
         self.patch_embeddings = Dinov2PatchEmbeddings(config)
-        num_patches = self.patch_embeddings.num_patches
+        # num_patches = self.patch_embeddings.num_patches
+        num_patches = 1369 # 1369 is the max number of patches for the base model
         self.position_embeddings = nn.Parameter(torch.randn(1, num_patches + 1, config.hidden_size))
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
         self.patch_size = config.patch_size
