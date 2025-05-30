@@ -176,11 +176,10 @@ class MIMDataset(monai.data.PersistentDataset):
         print(f"Size of dataset: {self.__len__()}\n")
 
 
-class Dinov2Dataset(monai.data.PersistentDataset):
-    def __init__(self, data_path: Union[str, Path], transform=ct_transforms["dinov2"], cache_dir=None):
-        data = load_data(data_path)
+class Dinov2Dataset(CTPersistentDataset):
+    def __init__(self, data_path: Union[str, Path], split: str = "train", transform=ct_transforms["dinov2"], cache_dir=None):
+        data = load_data(data_path, split=split)
         super().__init__(data=data, transform=transform, cache_dir=cache_dir)
-        print(f"Size of dataset: {self.__len__()}\n")
 
 
 class SiglipDataset(Dataset):
