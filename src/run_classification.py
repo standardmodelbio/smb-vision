@@ -392,6 +392,7 @@ def main():
         if data_args.train_data_path
         else None
     )
+    print(train_dataset[0]["image"].shape)
     val_dataset = (
         Dinov2Dataset(data_args.val_data_path, split="val", cache_dir=model_args.cache_dir)
         if data_args.val_data_path
