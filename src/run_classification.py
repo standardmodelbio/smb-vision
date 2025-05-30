@@ -9,7 +9,7 @@ import numpy as np
 import torch
 
 import transformers
-from dataloader.load import SMBVisionDataset
+from dataloader.load import SMBVisionDataset, Dinov2Dataset
 from models.dinov2.modeling_dinov2 import Dinov2ForImageClassification
 from transformers import (
     AutoConfig,
@@ -388,12 +388,12 @@ def main():
 
     # Initialize our dataset.
     train_dataset = (
-        SMBVisionDataset(data_args.train_data_path, split="train", cache_dir=model_args.cache_dir)
+        Dinov2Dataset(data_args.train_data_path, split="train", cache_dir=model_args.cache_dir)
         if data_args.train_data_path
         else None
     )
     val_dataset = (
-        SMBVisionDataset(data_args.val_data_path, split="val", cache_dir=model_args.cache_dir)
+        Dinov2Dataset(data_args.val_data_path, split="val", cache_dir=model_args.cache_dir)
         if data_args.val_data_path
         else None
     )
