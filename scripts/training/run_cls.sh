@@ -12,9 +12,9 @@ RUN_NAME=dinov2-base-survival-mdacc
 # Model parameters
 # TODO: change these parameters to your own
 NUM_LABELS=2
-LEARNING_RATE=5e-5
-VISION_LR=5e-5
-MERGER_LR=5e-5
+LEARNING_RATE=3e-4
+VISION_LR=3e-4
+MERGER_LR=3e-4
 WEIGHT_DECAY=0.01
 WARMUP_RATIO=0.01
 NUM_EPOCHS=3
