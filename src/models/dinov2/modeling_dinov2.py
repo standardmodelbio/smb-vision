@@ -97,7 +97,7 @@ class Dinov2Embeddings(nn.Module):
         return torch.cat((class_pos_embed, patch_pos_embed), dim=1)
 
     def forward(self, pixel_values: torch.Tensor, bool_masked_pos: Optional[torch.Tensor] = None) -> torch.Tensor:
-        batch_size, _, depth, height, width = pixel_values.shape
+        batch_size, _, height, width, depth = pixel_values.shape
         target_dtype = self.patch_embeddings.projection_3d.weight.dtype
         embeddings = self.patch_embeddings(pixel_values.to(dtype=target_dtype))
 
