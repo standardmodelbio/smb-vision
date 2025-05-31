@@ -59,7 +59,7 @@ class Dinov2Embeddings(nn.Module):
         self.use_mask_token = config.use_mask_token
         self.config = config
 
-    def interpolate_pos_encoding(self, embeddings: torch.Tensor, depth: int, height: int, width: int) -> torch.Tensor:
+    def interpolate_pos_encoding(self, embeddings: torch.Tensor, height: int, width: int, depth: int) -> torch.Tensor:
         """
         This method allows to interpolate the pre-trained position encodings, to be able to use the model on higher resolution
         3D images. This method is also adapted to support torch.jit tracing and interpolation at torch.float32 precision.
@@ -77,9 +77,9 @@ class Dinov2Embeddings(nn.Module):
 
         dim = embeddings.shape[-1]
 
-        new_depth = depth // self.patch_size[0]
-        new_height = height // self.patch_size[1]
-        new_width = width // self.patch_size[2]
+        new_height = height // self.patch_size
+        new_width = width // self.patch_size
+        new_depth = depth // self.patch_size
 
         # Calculate the cube root for 3D reshaping
         cube_root = torch_int(num_positions**(1/3))
@@ -88,7 +88,7 @@ class Dinov2Embeddings(nn.Module):
         target_dtype = patch_pos_embed.dtype
         patch_pos_embed = nn.functional.interpolate(
             patch_pos_embed.to(torch.float32),
-            size=(new_depth, new_height, new_width),
+            size=(new_height, new_width, new_depth),
             mode="trilinear",
             align_corners=False,
         ).to(dtype=target_dtype)
@@ -112,7 +112,7 @@ class Dinov2Embeddings(nn.Module):
         embeddings = torch.cat((cls_tokens, embeddings), dim=1)
 
         # add positional encoding to each token
-        embeddings = embeddings + self.interpolate_pos_encoding(embeddings, depth, height, width)
+        embeddings = embeddings + self.interpolate_pos_encoding(embeddings, height, width, depth)
 
         embeddings = self.dropout(embeddings)
 
