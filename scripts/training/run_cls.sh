@@ -13,17 +13,16 @@ RUN_NAME=dinov2-base-survival-mdacc
 # TODO: change these parameters to your own
 NUM_LABELS=2
 LEARNING_RATE=1e-5
-VISION_LR=1e-6
+VISION_LR=1e-5
 MERGER_LR=1e-5
 WEIGHT_DECAY=0.01
-MAX_GRAD_NORM=1.0
-WARMUP_RATIO=0.0
+WARMUP_RATIO=0.01
 NUM_EPOCHS=3
 
 # Batch size and device configuration
 # TODO: change these parameters to your own
-GLOBAL_BATCH_SIZE=16
-BATCH_PER_DEVICE=16
+GLOBAL_BATCH_SIZE=4
+BATCH_PER_DEVICE=4
 NUM_DEVICES=1
 GRAD_ACCUM_STEPS=$((GLOBAL_BATCH_SIZE / (BATCH_PER_DEVICE * NUM_DEVICES)))
 
@@ -41,7 +40,6 @@ accelerate launch src/run_classification.py \
     --vision_lr $VISION_LR \
     --merger_lr $MERGER_LR \
     --weight_decay $WEIGHT_DECAY \
-    --max_grad_norm $MAX_GRAD_NORM \
     --warmup_ratio $WARMUP_RATIO \
     --num_train_epochs $NUM_EPOCHS \
     --per_device_train_batch_size $BATCH_PER_DEVICE \
