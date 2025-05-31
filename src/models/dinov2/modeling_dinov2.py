@@ -54,6 +54,8 @@ class Dinov2Embeddings(nn.Module):
         # num_patches = self.patch_embeddings.num_patches
         num_patches = 1369 # 1369 is the max number of patches for the base model
         self.position_embeddings = nn.Parameter(torch.randn(1, num_patches + 1, config.hidden_size))
+        # self.max_position_embeddings = nn.Parameter(torch.randn(1, num_patches - 1370 + 1, config.hidden_size))
+        # self.position_embeddings = torch.cat((self.position_embeddings, self.max_position_embeddings), dim=1)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
         self.patch_size = config.patch_size
         self.use_mask_token = config.use_mask_token
@@ -61,15 +63,17 @@ class Dinov2Embeddings(nn.Module):
 
     def interpolate_pos_encoding(self, embeddings: torch.Tensor, height: int, width: int, depth: int) -> torch.Tensor:
         """
-        This method allows to interpolate the pre-trained position encodings, to be able to use the model on higher resolution
-        3D images. This method is also adapted to support torch.jit tracing and interpolation at torch.float32 precision.
+        This method allows to interpolate the pre-trained position encodings from 2D (37x37) to 3D dimensions.
+        This method is also adapted to support torch.jit tracing and interpolation at torch.float32 precision.
         """
 
         num_patches = embeddings.shape[1] - 1
-        num_positions = self.position_embeddings.shape[1] - 1
+        logger.info(f"num_patches: {num_patches}")
+        # num_positions = self.position_embeddings.shape[1] - 1
+        num_positions = num_patches
 
         # always interpolate when tracing to ensure the exported model works for dynamic input shapes
-        if not torch.jit.is_tracing() and num_patches == num_positions and depth == height == width:
+        if not torch.jit.is_tracing() and num_patches == num_positions and height == width == depth:
             return self.position_embeddings
 
         class_pos_embed = self.position_embeddings[:, :1]
@@ -81,19 +85,40 @@ class Dinov2Embeddings(nn.Module):
         new_width = width // self.patch_size
         new_depth = depth // self.patch_size
 
-        # Calculate the cube root for 3D reshaping
-        cube_root = torch_int(num_positions**(1/3))
-        patch_pos_embed = patch_pos_embed.reshape(1, cube_root, cube_root, cube_root, dim)
-        patch_pos_embed = patch_pos_embed.permute(0, 4, 1, 2, 3)
+        # Original 2D position embeddings are 37x37
+        original_size = 37
+        patch_pos_embed = patch_pos_embed.reshape(1, original_size, original_size, dim)
+        patch_pos_embed = patch_pos_embed.permute(0, 3, 1, 2)
         target_dtype = patch_pos_embed.dtype
+
+        # First interpolate to 2D target size
         patch_pos_embed = nn.functional.interpolate(
             patch_pos_embed.to(torch.float32),
-            size=(new_height, new_width, new_depth),
-            mode="trilinear",
+            size=(new_height, new_width),
+            mode="bicubic",
             align_corners=False,
         ).to(dtype=target_dtype)
 
-        patch_pos_embed = patch_pos_embed.permute(0, 2, 3, 4, 1).view(1, -1, dim)
+        # Reshape to 3D by repeating along depth dimension
+        patch_pos_embed = patch_pos_embed.unsqueeze(-1).repeat(1, 1, 1, 1, new_depth)
+
+        # Reshape back to sequence
+        patch_pos_embed = patch_pos_embed.permute(0, 2, 3, 4, 1).reshape(1, -1, dim)
+        logger.info(f"patch_pos_embed.shape: {patch_pos_embed.shape}")
+
+        # Ensure we have the correct number of position embeddings
+        if patch_pos_embed.shape[1] > num_patches:
+            patch_pos_embed = patch_pos_embed[:, :num_patches, :]
+        elif patch_pos_embed.shape[1] < num_patches:
+            # If we need more positions, pad with zeros
+            padding = torch.zeros(
+                1,
+                num_patches - patch_pos_embed.shape[1],
+                dim,
+                dtype=patch_pos_embed.dtype,
+                device=patch_pos_embed.device,
+            )
+            patch_pos_embed = torch.cat([patch_pos_embed, padding], dim=1)
 
         return torch.cat((class_pos_embed, patch_pos_embed), dim=1)
 
@@ -134,7 +159,9 @@ class Dinov2PatchEmbeddings(nn.Module):
 
         # Handle 3D image size and patch size
         image_size = image_size if isinstance(image_size, collections.abc.Iterable) else (image_size, image_size)
-        patch_size = patch_size if isinstance(patch_size, collections.abc.Iterable) else (patch_size, patch_size, patch_size)
+        patch_size = (
+            patch_size if isinstance(patch_size, collections.abc.Iterable) else (patch_size, patch_size, patch_size)
+        )
         num_patches = (image_size[0] // patch_size[0]) * (image_size[1] // patch_size[1]) * (depth // patch_size[2])
         self.image_size = image_size
         self.depth = depth
