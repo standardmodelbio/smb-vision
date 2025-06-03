@@ -124,7 +124,7 @@ class DataTrainingArguments:
     additional_feature_columns: Optional[List[str]] = field(
         default=None,
         metadata={
-            "help": "List of additional feature column names to use alongside the image data for classification. Use 'none' for no additional features."
+            "help": "List of additional feature column names to use alongside the image data for classification. Leave empty for no additional features."
         },
     )
     max_train_samples: Optional[int] = field(
@@ -367,6 +367,10 @@ def main():
         model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
     else:
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
+        
+        # Handle empty additional_feature_columns
+        if data_args.additional_feature_columns == [""]:
+            data_args.additional_feature_columns = None
 
     # Sending telemetry. Tracking the example usage helps us better allocate resources to maintain them. The
     # information sent is the one passed as arguments along with your Python/PyTorch versions.
