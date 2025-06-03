@@ -238,7 +238,7 @@ def collate_fn(examples, data_args):
 
     # Handle additional features if specified
     additional_features = None
-    if data_args.additional_feature_columns and data_args.additional_feature_columns[0] != "none":
+    if data_args.additional_feature_columns:
         additional_features = torch.stack(
             [
                 torch.tensor([ex[col] for col in data_args.additional_feature_columns], dtype=torch.float32)
