@@ -1,23 +1,24 @@
 #!/bin/bash
-export WANDB_PROJECT=smb-vision-cls
+export WANDB_PROJECT="your project name"
 
 # Paths and model configuration
 # TODO: change these paths to your own
 DATA_PATH=/workspace/data/mdanderson_dataset.parquet
 DATA_CACHE_PATH=/workspace/cache/
-MODEL_NAME=facebook/dinov2-base
-OUTPUT_DIR=/workspace/saves/dinov2-base-survival-mdacc
-RUN_NAME=dinov2-base-survival-mdacc
+MODEL_NAME=standardmodelbio/smb-vision-base
+OUTPUT_DIR=/workspace/saves/smb-vision-base-survival-mdacc
+RUN_NAME=smb-vision-base-survival-mdacc
 
 # Model parameters
 # TODO: change these parameters to your own
+LABEL_COLUMNS="histology_adc"
 NUM_LABELS=2
-LEARNING_RATE=3e-4
-VISION_LR=3e-4
+LEARNING_RATE=1e-5
+VISION_LR=1e-5
 MERGER_LR=3e-4
 WEIGHT_DECAY=1e-5
 WARMUP_RATIO=0.01
-NUM_EPOCHS=3
+NUM_EPOCHS=10
 
 # Batch size and device configuration
 # TODO: change these parameters to your own
@@ -34,7 +35,7 @@ accelerate launch src/run_classification.py \
     --model_name_or_path $MODEL_NAME \
     --task_type classification \
     --num_labels $NUM_LABELS \
-    --label_columns "one_year_survival" \
+    --label_columns $LABEL_COLUMNS \
     --lr_scheduler_type cosine \
     --learning_rate $LEARNING_RATE \
     --vision_lr $VISION_LR \
@@ -54,12 +55,9 @@ accelerate launch src/run_classification.py \
     --eval_steps 2 \
     --save_strategy "steps" \
     --save_steps 2 \
-    --save_total_limit 1 \
-    --load_best_model_at_end true \
-    --metric_for_best_model "accuracy" \
-    --greater_is_better true \
+    --save_total_limit 3 \
     --bf16 true \
     --gradient_checkpointing true \
     --logging_steps 1 \
-    --report_to wandb \
+    --report_to none \
     --run_name $RUN_NAME
