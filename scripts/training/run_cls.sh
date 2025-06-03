@@ -12,7 +12,7 @@ RUN_NAME=smb-vision-base-survival-mdacc
 # Model parameters
 # TODO: change these parameters to your own
 LABEL_COLUMNS="one_year_survival"
-ADDITIONAL_FEATURE_COLUMNS=None
+ADDITIONAL_FEATURE_COLUMNS=""
 NUM_LABELS=2
 LEARNING_RATE=1e-5
 VISION_LR=1e-5
