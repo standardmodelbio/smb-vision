@@ -64,6 +64,10 @@ def create_dummy_nifti(
         histology_squ = 1 if histology_label == 1 else 0
         histology_smc = 1 if histology_label == 2 else 0
 
+        # Generate random demographic features
+        age = np.random.randint(18, 91)  # Random age between 18 and 90
+        sex = np.random.randint(0, 2)    # 0 for male, 1 for female
+
         # Determine split
         if i < num_train:
             split = "train"
@@ -81,6 +85,8 @@ def create_dummy_nifti(
                 "histology_adc": histology_adc,
                 "histology_squ": histology_squ,
                 "histology_smc": histology_smc,
+                "age": age,
+                "sex": sex,
                 "split": split,
             }
         )
@@ -113,6 +119,9 @@ def create_dummy_nifti(
     logger.info(f"ADC: {sum(1 for x in all_files if x['histology_adc'] == 1)}")
     logger.info(f"SQU: {sum(1 for x in all_files if x['histology_squ'] == 1)}")
     logger.info(f"SMC: {sum(1 for x in all_files if x['histology_smc'] == 1)}")
+    logger.info("Demographic features:")
+    logger.info(f"Age range: {min(x['age'] for x in all_files)}-{max(x['age'] for x in all_files)}")
+    logger.info(f"Sex distribution - Male: {sum(1 for x in all_files if x['sex'] == 0)}, Female: {sum(1 for x in all_files if x['sex'] == 1)}")
 
 
 if __name__ == "__main__":

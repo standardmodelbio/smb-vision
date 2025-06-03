@@ -68,7 +68,8 @@ def load_data(file_path: Union[str, Path], split: str = None) -> List[Dict]:
 
 
 class CTPersistentDataset(monai.data.PersistentDataset):
-    def __init__(self, data, transform, cache_dir=None):
+    def __init__(self, data_path: Union[str, Path], split: str = "train", transform=ct_transforms["dinov2"], cache_dir=None):
+        data = load_data(data_path, split=split)
         super().__init__(data=data, transform=transform, cache_dir=cache_dir)
         print(f"Size of dataset: {self.__len__()}\n")
 
@@ -139,47 +140,6 @@ class CTPersistentDataset(monai.data.PersistentDataset):
     def _transform(self, index: int):
         pre_random_item = self._cachecheck(self.data[index])
         return self._post_transform(pre_random_item)
-
-
-class MerlinDataset(CTPersistentDataset):
-    def __init__(self, data, transform=ct_transforms["merlin"], cache_dir=None):
-        super().__init__(data=data, transform=transform, cache_dir=cache_dir)
-
-
-class SMBVisionDataset(CTPersistentDataset):
-    def __init__(
-        self, data_path: Union[str, Path], split: str = "train", transform=ct_transforms["smb-vision"], cache_dir=None
-    ):
-        """Initialize SMBVision dataset.
-
-        Args:
-            data_path (Union[str, Path]): Path to the data file (json, csv, or parquet)
-            split (str, optional): Data split to use. Defaults to "train"
-            transform: Transform to apply to the data
-            cache_dir: Directory for caching transformed data
-        """
-        data = load_data(data_path, split=split)
-        super().__init__(data=data, transform=transform, cache_dir=cache_dir)
-
-
-class MIMDataset(monai.data.PersistentDataset):
-    def __init__(self, data_path: Union[str, Path], transform=ct_transforms["mim"], cache_dir=None):
-        """Initialize MIM dataset.
-
-        Args:
-            data_path (Union[str, Path]): Path to the data file (json, csv, or parquet)
-            transform: Transform to apply to the data
-            cache_dir: Directory for caching transformed data
-        """
-        data = load_data(data_path)
-        super().__init__(data=data, transform=transform, cache_dir=cache_dir)
-        print(f"Size of dataset: {self.__len__()}\n")
-
-
-class Dinov2Dataset(CTPersistentDataset):
-    def __init__(self, data_path: Union[str, Path], split: str = "train", transform=ct_transforms["dinov2"], cache_dir=None):
-        data = load_data(data_path, split=split)
-        super().__init__(data=data, transform=transform, cache_dir=cache_dir)
 
 
 class SiglipDataset(Dataset):

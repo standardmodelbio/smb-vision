@@ -9,15 +9,16 @@ import numpy as np
 import torch
 
 import transformers
-from dataloader.load import SMBVisionDataset, Dinov2Dataset
+from dataloader.load import CTPersistentDataset
+from dataloader.transforms import ct_transforms
 from models.dinov2.modeling_dinov2 import Dinov2ForImageClassification
+from models.videomae.modeling_videomae import VideoMAEForVideoClassification
 from transformers import (
     AutoConfig,
     HfArgumentParser,
     Trainer,
     TrainingArguments,
     VideoMAEConfig,
-    VideoMAEForVideoClassification,
 )
 from transformers.trainer_utils import get_last_checkpoint
 from transformers.utils import check_min_version, send_example_telemetry
@@ -118,6 +119,12 @@ class DataTrainingArguments:
         default_factory=lambda: ["label"],
         metadata={
             "help": "List of label column names in the dataset for multilabel classification or survival analysis"
+        },
+    )
+    additional_feature_columns: List[str] = field(
+        default_factory=list,
+        metadata={
+            "help": "List of additional feature column names to use alongside the image data for classification"
         },
     )
     max_train_samples: Optional[int] = field(
@@ -225,6 +232,16 @@ def collate_fn(examples, data_args):
     # Stack tensors and get labels
     pixel_values = torch.stack([ex["image"] for ex in examples])
 
+    # Handle additional features if specified
+    additional_features = None
+    if data_args.additional_feature_columns:
+        additional_features = torch.stack(
+            [
+                torch.tensor([ex[col] for col in data_args.additional_feature_columns], dtype=torch.float32)
+                for ex in examples
+            ]
+        )
+
     # Handle different task types
     if data_args.task_type == "multilabel_classification":
         # Stack all labels into a single tensor of shape (batch_size, num_labels)
@@ -244,7 +261,10 @@ def collate_fn(examples, data_args):
         label_col = data_args.label_columns[0]
         labels = torch.tensor([ex[label_col] for ex in examples])
 
-    return {"pixel_values": pixel_values, "labels": labels}
+    result = {"pixel_values": pixel_values, "labels": labels}
+    if additional_features is not None:
+        result["additional_features"] = additional_features
+    return result
 
 
 def compute_metrics(eval_pred, data_args):
@@ -388,13 +408,19 @@ def main():
 
     # Initialize our dataset.
     train_dataset = (
-        Dinov2Dataset(data_args.train_data_path, split="train", cache_dir=model_args.cache_dir)
+        CTPersistentDataset(
+            data_args.train_data_path,
+            split="train",
+            transform=ct_transforms["smb-vision"],
+            cache_dir=model_args.cache_dir,
+        )
         if data_args.train_data_path
         else None
     )
-    print(train_dataset[0]["image"].shape)
     val_dataset = (
-        Dinov2Dataset(data_args.val_data_path, split="val", cache_dir=model_args.cache_dir)
+        CTPersistentDataset(
+            data_args.val_data_path, split="val", transform=ct_transforms["smb-vision"], cache_dir=model_args.cache_dir
+        )
         if data_args.val_data_path
         else None
     )
@@ -438,6 +464,10 @@ def main():
             ),
         }
     )
+
+    # Add additional features size to config if specified
+    if data_args.additional_feature_columns:
+        config.update({"additional_features_size": len(data_args.additional_feature_columns)})
 
     # Create model
     if "dino" in model_args.model_name_or_path:
