@@ -3,7 +3,7 @@ export WANDB_PROJECT="your project name"
 
 # Paths and model configuration
 # TODO: change these paths to your own
-DATA_PATH=/workspace/data/mdanderson_dataset.parquet
+DATA_PATH=dummy_data/dataset.parquet
 DATA_CACHE_PATH=/workspace/cache/
 MODEL_NAME=standardmodelbio/smb-vision-base
 OUTPUT_DIR=/workspace/saves/smb-vision-base-survival-mdacc
