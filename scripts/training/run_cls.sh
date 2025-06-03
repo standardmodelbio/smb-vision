@@ -3,7 +3,7 @@ export WANDB_PROJECT="your project name"
 
 # Paths and model configuration
 # TODO: change these paths to your own
-DATA_PATH=/workspace/data/mdanderson_dataset.parquet
+DATA_PATH=dummy_data/dataset.parquet
 DATA_CACHE_PATH=/workspace/cache/
 MODEL_NAME=standardmodelbio/smb-vision-base
 OUTPUT_DIR=/workspace/saves/smb-vision-base-survival-mdacc
@@ -11,7 +11,8 @@ RUN_NAME=smb-vision-base-survival-mdacc
 
 # Model parameters
 # TODO: change these parameters to your own
-LABEL_COLUMNS="one_year_survival"
+LABEL_COLUMNS="histology_adc"
+ADDITIONAL_FEATURE_COLUMNS="age,sex"
 NUM_LABELS=2
 LEARNING_RATE=1e-5
 VISION_LR=1e-5
@@ -36,6 +37,7 @@ accelerate launch src/run_classification.py \
     --task_type classification \
     --num_labels $NUM_LABELS \
     --label_columns $LABEL_COLUMNS \
+    --additional_feature_columns $ADDITIONAL_FEATURE_COLUMNS \
     --lr_scheduler_type cosine \
     --learning_rate $LEARNING_RATE \
     --vision_lr $VISION_LR \
