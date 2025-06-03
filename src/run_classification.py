@@ -122,7 +122,7 @@ class DataTrainingArguments:
         },
     )
     additional_feature_columns: Optional[List[str]] = field(
-        default=None,
+        default_factory=lambda: [],
         metadata={
             "help": "List of additional feature column names to use alongside the image data for classification. Leave empty for no additional features."
         },
