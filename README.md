@@ -83,7 +83,8 @@ python src/run_classification.py \
     --output_dir ./outputs \
     --learning_rate 1e-4 \
     --num_train_epochs 10 \
-    --per_device_train_batch_size 4
+    --per_device_train_batch_size 4 \
+    --additional_feature_columns "age,sex"  # Optional: specify additional features
 ```
 
 ### 3. Generating Embeddings
@@ -105,24 +106,24 @@ The expected format for each file type:
 
 1. **CSV/Parquet**
 
-| image | label | split |
-|------------|-------|-------|
-| path/to/image1.nii.gz | 1 | train |
-| path/to/image2.nii.gz | 0 | train |
-| path/to/image3.nii.gz | 1 | val |
+| image | label | split | age | sex | ... |
+|------------|-------|-------|-----|-----|-----|
+| path/to/image1.nii.gz | 1 | train | 65 | 1 | ... |
+| path/to/image2.nii.gz | 0 | train | 72 | 0 | ... |
+| path/to/image3.nii.gz | 1 | val | 58 | 1 | ... |
 
 2. **JSON**
 
 ```json
 {
   "train": [
-    {"image": "path/to/image1.nii.gz", "label": 0},
-    {"image": "path/to/image2.nii.gz", "label": 1},
+    {"image": "path/to/image1.nii.gz", "label": 0, "age": 65, "sex": 1},
+    {"image": "path/to/image2.nii.gz", "label": 1, "age": 72, "sex": 0},
     ...
   ],
   "validation": [
-    {"image": "path/to/image3.nii.gz", "label": 0},
-    {"image": "path/to/image4.nii.gz", "label": 1},
+    {"image": "path/to/image3.nii.gz", "label": 0, "age": 58, "sex": 1},
+    {"image": "path/to/image4.nii.gz", "label": 1, "age": 45, "sex": 0},
     ...
   ],
   "test": [...]
@@ -131,10 +132,31 @@ The expected format for each file type:
 or
 ```json
 [
-  {"image": "path/to/image1.nii.gz", "label": 0},
-  {"image": "path/to/image2.nii.gz", "label": 1},
-    ...
+  {"image": "path/to/image1.nii.gz", "label": 0, "age": 65, "sex": 1},
+  {"image": "path/to/image2.nii.gz", "label": 1, "age": 72, "sex": 0},
+  ...
 ]
+```
+
+### Additional Features
+
+The model supports additional features alongside the image data for classification tasks. These features can be:
+- Demographic data (age, sex, etc.)
+- Clinical measurements
+- Any numerical features that might be relevant to the classification task
+
+To use additional features:
+1. Include the feature columns in your dataset (CSV/Parquet/JSON)
+2. Specify the column names in the `--additional_feature_columns` argument
+3. The features will be automatically normalized and combined with the image features during training
+
+Example:
+```bash
+# Using age and sex as additional features
+--additional_feature_columns "age sex"
+
+# Using no additional features
+--additional_feature_columns ""
 ```
 
 ### For Inference
@@ -165,6 +187,7 @@ embeddings/
 - Support for 3D medical images (NIFTI format)
 - Masked image modeling pre-training
 - Fine-tuning for classification and regression tasks
+- Support for additional numerical features alongside images
 - Embedding generation using pre-trained models
 - Configurable image size, depth, and patch sizes
 - Mixed precision training (bf16)
