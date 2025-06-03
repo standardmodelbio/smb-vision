@@ -121,8 +121,8 @@ class DataTrainingArguments:
             "help": "List of label column names in the dataset for multilabel classification or survival analysis"
         },
     )
-    additional_feature_columns: List[str] = field(
-        default_factory=list,
+    additional_feature_columns: Optional[List[str]] = field(
+        default=None,
         metadata={
             "help": "List of additional feature column names to use alongside the image data for classification"
         },
@@ -218,7 +218,10 @@ class CustomTrainingArguments(TrainingArguments):
         default=5e-5,
         metadata={"help": "Learning rate for merger parameters"},
     )
-
+    attn_implementation: str = field(
+        default="flash_attention_2",
+        metadata={"help": "Attention implementation to use"},
+    )
 
 def collate_fn(examples, data_args):
     # Unpack nested lists (common in MONAI/PyTorch datasets)
@@ -480,6 +483,7 @@ def main():
             revision=model_args.model_revision,
             token=model_args.token,
             trust_remote_code=model_args.trust_remote_code,
+            attn_implementation=training_args.attn_implementation,
         )
     else:
         logger.info("Loading pretrained VideoMAE model")
@@ -491,6 +495,7 @@ def main():
             revision=model_args.model_revision,
             token=model_args.token,
             trust_remote_code=model_args.trust_remote_code,
+            attn_implementation=training_args.attn_implementation,
         )
 
     # Initialize trainer with custom trainer for survival tasks

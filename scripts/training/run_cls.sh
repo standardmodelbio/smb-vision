@@ -59,7 +59,7 @@ accelerate launch src/run_classification.py \
     --save_steps 2 \
     --save_total_limit 3 \
     --bf16 true \
-    --gradient_checkpointing true \
+    --gradient_checkpointing false \
     --logging_steps 1 \
     --report_to none \
     --run_name $RUN_NAME
