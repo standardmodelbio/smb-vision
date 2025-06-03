@@ -124,7 +124,7 @@ class DataTrainingArguments:
     additional_feature_columns: Optional[List[str]] = field(
         default=None,
         metadata={
-            "help": "List of additional feature column names to use alongside the image data for classification"
+            "help": "List of additional feature column names to use alongside the image data for classification. Use 'none' for no additional features."
         },
     )
     max_train_samples: Optional[int] = field(
@@ -238,7 +238,7 @@ def collate_fn(examples, data_args):
 
     # Handle additional features if specified
     additional_features = None
-    if data_args.additional_feature_columns and data_args.additional_feature_columns[0]:  # Check if not empty string
+    if data_args.additional_feature_columns and data_args.additional_feature_columns[0] != "none":
         additional_features = torch.stack(
             [
                 torch.tensor([ex[col] for col in data_args.additional_feature_columns], dtype=torch.float32)
