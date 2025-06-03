@@ -223,6 +223,7 @@ class CustomTrainingArguments(TrainingArguments):
         metadata={"help": "Attention implementation to use"},
     )
 
+
 def collate_fn(examples, data_args):
     # Unpack nested lists (common in MONAI/PyTorch datasets)
     unpacked = []
@@ -237,7 +238,7 @@ def collate_fn(examples, data_args):
 
     # Handle additional features if specified
     additional_features = None
-    if data_args.additional_feature_columns:
+    if data_args.additional_feature_columns and data_args.additional_feature_columns[0]:  # Check if not empty string
         additional_features = torch.stack(
             [
                 torch.tensor([ex[col] for col in data_args.additional_feature_columns], dtype=torch.float32)
