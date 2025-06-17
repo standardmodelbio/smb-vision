@@ -169,3 +169,5 @@ nifti_files/
 data/
 *.nii.gz
 *.DS_Store
+
+outputs/

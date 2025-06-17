@@ -11,3 +11,4 @@ packaging
 ninja
 loguru
 wandb
+matplotlib>=3.7.0
