@@ -16,18 +16,22 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "torch==2.6.0",
-    "transformers>=4.46.1",
-    "peft",
+    "torch==2.7.0",
+    "torchvision==0.22.0",
+    "torchaudio==2.7.0",
+    "transformers[hf_xet]>=4.51.0",
     "accelerate",
+    "peft",
     "datasets",
+    "numpy<2.0.0",
+    "pandas",
+    "pyarrow>=15.0.0",
     "nibabel",
     "monai",
     "loguru",
-    "awswrangler",
-    "ninja",
     "wandb",
-    "lifelines"
+    "lifelines",
+    "ruff"
 ]
 
 [project.optional-dependencies]

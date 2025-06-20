@@ -116,7 +116,7 @@ class VJEPA2PatchEmbeddings3D(nn.Module):
         self.tubelet_size = config.tubelet_size
         self.hidden_size = hidden_size
 
-        self.proj = nn.Conv3d(
+        self.proj_3d = nn.Conv3d(
             in_channels=config.in_chans,
             out_channels=hidden_size,
             kernel_size=(config.tubelet_size, config.patch_size, config.patch_size),
@@ -132,7 +132,7 @@ class VJEPA2PatchEmbeddings3D(nn.Module):
         )
 
     def forward(self, pixel_values_videos: torch.Tensor) -> torch.Tensor:
-        x = self.proj(pixel_values_videos).flatten(2).transpose(1, 2)
+        x = self.proj_3d(pixel_values_videos).flatten(2).transpose(1, 2)
         return x
 
 
@@ -163,7 +163,7 @@ class VJEPA2Embeddings(nn.Module):
         if num_frames < self.config.tubelet_size:
             pixel_values_videos = pixel_values_videos.repeat(1, 1, self.config.tubelet_size, 1, 1)
 
-        target_dtype = self.patch_embeddings.proj.weight.dtype
+        target_dtype = self.patch_embeddings.proj_3d.weight.dtype
         pixel_values_videos = pixel_values_videos.to(dtype=target_dtype)
         embeddings = self.patch_embeddings(pixel_values_videos)
 

@@ -130,13 +130,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Create dummy data for testing")
     parser.add_argument("--output_path", type=str, default="./dummy_data", help="Directory to save the dummy data")
     parser.add_argument(
-        "--shape", type=int, nargs=3, default=[224, 224, 160], help="Shape of the NIfTI volumes (height width depth)"
+        "--shape", type=int, nargs=3, default=[384, 384, 256], help="Shape of the NIfTI volumes (height width depth)"
     )
-    parser.add_argument("--num_files", type=int, default=10, help="Number of NIfTI files to create")
+    parser.add_argument("--num_files", type=int, default=2, help="Number of NIfTI files to create")
     parser.add_argument("--num_classes", type=int, default=2, help="Number of classes for classification")
     parser.add_argument("--train_ratio", type=float, default=0.7, help="Ratio of training samples")
-    parser.add_argument("--val_ratio", type=float, default=0.15, help="Ratio of validation samples")
-    parser.add_argument("--test_ratio", type=float, default=0.15, help="Ratio of test samples")
+    parser.add_argument("--val_ratio", type=float, default=0.5, help="Ratio of validation samples")
+    parser.add_argument("--test_ratio", type=float, default=0.1, help="Ratio of test samples")
 
     args = parser.parse_args()
 
